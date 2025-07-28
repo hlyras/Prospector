@@ -1,0 +1,44 @@
+<script>
+  function websocketConnect() {
+    return new Promise((resolve, reject) => {
+      const socketUrl = 'ws://localhost:3005/ws';
+
+      const socket = new WebSocket(socketUrl);
+
+      socket.onopen = function () {
+        console.log('Conexão estabelecida... Aguardando key');
+        socket.send(JSON.stringify({ type: 'identify', sessionID: 'abc123' }));
+      };
+
+      socket.onmessage = (event) => {
+        console.log('Mensagem recebida:', event.data);
+        // let data = JSON.parse(event.data);
+
+        // console.log('Mensagem recebida:', data);
+
+        // if (data.type == "websocketKey") {
+        //   resolve({ ws: socket, key: data.key });
+        // }
+
+        // if (data.type == "webhook") {
+        //   lib.message(data.message, () => {
+        //     location.reload();
+        //   });
+        // }
+      };
+
+      socket.onerror = function (error) {
+        reject(error);
+      };
+
+      socket.onclose = function (event) {
+        if (event.wasClean) {
+          console.log('Conexão fechada limpa');
+        } else {
+          console.log('Conexão interrompida');
+        }
+        console.log('Código:', event.code, ' Motivo:', event.reason);
+      };
+    });
+  };
+</script>

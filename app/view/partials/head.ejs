@@ -1,0 +1,209 @@
+<meta charset="utf-8">
+<title>Prospector</title>
+<meta name="viewport" content="width=device-width, user-scalable=no">
+<link rel="icon" type="image/x-icon" href="/images/logo/favicon.png">
+
+<!-- Digital ocean -->
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/main.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/loader.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/carousel.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/elements.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/visual.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/speech.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/dropdown.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/tooltip.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/sidebar.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/actions.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/size.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/position.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/image.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/box.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/responsivity.css?v=2.5">
+<link rel="stylesheet" type="text/css"
+	href="https://seal-app-bv3qd.ondigitalocean.app/front-end/stylesheets/fonts.css?v=2.5">
+
+<!-- Local framework -->
+<!-- <link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/main.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/loader.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/elements.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/carousel.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/visual.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/speech.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/dropdown.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/tooltip.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/sidebar.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/actions.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/size.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/position.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/image.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/box.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/responsivity.css">
+<link rel="stylesheet" type="text/css" href="http://127.0.0.1:3000/front-end/stylesheets/fonts.css"> -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
+<style>
+	.whatsapp-button {
+		position: fixed;
+		bottom: 15px;
+		right: 15px;
+		z-index: 1000;
+	}
+
+	.whatsapp-button img {
+		width: 35px;
+		height: auto;
+	}
+
+	.cart-icon {
+		width: 35px;
+		height: 35px;
+		position: relative;
+	}
+
+	.cart-basket {
+		width: 20px;
+		height: 0px;
+		position: absolute;
+		top: 8.5px;
+		left: 5.5px;
+		border-top: 10px solid var(--cart-color);
+		border-left: 3px solid transparent;
+		border-right: 3px solid transparent;
+		border-radius: 2px;
+	}
+
+	.cart-basket::before {
+		content: "";
+		width: 3px;
+		height: 0px;
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		border-top: 2px solid var(--cart-color);
+		border-left: 2px solid transparent;
+		border-right: 15px solid transparent;
+		border-radius: 5px solid;
+	}
+
+	.cart-basket::after {
+		content: "";
+		width: 18px;
+		height: 2.3px;
+		position: absolute;
+		top: 4px;
+		left: 1.5px;
+		background-color: var(--cart-color);
+		border-radius: 2px;
+	}
+
+	.cart-line {
+		width: 2px;
+		height: 20px;
+		background-color: var(--cart-color);
+		position: absolute;
+		top: 5px;
+		left: 7px;
+		transform: translateX(-50%);
+		border-radius: 5px;
+		transform: rotate(-15deg);
+	}
+
+	.cart-strap {
+		width: 5px;
+		height: 2px;
+		background-color: var(--cart-color);
+		position: absolute;
+		top: 5px;
+		left: 1.5px;
+		border-radius: 5px;
+	}
+
+	.cart-wheel-left {
+		width: 5px;
+		height: 5px;
+		background-color: var(--cart-color);
+		position: absolute;
+		top: 26.5px;
+		left: 11px;
+		border-radius: 50%;
+	}
+
+	.cart-wheel-right {
+		width: 5px;
+		height: 5px;
+		background-color: var(--cart-color);
+		position: absolute;
+		top: 26.5px;
+		left: 21px;
+		border-radius: 50%;
+	}
+
+	.search-icon {
+		width: 35px;
+		height: 35px;
+		position: relative;
+	}
+
+	.search-circle {
+		width: 17px;
+		height: 17px;
+		position: absolute;
+		top: 4px;
+		left: 3px;
+		border-radius: 50%;
+		border: 2px solid var(--search-color);
+	}
+
+	.search-detail {
+		width: 15px;
+		height: 15px;
+		position: absolute;
+		border-radius: 50%;
+		top: 6.5px;
+		left: 6.5px;
+		border: 1.5px solid var(--search-color);
+		border-right: none;
+		border-bottom: none;
+		border-left: none;
+		transform: rotate(-45deg);
+	}
+
+	.search-line {
+		width: 2px;
+		height: 10px;
+		background-color: var(--search-color);
+		position: absolute;
+		top: 20px;
+		left: 23px;
+		transform: translateX(-50%);
+		border-radius: 5px;
+		transform: rotate(-45deg);
+	}
+
+	.search-line::before {
+		content: "";
+		width: 4px;
+		height: 10px;
+		background-color: var(--search-color);
+		position: absolute;
+		top: 4px;
+		left: -1px;
+		border-radius: 5px;
+	}
+</style>

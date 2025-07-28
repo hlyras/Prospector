@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <%- include('./../partials/head.ejs') %>
+  <title>WA Messager</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+
+<body>
+  <%- include('./../partials/header.ejs') %>
+  <h1>Conectar WhatsApp</h1>
+  <div id="qrcode" class="padding-10"></div>
+
+  <section class="container">
+    <%- include('./message/form.ejs') %>
+  </section>
+</body>
+
+<footer>
+  <%- include('./../partials/footer.ejs') %>
+
+  <script src="/js/messenger.js"></script>
+  <script src="/js/lead/main.js"></script>
+
+  <%- include('./websocket.ejs') %>
+
+  <script>
+    function generateQRCode({ qrcode, isConnected }) {
+      const qrcodeElement = document.getElementById('qrcode');
+      if (isConnected) {
+        return qrcodeElement.innerHTML = '<p>✅ Já conectado!</p>';
+      }
+
+      if (qrcode && qrcodeElement) {
+        new QRCode(qrcodeElement, qrcode);
+      }
+
+      if (!qrCode && qrcodeElement) {
+        qrcodeElement.innerHTML = '<p>❌ QR Code ainda não disponível.</p>';
+        // console.error('QR Code is not available.');
+      }
+
+      if (!qrcodeElement) {
+        console.error('QR Code element not found in the DOM.');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      let response = await API.response(Messenger.qrcode, {});
+      generateQRCode(response);
+
+      websocketConnect();
+    });
+  </script>
+</footer>
+
+</html>

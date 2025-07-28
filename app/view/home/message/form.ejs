@@ -1,0 +1,66 @@
+<div class="box b1 container">
+  <div id="lead-create-btn" class="mobile-box container ground right margin-right-10">
+    <img id="lead-icon" class='image-prop size-25 shadow-lg-st radius-5 opacity-out-08 padding-5 margin-right-5 pointer'
+      src='/images/icon/add-lead.png'>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    let lead_create_btn = document.getElementById('lead-create-btn');
+
+    // lead_create_btn.append(lib.element.icon("opacity-out-09 pointer", "50",
+    //   "/images/icon/add-lead.png"));
+
+    lead_create_btn.addEventListener('click', () => {
+      let lead_create_form = lib.element.create('form', {
+        class: "box b1 container padding-10 h-center",
+      });
+      lib.popup(lead_create_form);
+
+      let lead_create_title = lib.element.create("h2", {
+        class: "box b2-3 underline lucida-grande bold margin-top-15 center",
+      }, "Novo Lead");
+      lead_create_form.append(lead_create_title);
+
+      let lead_create_business = lib.element.create("input", {
+        class: "box b2-3 lucida-grande border radius-3 shadow padding-10 margin-top-10",
+        placeholder: "Nome da empresa",
+        role: "presentation",
+        autocomplete: "off"
+      });
+      lead_create_form.append(lead_create_business);
+
+      let lead_create_phone = lib.element.create("input", {
+        class: "box b2-3 lucida-grande border radius-3 shadow padding-10 margin-top-10",
+        placeholder: "Telefone",
+        role: "presentation",
+        autocomplete: "off"
+      });
+      lead_create_form.append(lead_create_phone);
+
+      let submit_button = lib.element.create("input", {
+        type: "submit",
+        class: "box b2-3 btn-act lucida-grande bold noborder radius-3 shadow-lg-st padding-10 margin-top-10 pointer",
+        name: "submit",
+      });
+      lead_create_form.append(submit_button);
+
+      lead_create_form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        let lead_options = {
+          business: lead_create_business.value,
+          phone: lead_create_phone.value,
+          message: `Bom dia, é da ${lead_create_business.value}?`
+        };
+
+        let response = await API.response(Lead.create, lead_options);
+
+        lib.message(response.done || response.error, () => {
+          lib.popout(lead_create_form);
+        });
+      });
+    });
+  });
+</script>
