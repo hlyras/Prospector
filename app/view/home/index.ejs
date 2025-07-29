@@ -10,11 +10,12 @@
 
 <body>
   <%- include('./../partials/header.ejs') %>
-  <h1>Conectar WhatsApp</h1>
+
   <div id="qrcode" class="padding-10"></div>
 
-  <section class="container">
+  <section id="prospector-container" class="container margin-top-10">
     <%- include('./message/form.ejs') %>
+    <%- include('./message/box.ejs') %>
   </section>
 </body>
 
@@ -30,14 +31,14 @@
     function generateQRCode({ qrcode, isConnected }) {
       const qrcodeElement = document.getElementById('qrcode');
       if (isConnected) {
-        return qrcodeElement.innerHTML = '<p>✅ Já conectado!</p>';
+        return lib.display(qrcodeElement, "none");
       }
 
       if (qrcode && qrcodeElement) {
         new QRCode(qrcodeElement, qrcode);
       }
 
-      if (!qrCode && qrcodeElement) {
+      if (!qrcode && qrcodeElement) {
         qrcodeElement.innerHTML = '<p>❌ QR Code ainda não disponível.</p>';
         // console.error('QR Code is not available.');
       }

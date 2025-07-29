@@ -83,9 +83,28 @@ class WhatsAppSession {
           sender, content
         });
 
+        const getProfilePicWithTimeout = (jid, timeout = 5000) => {
+          return Promise.race([
+            this.sock.profilePictureUrl(jid, 'image'),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Timeout ao buscar foto de perfil')), timeout)
+            )
+          ]);
+        };
+
+        let profile_picture = null;
+
+        try {
+          profile_picture = await getProfilePicWithTimeout(sender);
+          console.log('Foto do perfil:', profile_picture);
+        } catch (err) {
+          console.log('Erro ao buscar foto:', err.message);
+        }
+
         waEmitter.emit('received-message', {
           sender,
           content,
+          profile_picture,
           raw: msg
         });
       }

@@ -1,6 +1,6 @@
 <div class="box b1 container">
   <div id="lead-create-btn" class="mobile-box container ground right margin-right-10">
-    <img id="lead-icon" class='image-prop size-25 shadow-lg-st radius-5 opacity-out-08 padding-5 margin-right-5 pointer'
+    <img id="lead-icon" class='image-prop size-40 shadow-lg-st radius-5 opacity-out-09 padding-8 margin-right-5 pointer'
       src='/images/icon/add-lead.png'>
   </div>
 </div>
@@ -8,9 +8,6 @@
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     let lead_create_btn = document.getElementById('lead-create-btn');
-
-    // lead_create_btn.append(lib.element.icon("opacity-out-09 pointer", "50",
-    //   "/images/icon/add-lead.png"));
 
     lead_create_btn.addEventListener('click', () => {
       let lead_create_form = lib.element.create('form', {
@@ -39,6 +36,19 @@
       });
       lead_create_form.append(lead_create_phone);
 
+      let lead_create_chat = lib.element.create("select", {
+        class: "box b2-3 lucida-grande disable-selected border radius-3 shadow padding-10 margin-top-10",
+      });
+      lead_create_form.append(lead_create_chat);
+
+      lead_create_chat.append(lib.element.create("option", {
+        value: 1,
+      }, "Iniciar conversa automaticamente"));
+
+      lead_create_chat.append(lib.element.create("option", {
+        value: 0,
+      }, "Chat automático desativado"));
+
       let submit_button = lib.element.create("input", {
         type: "submit",
         class: "box b2-3 btn-act lucida-grande bold noborder radius-3 shadow-lg-st padding-10 margin-top-10 pointer",
@@ -52,7 +62,7 @@
         let lead_options = {
           business: lead_create_business.value,
           phone: lead_create_phone.value,
-          message: `Bom dia, é da ${lead_create_business.value}?`
+          autochat: lead_create_chat.value
         };
 
         let response = await API.response(Lead.create, lead_options);

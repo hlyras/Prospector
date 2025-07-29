@@ -1,7 +1,9 @@
 <script>
   function websocketConnect() {
     return new Promise((resolve, reject) => {
-      const socketUrl = 'ws://localhost:3005/ws';
+      // const socketUrl = 'ws://127.0.0.1:3005/ws';
+      // const socketUrl = 'ws://192.168.0.5:3005/ws';
+      const socketUrl = 'wss://d56826c65bd4.ngrok-free.app/ws';
 
       const socket = new WebSocket(socketUrl);
 
@@ -11,33 +13,46 @@
       };
 
       socket.onmessage = (event) => {
-        console.log('Mensagem recebida:', event.data);
-        // let data = JSON.parse(event.data);
+        console.log('Mensagem recebida:', JSON.parse(event.data));
 
-        // console.log('Mensagem recebida:', data);
+        const data = JSON.parse(event.data);
 
-        // if (data.type == "websocketKey") {
-        //   resolve({ ws: socket, key: data.key });
-        // }
+        if (!data.content) { return; }
 
-        // if (data.type == "webhook") {
-        //   lib.message(data.message, () => {
-        //     location.reload();
-        //   });
-        // }
+        let message_box = document.getElementById("message-box");
+        let message_div = messageDiv(data);
+        message_box.append(message_div);
       };
 
-      socket.onerror = function (error) {
-        reject(error);
+      socket.onerror = function (event) {
+        let message = 'Erro desconhecido no WebSocket.';
+
+        if (socket.readyState === WebSocket.CLOSED) {
+          message = 'Conexão com o servidor foi recusada ou caiu.';
+        } else if (socket.readyState === WebSocket.CONNECTING) {
+          message = 'Não foi possível conectar ao servidor WebSocket.';
+        }
+
+        // Tenta pegar mais detalhes se disponíveis
+        if (event?.message) {
+          message += ' Detalhes: ' + event.message;
+        }
+
+        lib.message(message);
+
+        // Rejeita com string clara (ou usa lib.message)
+        reject(message);
       };
 
       socket.onclose = function (event) {
         if (event.wasClean) {
-          console.log('Conexão fechada limpa');
+          lib.message('Conexão fechada limpa');
         } else {
-          console.log('Conexão interrompida');
+          lib.message('Conexão interrompida');
+          websocketConnect();
         }
-        console.log('Código:', event.code, ' Motivo:', event.reason);
+
+        lib.message(`Código: ${event.code} - Motivo: ${event.reason}`);
       };
     });
   };

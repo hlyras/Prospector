@@ -27,12 +27,12 @@ router.get('/qrcode', (req, res) => {
 // Envia mensagem para um número
 router.post('/send', async (req, res) => {
   const { number, message } = req.body;
-  if (!isConnected || !sock) return res.status(500).send('❌ WhatsApp não conectado.');
+  if (!wa.isConnected() || !sock) return res.status(500).send('❌ WhatsApp não conectado.');
   if (!number || !message) return res.status(400).send('⚠️ Envie number e message no body.');
 
   const jid = number + '@s.whatsapp.net';
   try {
-    await sock.sendMessage(jid, { text: message });
+    await wa.getSocket().sendMessage(jid, { text: message });
     res.send('📤 Mensagem enviada!');
   } catch (err) {
     console.error('Erro ao enviar:', err);
@@ -40,16 +40,18 @@ router.post('/send', async (req, res) => {
   }
 });
 
-waEmitter.on('received-message', ({ sender, content, raw }) => {
+waEmitter.on('received-message', ({ sender, content, profile_picture, raw }) => {
   console.log(`📥 Mensagem de ${sender}: ${content}`);
   console.log('received-message', content);
 
   for (const [sessionID, ws] of activeWebSockets.entries()) {
     console.log('sessionID', sessionID);
     if (ws.readyState === 1) { // ws.OPEN
-      ws.send(JSON.stringify({ sender, content, raw }));
+      ws.send(JSON.stringify({ sender, content, profile_picture, raw }));
     }
   };
 });
+
+router.use("/lead", require("./lead"));
 
 module.exports = router;
