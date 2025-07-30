@@ -64,25 +64,6 @@ class WhatsAppSession {
       for (const msg of messages) {
         if (!msg.message || msg.key.fromMe) continue;
 
-        const sender = msg.key.remoteJid;
-        const type = Object.keys(msg.message)[0];
-        let content = '';
-
-        if (type === 'conversation') {
-          content = msg.message.conversation;
-        } else if (type === 'extendedTextMessage') {
-          content = msg.message.extendedTextMessage.text;
-        } else {
-          content = '[Mensagem não textual]';
-        }
-
-        // console.log(`📥 Mensagem de ${sender}: ${content}`);
-
-        // Emitir evento do WhatsApp para o sistema
-        console.log('Emitindo evento received-message...', {
-          sender, content
-        });
-
         const getProfilePicWithTimeout = (jid, timeout = 5000) => {
           return Promise.race([
             this.sock.profilePictureUrl(jid, 'image'),
@@ -95,18 +76,16 @@ class WhatsAppSession {
         let profile_picture = null;
 
         try {
-          profile_picture = await getProfilePicWithTimeout(sender);
+          profile_picture = await getProfilePicWithTimeout(msg.key.remoteJid);
           console.log('Foto do perfil:', profile_picture);
         } catch (err) {
           console.log('Erro ao buscar foto:', err.message);
         }
 
-        waEmitter.emit('received-message', {
-          sender,
-          content,
-          profile_picture,
-          raw: msg
-        });
+        const data = msg;
+        data.profile_picture = profile_picture;
+
+        waEmitter.emit('received-message', { data });
       }
     });
 

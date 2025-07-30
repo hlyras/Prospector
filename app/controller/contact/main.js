@@ -1,12 +1,12 @@
-const wa = require('./../../middleware/baileys/main');
-const Lead = require("./../../model/lead/main");
+const wa = require('../../middleware/baileys/main');
+const Contact = require("../../model/contact/main");
 
 const lib = require('jarmlib');
 
-const leadController = {};
+const contactController = {};
 
-leadController.create = async (req, res) => {
-  let lead = new Lead();
+contactController.create = async (req, res) => {
+  let lead = new Contact();
   lead.business = req.body.business;
   lead.phone = req.body.phone;
   lead.name = req.body.name;
@@ -27,23 +27,29 @@ leadController.create = async (req, res) => {
       }
     }
 
-    res.status(201).send({ done: "Lead criado com sucesso!", lead });
+    res.status(201).send({ done: "Contato criado com sucesso!", lead });
   } catch (error) {
     console.error("Erro ao criar lead:", error);
     res.status(500).send({ msg: "Erro ao criar lead.", error });
   }
 };
 
-leadController.update = async (req, res) => {
+contactController.update = async (req, res) => {
 
 };
 
-leadController.filter = async (req, res) => {
+contactController.filter = async (req, res) => {
+  try {
+    let contacts = await Contact.filter({});
+    res.send({ contacts });
+  } catch (error) {
+    console.log(error);
+    res.send({ msg: "Ocorreu um erro ao filtrar os contatos" });
+  }
+};
+
+contactController.delete = async (req, res) => {
 
 };
 
-leadController.delete = async (req, res) => {
-
-};
-
-module.exports = leadController;
+module.exports = contactController;

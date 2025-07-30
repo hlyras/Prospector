@@ -1,0 +1,31 @@
+<script>
+  async function receivedMessage(data) {
+    console.log('data', data);
+
+    let sender = lib.splitTextBy(data.key.remoteJid, "@")[0];
+    console.log('sender', sender);
+    if (!sender) return;
+
+    let contact_div = document.getElementById(`contact-${sender}`);
+    console.log(contact_div);
+
+    let profile_picture = document.getElementById(`profile-picture-${sender}`);
+    console.log(profile_picture);
+    console.log('profile_picture.dataset', profile_picture.dataset.empty);
+    if (profile_picture.dataset.empty) {
+      console.log('tem dataset.empty');
+    } else {
+      console.log('NÃO dataset.empty');
+    }
+
+    profile_picture.src = data.profile_picture;
+
+    console.log(data.profile_picture);
+
+    // if (profile_picture.dataset.empty) {
+    //   let response = await API.response(Contact.update, {
+    //     profile_picture: data.profile_picture
+    //   });
+    // }
+  };
+</script>

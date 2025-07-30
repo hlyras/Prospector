@@ -1,7 +1,7 @@
 const db = require('../../../config/connection');
 const lib = require('jarmlib');
 
-const Lead = function () {
+const Contact = function () {
   this.id;
   this.business;
   this.phone;
@@ -13,7 +13,7 @@ const Lead = function () {
     // if (this.phone.length < 14) { return { err: "O Telefone informado é inválido" }; }
 
     let obj = lib.convertTo.object(this);
-    let { query, values } = lib.Query.save(obj, 'cms_prospector.lead');
+    let { query, values } = lib.Query.save(obj, 'cms_prospector.contact');
 
     return db(query, values);
   };
@@ -22,16 +22,16 @@ const Lead = function () {
     if (!this.id) { return { err: "O id da tarefa é inválido" }; }
 
     let obj = lib.convertTo.object(this);
-    let { query, values } = lib.Query.update(obj, 'cms_prospector.lead', 'id');
+    let { query, values } = lib.Query.update(obj, 'cms_prospector.contact', 'id');
 
     return db(query, values);
   };
 };
 
-Lead.filter = ({ props, inners, params, strict_params, order_params }) => {
+Contact.filter = ({ props, inners, params, strict_params, order_params }) => {
   let { query, values } = new lib.Query().select()
     .props(props)
-    .table("cms_prospector.lead")
+    .table("cms_prospector.contact")
     .inners(inners)
     .params(params)
     .strictParams(strict_params)
@@ -39,13 +39,13 @@ Lead.filter = ({ props, inners, params, strict_params, order_params }) => {
   return db(query, values);
 };
 
-Lead.delete = ({ inners, params, strict_params }) => {
+Contact.delete = ({ inners, params, strict_params }) => {
   let { query, values } = new lib.Query().delete()
-    .table("cms_prospector.lead")
+    .table("cms_prospector.contact")
     .inners(inners)
     .params(params)
     .strictParams(strict_params).build();
   return db(query, values);
 }
 
-module.exports = Lead;
+module.exports = Contact;

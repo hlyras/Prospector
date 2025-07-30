@@ -14,8 +14,7 @@
   <div id="qrcode" class="padding-10"></div>
 
   <section id="prospector-container" class="container margin-top-10">
-    <%- include('./message/form.ejs') %>
-    <%- include('./message/box.ejs') %>
+    <%- include('./contact/main.ejs') %>
   </section>
 </body>
 
@@ -23,7 +22,9 @@
   <%- include('./../partials/footer.ejs') %>
 
   <script src="/js/messenger.js"></script>
-  <script src="/js/lead/main.js"></script>
+  <script src="/js/contact/main.js"></script>
+
+  <%- include('./message/main.ejs') %>
 
   <%- include('./websocket.ejs') %>
 

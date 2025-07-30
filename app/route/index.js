@@ -40,18 +40,15 @@ router.post('/send', async (req, res) => {
   }
 });
 
-waEmitter.on('received-message', ({ sender, content, profile_picture, raw }) => {
-  console.log(`📥 Mensagem de ${sender}: ${content}`);
-  console.log('received-message', content);
-
+waEmitter.on('received-message', ({ data }) => {
   for (const [sessionID, ws] of activeWebSockets.entries()) {
     console.log('sessionID', sessionID);
     if (ws.readyState === 1) { // ws.OPEN
-      ws.send(JSON.stringify({ sender, content, profile_picture, raw }));
+      ws.send(JSON.stringify({ type: "wasocket", data }));
     }
   };
 });
 
-router.use("/lead", require("./lead"));
+router.use("/contact", require("./contact"));
 
 module.exports = router;

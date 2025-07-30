@@ -1,10 +1,10 @@
-const Lead = {};
+const Contact = {};
 
-Lead.create = async (lead) => {
-  let response = await fetch("/lead/create", {
+Contact.create = async (contact) => {
+  let response = await fetch("/contact/create", {
     method: "POST",
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(lead)
+    body: JSON.stringify(contact)
   });
   response = await response.json();
 
@@ -13,11 +13,11 @@ Lead.create = async (lead) => {
   return response;
 };
 
-Lead.update = async (lead) => {
-  let response = await fetch("/lead/update", {
+Contact.update = async (contact) => {
+  let response = await fetch("/contact/update", {
     method: "POST",
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(lead)
+    body: JSON.stringify(contact)
   });
   response = await response.json();
 
@@ -26,21 +26,21 @@ Lead.update = async (lead) => {
   return response;
 };
 
-Lead.filter = async (lead) => {
-  let response = await fetch("/lead/filter", {
+Contact.filter = async (contact) => {
+  let response = await fetch("/contact/filter", {
     method: "POST",
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(lead)
+    body: JSON.stringify(contact)
   });
   response = await response.json();
 
   if (API.verifyResponse(response)) { return false; };
 
-  return response.tasks;
+  return response.contacts;
 };
 
-Lead.delete = async (task_id) => {
-  let response = await fetch(`/lead/delete/${task_id}`, {
+Contact.delete = async (task_id) => {
+  let response = await fetch(`/contact/delete/${task_id}`, {
     method: "DELETE"
   });
   response = await response.json();
