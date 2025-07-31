@@ -1,19 +1,18 @@
 const db = require('../../../config/connection');
 const lib = require('jarmlib');
 
-const Contact = function () {
+const Message = function () {
   this.id;
-  this.business;
-  this.phone;
-  this.name;
-  this.autochat;
+  this.key;
+  this.origin; // P2P || GROUP
+  this.content;
 
   this.create = () => {
     // if (!this.name) { return { err: "É necessário informar seu nome" }; }
     // if (this.phone.length < 14) { return { err: "O Telefone informado é inválido" }; }
 
     let obj = lib.convertTo.object(this);
-    let { query, values } = lib.Query.save(obj, 'cms_prospector.contact');
+    let { query, values } = lib.Query.save(obj, 'cms_prospector.message');
 
     return db(query, values);
   };
@@ -22,30 +21,31 @@ const Contact = function () {
     if (!this.phone) { return { err: "O id da tarefa é inválido" }; }
 
     let obj = lib.convertTo.object(this);
-    let { query, values } = lib.Query.update(obj, 'cms_prospector.contact', 'phone');
+    let { query, values } = lib.Query.update(obj, 'cms_prospector.message', 'phone');
 
     return db(query, values);
   };
 };
 
-Contact.filter = ({ props, inners, params, strict_params, order_params }) => {
+Message.filter = ({ props, inners, params, strict_params, in_params, order_params }) => {
   let { query, values } = new lib.Query().select()
     .props(props)
-    .table("cms_prospector.contact")
+    .table("cms_prospector.message")
     .inners(inners)
     .params(params)
     .strictParams(strict_params)
+    .inParams(in_params)
     .order(order_params).build();
   return db(query, values);
 };
 
-Contact.delete = ({ inners, params, strict_params }) => {
+Message.delete = ({ inners, params, strict_params }) => {
   let { query, values } = new lib.Query().delete()
-    .table("cms_prospector.contact")
+    .table("cms_prospector.message")
     .inners(inners)
     .params(params)
     .strictParams(strict_params).build();
   return db(query, values);
 }
 
-module.exports = Contact;
+module.exports = Message;

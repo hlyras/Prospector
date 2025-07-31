@@ -36,7 +36,7 @@ Contact.filter = async (contact) => {
 
   if (API.verifyResponse(response)) { return false; };
 
-  return response.contacts;
+  return response;
 };
 
 Contact.delete = async (task_id) => {

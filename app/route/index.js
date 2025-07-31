@@ -2,9 +2,6 @@ const router = require("express").Router();
 
 const wa = require('./../middleware/baileys/main');
 const websocketHandler = require('./../middleware/websocket/handler');
-const waEmitter = require('./../middleware/baileys/emitter');
-const wsEmitter = require('./../middleware/websocket/emitter');
-const activeWebSockets = require('./../middleware/websocket/connectionStore'); // <== Aqui
 
 wa.connect(); // só vai conectar se não estiver conectado
 
@@ -27,7 +24,7 @@ router.get('/qrcode', (req, res) => {
 // Envia mensagem para um número
 router.post('/send', async (req, res) => {
   const { number, message } = req.body;
-  if (!wa.isConnected() || !sock) return res.status(500).send('❌ WhatsApp não conectado.');
+  if (!wa.isConnected() || !wa.getSocket()) return res.status(500).send('❌ WhatsApp não conectado.');
   if (!number || !message) return res.status(400).send('⚠️ Envie number e message no body.');
 
   const jid = number + '@s.whatsapp.net';
@@ -40,15 +37,7 @@ router.post('/send', async (req, res) => {
   }
 });
 
-waEmitter.on('received-message', ({ data }) => {
-  for (const [sessionID, ws] of activeWebSockets.entries()) {
-    console.log('sessionID', sessionID);
-    if (ws.readyState === 1) { // ws.OPEN
-      ws.send(JSON.stringify({ type: "wasocket", data }));
-    }
-  };
-});
-
 router.use("/contact", require("./contact"));
+router.use("/message", require("./message"));
 
 module.exports = router;

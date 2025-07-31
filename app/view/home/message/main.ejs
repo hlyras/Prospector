@@ -1,5 +1,5 @@
 <script>
-  async function receivedMessage(data) {
+  async function receivedMessage({ data, message }) {
     console.log('data', data);
 
     let sender = lib.splitTextBy(data.key.remoteJid, "@")[0];
@@ -7,25 +7,30 @@
     if (!sender) return;
 
     let contact_div = document.getElementById(`contact-${sender}`);
-    console.log(contact_div);
 
     let profile_picture = document.getElementById(`profile-picture-${sender}`);
-    console.log(profile_picture);
-    console.log('profile_picture.dataset', profile_picture.dataset.empty);
-    if (profile_picture.dataset.empty) {
-      console.log('tem dataset.empty');
+
+    if (data.profile_picture && profile_picture?.dataset.empty) {
+      let response = await API.response(Contact.update, {
+        phone: sender,
+        profile_picture: data.profile_picture
+      }, profile_picture);
+
+      response.done && (profile_picture.src = data.profile_picture);
     } else {
-      console.log('NÃO dataset.empty');
+      if (profile_picture?.src && profile_picture?.src != data.profile_picture) {
+        let response = await API.response(Contact.update, {
+          profile_picture: data.profile_picture
+        }, profile_picture);
+      }
     }
 
-    profile_picture.src = data.profile_picture;
+    let last_message_datetime = document.getElementById(`last-message-datetime-${sender}`);
+    last_message_datetime.innerHTML = "";
+    last_message_datetime.innerHTML = lib.timestampToFulldate(message.datetime);
 
-    console.log(data.profile_picture);
-
-    // if (profile_picture.dataset.empty) {
-    //   let response = await API.response(Contact.update, {
-    //     profile_picture: data.profile_picture
-    //   });
-    // }
+    let last_message = document.getElementById(`last-message-${sender}`);
+    last_message.innerHTML = "";
+    last_message.innerHTML = message.content;
   };
 </script>

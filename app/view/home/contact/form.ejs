@@ -67,6 +67,13 @@
 
         let response = await API.response(Lead.create, lead_options);
 
+
+        // let { contacts, messages } = await API.response(Contact.filter, {});
+        // for (let i in contacts) {
+        //   contacts[i].messages = messages.filter(msg => msg.contact_phone == contacts[i].phone);
+        // };
+        // contactFilter(contacts);
+
         lib.message(response.done || response.error, () => {
           lib.popout(lead_create_form);
         });

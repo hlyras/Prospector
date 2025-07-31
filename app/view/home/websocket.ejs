@@ -13,11 +13,13 @@
       };
 
       socket.onmessage = (event) => {
-        const response = JSON.parse(event.data);
-        console.log(response);
-        if (response.type != "wasocket") { return; }
+        const { data, message } = JSON.parse(event.data);
 
-        receivedMessage(response.data);
+        if (lib.splitTextBy(data.key.remoteJid)[0] == "status") {
+          return;
+        }
+
+        receivedMessage({ data, message });
       };
 
       socket.onerror = function (event) {

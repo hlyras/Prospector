@@ -1,9 +1,12 @@
-<div id="contact-box" class="box a1 container border-top"></div>
+<div id="contact-box" class="box a1 container border-top margin-top-10"></div>
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
-    let contacts = await API.response(Contact.filter, {});
-    console.log(contacts);
+    let { contacts, messages } = await API.response(Contact.filter, {});
+
+    for (let i in contacts) {
+      contacts[i].messages = messages.filter(msg => msg.contact_phone == contacts[i].phone);
+    };
 
     contactFilter(contacts);
   });
@@ -11,53 +14,16 @@
   function contactFilter(contacts) {
     let contact_box = document.getElementById("contact-box");
 
-    contacts.forEach(contact => {
-      let contact_div = lib.element.create("div", {
-        id: `contact-${contact.phone}`,
-        class: "box a1 container border-bottom padding-5"
-      });
+    if (!contacts.length) {
+      contact_box.innerHTML = "";
+      return contact_box.append(lib.element.create("div", {
+        class: "box b1 lucida-grande center"
+      }, "Nenhum contato"));
+    }
+
+    contacts?.forEach(contact => {
+      let contact_div = contactDiv(contact);
       contact_box.append(contact_div);
-
-      let profile_picture_box = lib.element.create("div", {
-        class: "mobile-box b6 container v-center"
-      });
-      contact_div.append(profile_picture_box);
-
-      // let profile_picture = lib.element.icon("b5", "50", data.profile_picture || "/images/icon/no-image.png");
-      let profile_picture = lib.element.create("img", {
-        id: `profile-picture-${contact.phone}`,
-        class: "image-prop size-50 radius-50",
-        src: contact.profile_picture || "/images/icon/no-image.png",
-        'data-empty': contact.profile_picture ? false : true
-      });
-      profile_picture_box.append(profile_picture);
-
-      // console.log('profile_picture.dataset.empty', profile_picture.dataset.empty);
-
-      let info_box = lib.element.create("div", {
-        class: "mobile-box b5-6 container v-center"
-      });
-      contact_div.append(info_box);
-
-      let name_box = lib.element.create("div", {
-        class: "mobile-box b2 container v-center"
-      });
-      info_box.append(name_box);
-
-      let name = lib.element.create("div", {
-        class: "mobile-box b1 lucida-grande rem08 bold text-shadow"
-      }, contact.business || contact.name || "");
-      name_box.append(name);
-
-      let identify_box = lib.element.create("div", {
-        class: "mobile-box b2 container v-center"
-      });
-      info_box.append(identify_box);
-
-      let phone = lib.element.create("div", {
-        class: "mobile-box b1 rem08 text-shadow v-center right"
-      }, contact.phone);
-      identify_box.append(phone);
     });
   };
 </script>
