@@ -1,4 +1,4 @@
-<div id="contact-box" class="box a1 container border-top margin-top-10"></div>
+<div id="contact-filter-box" class="box a1 container border-top margin-top-10"></div>
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
@@ -12,7 +12,7 @@
   });
 
   function contactFilter(contacts) {
-    let contact_box = document.getElementById("contact-box");
+    let contact_box = document.getElementById("contact-filter-box");
 
     if (!contacts.length) {
       contact_box.innerHTML = "";

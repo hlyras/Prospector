@@ -16,11 +16,6 @@ messageController.receipt = async ({ data }) => {
   message.contact_phone = sender ? sender : null;
   message.datetime = data.messageTimestamp * 1000;
 
-  if (data.message.imageMessage) {
-    message.type = "image";
-    message.content = data.message.imageMessage.url;
-  }
-
   if (data.message.extendedTextMessage) {
     message.type = "text";
     message.content = data.message.extendedTextMessage.text;
@@ -29,6 +24,16 @@ messageController.receipt = async ({ data }) => {
   if (data.message.conversation) {
     message.type = "conversation";
     message.content = data.message.conversation;
+  }
+
+  if (data.message.imageMessage) {
+    message.type = "image";
+    message.content = data.message.imageMessage.url;
+  }
+
+  if (data.message.audioMessage) {
+    message.type = "audio";
+    message.content = data.message.audioMessage.url;
   }
 
   if (data.message.videoMessage) {

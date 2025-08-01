@@ -33,13 +33,15 @@ contactController.create = async (req, res) => {
 
   contact.profile_picture = profile_picture;
 
+  console.log(contact);
+
   try {
-    let contact_create_response = await contact.create();
-    if (contact_create_response.err) {
-      return res.status(500).send({
-        msg: contact_create_response.err
-      });
-    }
+    // let contact_create_response = await contact.create();
+    // if (contact_create_response.err) {
+    //   return res.status(500).send({
+    //     msg: contact_create_response.err
+    //   });
+    // }
 
     // if (contact.autochat) {
     //   if (wa.isConnected()) {

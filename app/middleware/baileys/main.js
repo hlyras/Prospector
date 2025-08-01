@@ -62,7 +62,9 @@ class WhatsAppSession {
 
     this.sock.ev.on('messages.upsert', async ({ messages }) => {
       for (const msg of messages) {
-        if (!msg.message || msg.key.fromMe) continue;
+        if (!msg.message) continue;
+
+        const data = msg;
 
         const getProfilePicWithTimeout = (jid, timeout = 5000) => {
           return Promise.race([
@@ -74,16 +76,17 @@ class WhatsAppSession {
         };
 
         let profile_picture = null;
-
-        try {
-          profile_picture = await getProfilePicWithTimeout(msg.key.remoteJid);
-          console.log('Foto do perfil:', profile_picture);
-        } catch (err) {
-          console.log('Erro ao buscar foto:', err.message);
-        }
-
-        const data = msg;
+        profile_picture = await getProfilePicWithTimeout(msg.key.remoteJid);
         data.profile_picture = profile_picture;
+
+        // msg.key.fromMe
+        // console.log('DATA: ', data);
+
+        // if (msg.key.fromMe) {
+        //   // message.extendedTextMessage.contextInfo.stanzaId
+        //   console.log('FROM ME: ', data);
+        //   continue;
+        // }
 
         waEmitter.emit('received-message', { data });
       }

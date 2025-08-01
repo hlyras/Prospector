@@ -1,14 +1,14 @@
 <script>
   function websocketConnect() {
     return new Promise((resolve, reject) => {
-      // const socketUrl = 'ws://127.0.0.1:3005/ws';
+      const socketUrl = 'ws://127.0.0.1:3005/ws';
       // const socketUrl = 'ws://192.168.0.5:3005/ws';
-      const socketUrl = 'wss://1e0c0c4cd4f1.ngrok-free.app/ws';
+      // const socketUrl = 'wss://1e0c0c4cd4f1.ngrok-free.app/ws';
 
       const socket = new WebSocket(socketUrl);
 
       socket.onopen = function () {
-        console.log('Conexão estabelecida... Aguardando key');
+        console.log('Conexão estabelecida...');
         socket.send(JSON.stringify({ type: 'identify', sessionID: 'abc123' }));
       };
 
