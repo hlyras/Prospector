@@ -1,62 +1,16 @@
 <script>
-  function messageDiv(data) {
+  function messageDiv(message) {
     let message_div = lib.element.create("div", {
-      class: "box b1 container shadow padding-3 margin-top-10"
+      class: "box b1 container border-st right"
     });
+    // message.from_me && lib.addCss(message_div, ["right"]);
 
-    let profile_box = lib.element.create("div", {
-      class: "mobile-box b6 container v-center"
-    });
-    message_div.append(profile_box);
+    console.log(message);
 
-    // let profile_picture = lib.element.icon("b5", "50", data.profile_picture || "/images/icon/no-image.png");
-    let profile_picture = lib.element.create("img", {
-      class: "image-prop size-50 radius-50",
-      src: data.profile_picture || "/images/icon/no-image.png"
-    });
-    profile_box.append(profile_picture);
-
-    let info_box = lib.element.create("div", {
-      class: "mobile-box b5-6 container v-center"
-    });
-    message_div.append(info_box);
-
-    let name_box = lib.element.create("div", {
-      class: "mobile-box b2 container v-center"
-    });
-    info_box.append(name_box);
-
-    let name = lib.element.create("div", {
-      class: "mobile-box b1 lucida-grande rem08 bold text-shadow"
-    }, data.raw?.pushName
-      ? `${data.raw?.pushName}`
-      : "");
-    name_box.append(name);
-
-    let identify_box = lib.element.create("div", {
-      class: "mobile-box b2 container v-center"
-    });
-    info_box.append(identify_box);
-
-    let phone = lib.element.create("div", {
-      class: "mobile-box b1 rem08 text-shadow v-center right"
-    }, lib.splitTextBy(data.sender, "@")[0]);
-    identify_box.append(phone);
-
-    let datetime = lib.element.create("div", {
-      class: "mobile-box b1 rem07 text-shadow v-center right margin-top-5"
-    }, lib.timestampToFulldate(parseInt(`${data.raw.messageTimestamp}000`)));
-    identify_box.append(datetime);
-
-    let message_box = lib.element.create("div", {
-      class: "box b1 container"
-    });
-    message_div.append(message_box);
-
-    let message = lib.element.create("div", {
-      class: "mobile-box b1 rem09 v-center margin-top-5 pre-wrap"
-    }, data.content);
-    info_box.append(message);
+    let text_content = lib.element.create("div", {
+      class: "box b2-3 container wrap border-st"
+    }, message.content);
+    message_div.append(text_content);
 
     return message_div;
   };

@@ -1,0 +1,70 @@
+<div id="chat-container" class="box a3-4 container border-st"></div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const chat_container = document.getElementById("chat-container");
+    chat_container.style.height = window.innerHeight + "px";
+
+    let identity_box = lib.element.create("div", {
+      id: "identity-box",
+      class: "box a1 container border",
+      style: `height: ${parseInt(window.innerHeight) * 0.12}px;`
+    });
+    chat_container.append(identity_box);
+
+    let message_box = lib.element.create("div", {
+      id: "message-box",
+      class: "box a1 container border-st scroll-y",
+    });
+    chat_container.append(message_box);
+
+    let message_input_box = lib.element.create("div", {
+      id: "message-input-box",
+      class: "box a1 container border",
+      style: `height: ${parseInt(window.innerHeight) * 0.10}px;`
+    });
+    chat_container.append(message_input_box);
+
+    // functions
+    function resizeMessageBox() {
+      const containerHeight = chat_container.clientHeight;
+      const identityHeight = identity_box.offsetHeight;
+      const inputHeight = message_input_box.offsetHeight;
+
+      const availableHeight = containerHeight - identityHeight - inputHeight;
+      message_box.style.height = availableHeight + "px";
+    };
+
+    // events
+    window.addEventListener("resize", function () {
+      chat_container.style.height = window.innerHeight + "px";
+      console.log("A tela foi redimensionada. Nova altura:", window.innerHeight);
+
+      resizeMessageBox();
+    });
+
+    resizeMessageBox();
+  });
+
+  async function openChat(phone) {
+    let contact = await API.response(Contact.filter, { phone });
+    if (!contact) { return; }
+
+    contact.messages = await API.response(Message.filter, { contact_phone: phone });
+    if (!contact.messages) { return; }
+
+    console.log(contact.messages);
+
+    let identity_box = document.getElementById("identity-box");
+    let message_box = document.getElementById("message-box");
+    let message_input = document.getElementById("message-input-box");
+
+    contact.messages.forEach(message => {
+      message_box.append(messageDiv(message));
+    });
+  };
+
+  function identityDiv() {
+
+  };
+</script>

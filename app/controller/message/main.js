@@ -1,4 +1,3 @@
-const Contact = require("../../model/contact/main");
 const Message = require("../../model/message/main");
 const activeWebSockets = require('../../middleware/websocket/connectionStore'); // <== Aqui
 
@@ -14,6 +13,7 @@ messageController.receipt = async ({ data }) => {
   let message = new Message();
   message.wa_id = data.key.id;
   message.contact_phone = sender ? sender : null;
+  message.from_me = data.key.fromMe ? 1 : 0;
   message.datetime = data.messageTimestamp * 1000;
 
   if (data.message.extendedTextMessage) {
@@ -53,6 +53,28 @@ messageController.receipt = async ({ data }) => {
     };
   } catch (error) {
     console.log(error);
+  }
+};
+
+messageController.filter = async (req, res) => {
+  try {
+    let message_options = {
+      props: [],
+      strict_params: { keys: [], values: [] }
+    };
+
+    lib.Query.fillParam("message.contact_phone", req.body.contact_phone, message_options.strict_params);
+
+    let messages = await Message.filter(message_options);
+
+    if (!messages.length) {
+      return res.send(messages);
+    }
+
+    res.send(messages);
+  } catch (error) {
+    console.log(error);
+    res.send({ msg: "Ocorreu um erro ao filtrar os contatos" });
   }
 };
 

@@ -1,83 +1,116 @@
-<div class="box a1 container">
-  <div id="lead-create-btn" class="mobile-box container ground right margin-right-10">
-    <img id="lead-icon" class='image-prop size-40 shadow-lg-st radius-5 opacity-out-09 padding-8 margin-right-5 pointer'
-      src='/images/icon/add-lead.png'>
+<div class="box a1 container ground padding-4">
+  <div id="contact-create-btn" class="mobile-box container ground right">
+    <img id="contact-icon" class='image-prop size-20 shadow-lg-st radius-5 opacity-out-09 padding-8 pointer'
+      src='/images/icon/add-contact.png'>
+  </div>
+  <div id="contact-create-box" class="box a1 container h-center" style="display:none;">
   </div>
 </div>
 
 <script>
+  function createForm() {
+    let contact_create_form = lib.element.create('form', {
+      class: "box a1 container ground padding-10 h-center margin-top-5",
+    });
+
+    let contact_create_title = lib.element.create("h2", {
+      class: "box b1 underline lucida-grande bold rem10 text-shadow center",
+    }, "Novo contato");
+    contact_create_form.append(contact_create_title);
+
+    contact_create_form.append(lib.element.create("div", {
+      class: "box b1 lucida-grande bold rem08 margin-top-10"
+    }, "Nome da empresa"));
+    let contact_create_business = lib.element.create("input", {
+      class: "box b1 lucida-grande rem08 border-bottom-lg-st padding-10",
+      placeholder: "Nome da empresa que está prospectando",
+      role: "presentation",
+      autocomplete: "off"
+    });
+    contact_create_form.append(contact_create_business);
+
+    contact_create_form.append(lib.element.create("div", {
+      class: "box b1 lucida-grande bold rem08 margin-top-10"
+    }, "WhatsApp da empresa"));
+    let contact_create_phone = lib.element.create("input", {
+      class: "box b1 lucida-grande rem08 border-bottom-lg-st padding-10",
+      placeholder: "WhatsApp da empresa",
+      role: "presentation",
+      autocomplete: "off"
+    });
+    contact_create_form.append(contact_create_phone);
+
+    contact_create_form.append(lib.element.create("div", {
+      class: "box b1 lucida-grande bold rem08 margin-top-10"
+    }, "Ativar conversa automática."));
+    let contact_create_chat = lib.element.create("select", {
+      class: "box b1 lucida-grande rem08 disable-selected border-bottom-lg-st padding-10",
+    });
+    contact_create_form.append(contact_create_chat);
+
+    contact_create_chat.append(lib.element.create("option", {
+      value: 1,
+    }, "Ativar conversa automática"));
+
+    contact_create_chat.append(lib.element.create("option", {
+      value: 0,
+    }, "Desativar conversa automática"));
+
+    let submit_button = lib.element.create("input", {
+      type: "submit",
+      class: "box b1 btn-act lucida-grande bold noborder radius-3 shadow-lg-st padding-10 margin-top-10 pointer",
+      name: "submit",
+      value: "Iniciar prospecção"
+    });
+    contact_create_form.append(submit_button);
+
+    contact_create_form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      let contact_options = {
+        business: contact_create_business.value,
+        phone: contact_create_phone.value,
+        autochat: contact_create_chat.value
+      };
+
+      let response = await API.response(Contact.create, contact_options);
+      if (!response) { return; }
+
+      let { contacts, messages } = await API.response(Contact.filter, {});
+      for (let i in contacts) {
+        contacts[i].messages = messages.filter(msg => msg.contact_phone == contacts[i].phone);
+      };
+      contactFilter(contacts);
+
+      let contact_create_box = document.getElementById('contact-create-box');
+      let contact_icon = document.getElementById("contact-icon");
+      contact_icon.src = "/images/icon/add-contact.png";
+      contact_create_box.style.display = "none";
+
+      lib.message(response.done || response.error, () => {
+
+      });
+    });
+
+    return contact_create_form;
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
-    let lead_create_btn = document.getElementById('lead-create-btn');
+    let contact_create_btn = document.getElementById('contact-create-btn');
+    let contact_create_box = document.getElementById('contact-create-box');
 
-    lead_create_btn.addEventListener('click', () => {
-      let lead_create_form = lib.element.create('form', {
-        class: "box b1 container padding-10 h-center",
-      });
-      lib.popup(lead_create_form);
+    contact_create_box.append(createForm());
 
-      let lead_create_title = lib.element.create("h2", {
-        class: "box b2-3 underline lucida-grande bold margin-top-15 center",
-      }, "Novo Lead");
-      lead_create_form.append(lead_create_title);
+    contact_create_btn.addEventListener('click', () => {
+      let contact_icon = document.getElementById("contact-icon");
 
-      let lead_create_business = lib.element.create("input", {
-        class: "box b2-3 lucida-grande border-st radius-3 shadow padding-10 margin-top-5",
-        placeholder: "Nome da empresa",
-        role: "presentation",
-        autocomplete: "off"
-      });
-      lead_create_form.append(lead_create_business);
-
-      let lead_create_phone = lib.element.create("input", {
-        class: "box b2-3 lucida-grande border-st radius-3 shadow padding-10 margin-top-5",
-        placeholder: "Telefone",
-        role: "presentation",
-        autocomplete: "off"
-      });
-      lead_create_form.append(lead_create_phone);
-
-      let lead_create_chat = lib.element.create("select", {
-        class: "box b2-3 lucida-grande disable-selected border-st radius-3 shadow padding-10 margin-top-5",
-      });
-      lead_create_form.append(lead_create_chat);
-
-      lead_create_chat.append(lib.element.create("option", {
-        value: 1,
-      }, "Iniciar conversa automaticamente"));
-
-      lead_create_chat.append(lib.element.create("option", {
-        value: 0,
-      }, "Chat automático desativado"));
-
-      let submit_button = lib.element.create("input", {
-        type: "submit",
-        class: "box b2-3 btn-act lucida-grande bold noborder radius-3 shadow-lg-st padding-10 margin-top-10 pointer",
-        name: "submit",
-      });
-      lead_create_form.append(submit_button);
-
-      lead_create_form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        let lead_options = {
-          business: lead_create_business.value,
-          phone: lead_create_phone.value,
-          autochat: lead_create_chat.value
-        };
-
-        let response = await API.response(Lead.create, lead_options);
-
-
-        // let { contacts, messages } = await API.response(Contact.filter, {});
-        // for (let i in contacts) {
-        //   contacts[i].messages = messages.filter(msg => msg.contact_phone == contacts[i].phone);
-        // };
-        // contactFilter(contacts);
-
-        lib.message(response.done || response.error, () => {
-          lib.popout(lead_create_form);
-        });
-      });
+      if (contact_create_box.style.display === "none") {
+        contact_icon.src = "/images/icon/close-x.png";
+        contact_create_box.style.display = "";
+      } else {
+        contact_icon.src = "/images/icon/add-contact.png";
+        contact_create_box.style.display = "none";
+      }
     });
   });
 </script>

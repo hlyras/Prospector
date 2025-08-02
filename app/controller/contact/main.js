@@ -1,8 +1,10 @@
+const lib = require('jarmlib');
+
 const wa = require('../../middleware/baileys/main');
+const { getProfilePicWithTimeout } = require('../../middleware/baileys/controller');
+
 const Contact = require("../../model/contact/main");
 const Message = require("../../model/message/main");
-
-const lib = require('jarmlib');
 
 const contactController = {};
 
@@ -10,47 +12,34 @@ contactController.create = async (req, res) => {
   let contact = new Contact();
   contact.business = req.body.business;
   contact.phone = req.body.phone;
+  contact.participant = req.body.participant;
   contact.name = req.body.name;
-  contact.autochat = req.body.autochat || 0;
-
-  const getProfilePicWithTimeout = (jid, timeout = 5000) => {
-    return Promise.race([
-      wa.getSocket().profilePictureUrl(jid, 'image'),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout ao buscar foto de perfil')), timeout)
-      )
-    ]);
-  };
+  contact.autochat = !isNaN(req.body.autochat)
+    ? parseInt(req.body.autochat) : 0;
+  contact.created = 1;
 
   let profile_picture = null;
-
-  try {
-    profile_picture = await getProfilePicWithTimeout(`${contact.phone}@s.whatsapp.net`);
-    console.log('Foto do perfil:', profile_picture);
-  } catch (err) {
-    console.log('Erro ao buscar foto:', err.message);
-  }
-
+  profile_picture = await getProfilePicWithTimeout(wa.getSocket(), `${contact.phone}`);
   contact.profile_picture = profile_picture;
 
   console.log(contact);
 
   try {
-    // let contact_create_response = await contact.create();
-    // if (contact_create_response.err) {
-    //   return res.status(500).send({
-    //     msg: contact_create_response.err
-    //   });
-    // }
+    let contact_create_response = await contact.create();
+    if (contact_create_response.err) {
+      return res.status(500).send({
+        msg: contact_create_response.err
+      });
+    }
 
-    // if (contact.autochat) {
-    //   if (wa.isConnected()) {
-    //     const jid = contact.phone + '@s.whatsapp.net';
-    //     await wa.getSocket().sendMessage(jid, { text: `Olá é da ${contact.business}` });
-    //   } else {
-    //     console.warn("WhatsApp não está pronto para enviar mensagens.");
-    //   }
-    // }
+    if (contact.autochat) {
+      if (wa.isConnected()) {
+        const jid = contact.phone + '@s.whatsapp.net';
+        await wa.getSocket().sendMessage(jid, { text: `Olá é da ${contact.business}` });
+      } else {
+        console.warn("WhatsApp não está pronto para enviar mensagens.");
+      }
+    }
 
     res.status(201).send({ done: "Contato criado com sucesso!", contact });
   } catch (error) {
@@ -91,30 +80,33 @@ contactController.update = async (req, res) => {
 
 contactController.filter = async (req, res) => {
   try {
-    let contacts = await Contact.filter({});
+    let contact_options = {
+      props: [
+        "contact.*",
+        "last_message.type last_message_type",
+        "last_message.content last_message_content",
+        "last_message.wa_id last_message_wa_id",
+        "last_message.from_me last_message_from_me",
+        "last_message.datetime last_message_datetime",
+      ],
+      lefts: [
+        ["cms_prospector.message last_message",
+          "last_message.contact_phone", "contact.phone",
+          "last_message.datetime", "(SELECT MAX(datetime) FROM cms_prospector.message WHERE contact_phone = contact.phone)"
+        ]
+      ],
+      strict_params: { keys: [], values: [] }
+    };
+
+    lib.Query.fillParam("contact.phone", req.body.phone, contact_options.strict_params);
+
+    let contacts = await Contact.filter(contact_options);
 
     if (!contacts.length) {
-      return res.send({ contacts, messages: [] });
+      return res.send(contacts);
     }
 
-    let contact_list = [];
-
-    for (let i in contacts) {
-      contact_list.push(contacts[i].phone);
-    };
-
-    let message_options = {
-      props: [],
-      in_params: { keys: [], values: [] },
-      order_params: [["datetime", "desc"]]
-    };
-
-    lib.Query.fillParam("contact_phone",
-      [contact_list], message_options.in_params);
-
-    let messages = await Message.filter(message_options);
-
-    res.send({ contacts, messages });
+    res.send(contacts);
   } catch (error) {
     console.log(error);
     res.send({ msg: "Ocorreu um erro ao filtrar os contatos" });

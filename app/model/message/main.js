@@ -27,15 +27,17 @@ const Message = function () {
   };
 };
 
-Message.filter = ({ props, inners, params, strict_params, in_params, order_params }) => {
+Message.filter = ({ props, inners, lefts, params, strict_params, in_params, order_params, limit }) => {
   let { query, values } = new lib.Query().select()
     .props(props)
     .table("cms_prospector.message")
     .inners(inners)
+    .lefts(lefts)
     .params(params)
     .strictParams(strict_params)
     .inParams(in_params)
-    .order(order_params).build();
+    .order(order_params)
+    .limit(limit).build();
   return db(query, values);
 };
 

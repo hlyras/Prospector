@@ -19,7 +19,7 @@ const Contact = function () {
   };
 
   this.update = () => {
-    if (!this.phone) { return { err: "O id da tarefa é inválido" }; }
+    if (!this.phone) { return { err: "O telefone do contato é inválido" }; }
 
     let obj = lib.convertTo.object(this);
     let { query, values } = lib.Query.update(obj, 'cms_prospector.contact', 'phone');
@@ -28,11 +28,12 @@ const Contact = function () {
   };
 };
 
-Contact.filter = ({ props, inners, params, strict_params, order_params }) => {
+Contact.filter = ({ props, inners, lefts, params, strict_params, order_params }) => {
   let { query, values } = new lib.Query().select()
     .props(props)
     .table("cms_prospector.contact")
     .inners(inners)
+    .lefts(lefts)
     .params(params)
     .strictParams(strict_params)
     .order(order_params).build();

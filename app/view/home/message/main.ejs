@@ -1,9 +1,10 @@
+<%- include('./div.ejs') %>
+
 <script>
   async function receivedMessage({ data, message }) {
-    console.log('data', data);
+    console.log('Message', data);
 
     let sender = lib.splitTextBy(data.key.remoteJid, "@")[0];
-    console.log('sender', sender);
     if (!sender) return;
 
     let contact_div = document.getElementById(`contact-${sender}`);
@@ -19,8 +20,9 @@
 
       response.done && (profile_picture.src = data.profile_picture);
     } else {
-      if (profile_picture?.src && profile_picture?.src != data.profile_picture) {
+      if ((data.profile_picture && profile_picture.src) && profile_picture.src != data.profile_picture) {
         let response = await API.response(Contact.update, {
+          phone: sender,
           profile_picture: data.profile_picture
         }, profile_picture);
       }
@@ -32,6 +34,13 @@
 
     let last_message = document.getElementById(`last-message-${sender}`);
     last_message.innerHTML = "";
-    last_message.innerHTML = message.content;
+
+    if (message.type == "conversation" || message.type == "text") {
+      last_message.innerHTML = lib.string.cut(message.content, 30);
+    }
+
+    if (message.type == "image") { last_message.innerHTML = "📸 Foto"; }
+    if (message.type == "video") { last_message.innerHTML = "🎬 Vídeo"; }
+    if (message.type == "audio") { last_message.innerHTML = "🔊 Áudio"; }
   };
 </script>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html style="height:100%;">
 
 <head>
   <%- include('./../partials/head.ejs') %>
@@ -8,13 +8,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 
-<body>
-  <%- include('./../partials/header.ejs') %>
-
+<body style="height:100%;">
   <div id="qrcode" class="padding-10"></div>
 
-  <section id="prospector-container" class="container margin-top-10">
+  <section id="prospector-container" class="container" style="height:100%;">
     <%- include('./contact/main.ejs') %>
+    <%- include('./chat/main.ejs') %>
   </section>
 </body>
 
@@ -23,6 +22,7 @@
 
   <script src="/js/messenger.js"></script>
   <script src="/js/contact/main.js"></script>
+  <script src="/js/message/main.js"></script>
 
   <%- include('./message/main.ejs') %>
 

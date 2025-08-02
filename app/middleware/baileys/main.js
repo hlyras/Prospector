@@ -1,6 +1,7 @@
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const { Boom } = require('@hapi/boom');
 const waEmitter = require('./emitter');
+const { getProfilePicWithTimeout } = require('./controller');
 
 let instance = null;
 
@@ -66,17 +67,8 @@ class WhatsAppSession {
 
         const data = msg;
 
-        const getProfilePicWithTimeout = (jid, timeout = 5000) => {
-          return Promise.race([
-            this.sock.profilePictureUrl(jid, 'image'),
-            new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Timeout ao buscar foto de perfil')), timeout)
-            )
-          ]);
-        };
-
         let profile_picture = null;
-        profile_picture = await getProfilePicWithTimeout(msg.key.remoteJid);
+        profile_picture = await getProfilePicWithTimeout(this.sock, msg.key.remoteJid);
         data.profile_picture = profile_picture;
 
         // msg.key.fromMe

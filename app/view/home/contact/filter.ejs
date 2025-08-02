@@ -1,18 +1,14 @@
-<div id="contact-filter-box" class="box a1 container border-top margin-top-10"></div>
+<div id="contact-filter-box" class="box a1 container"></div>
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
-    let { contacts, messages } = await API.response(Contact.filter, {});
-
-    for (let i in contacts) {
-      contacts[i].messages = messages.filter(msg => msg.contact_phone == contacts[i].phone);
-    };
-
+    let contacts = await API.response(Contact.filter, {});
     contactFilter(contacts);
   });
 
   function contactFilter(contacts) {
     let contact_box = document.getElementById("contact-filter-box");
+    contact_box.innerHTML = "";
 
     if (!contacts.length) {
       contact_box.innerHTML = "";
