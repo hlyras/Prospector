@@ -62,7 +62,7 @@
     let last_message = lib.element.create("div", {
       id: `last-message-${contact.phone}`,
       class: "mobile-box b3-4 em07 v-center margin-top-5 pre-wrap"
-    }, contact.last_message_content ? lib.string.cut(contact.last_message_content, 15) : null);
+    }, contact.last_message_content ? lib.string.cut(contact.last_message_content, 20) : null);
     last_message_box.append(last_message);
 
     let datetime = lib.element.create("div", {

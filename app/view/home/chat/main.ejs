@@ -12,7 +12,7 @@
     let identity_box = lib.element.create("div", {
       id: "identity-box",
       class: "box a1 container ground",
-      style: `height: ${parseInt(window.innerHeight) * 0.12}px;`
+      style: `height: ${parseInt(window.innerHeight) * 0.08}px;`
     });
     chat_container.append(identity_box);
 
@@ -51,7 +51,7 @@
   });
 
   async function openChat(phone) {
-    let contact = await API.response(Contact.filter, { phone });
+    let contact = (await API.response(Contact.filter, { phone }))[0];
     if (!contact) { return; }
 
     currentChatContact = phone;
@@ -63,6 +63,34 @@
     let message_box = document.getElementById("message-box");
     let message_input = document.getElementById("message-input-box");
 
+    // identity box
+    identity_box.innerHTML = "";
+    let identity_info_box = lib.element.create("div", {
+      class: "mobile-box container margin-left-10",
+      style: "align-self: center;"
+    });
+    identity_box.append(identity_info_box);
+
+    let profile_picture = lib.element.create("img", {
+      class: "image-prop size-35 radius-50 v-center",
+      src: contact.profile_picture || "/images/icon/profile.png",
+    });
+    identity_info_box.append(profile_picture);
+
+    let identity_contact_box = lib.element.create("div", {
+      class: "mobile-box container v-center padding-left-10"
+    });
+    identity_info_box.append(identity_contact_box);
+
+    identity_contact_box.append(lib.element.create("div", {
+      class: "mobile-box b1 lucida-grande em09 text-shadow v-center"
+    }, contact.business || contact.name || ""));
+
+    identity_contact_box.append(lib.element.create("div", {
+      class: "mobile-box b1 em08 text-shadow v-center"
+    }, contact.phone));
+
+    // Message box
     message_box.innerHTML = "";
 
     contact.messages = lib.sort(contact.messages, "datetime");
@@ -72,11 +100,6 @@
     });
 
     message_box.scrollTop = message_box.scrollHeight;
-
-    // message_box.scrollTo({
-    //   top: message_box.scrollHeight,
-    //   behavior: "smooth"
-    // });
   };
 
   function identityDiv() {
