@@ -76,10 +76,7 @@
       let response = await API.response(Contact.create, contact_options);
       if (!response) { return; }
 
-      let { contacts, messages } = await API.response(Contact.filter, {});
-      for (let i in contacts) {
-        contacts[i].messages = messages.filter(msg => msg.contact_phone == contacts[i].phone);
-      };
+      let contacts = await API.response(Contact.filter, {});
       contactFilter(contacts);
 
       let contact_create_box = document.getElementById('contact-create-box');
@@ -87,9 +84,7 @@
       contact_icon.src = "/images/icon/add-contact.png";
       contact_create_box.style.display = "none";
 
-      lib.message(response.done || response.error, () => {
-
-      });
+      lib.message(response.done || response.error);
     });
 
     return contact_create_form;

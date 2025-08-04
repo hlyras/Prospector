@@ -18,11 +18,11 @@ contactController.create = async (req, res) => {
     ? parseInt(req.body.autochat) : 0;
   contact.created = 1;
 
-  let profile_picture = null;
-  profile_picture = await getProfilePicWithTimeout(wa.getSocket(), `${contact.phone}`);
-  contact.profile_picture = profile_picture;
+  const jid = `${contact.phone}@s.whatsapp.net`;
 
-  console.log(contact);
+  let profile_picture = null;
+  profile_picture = await getProfilePicWithTimeout(wa.getSocket(), jid);
+  contact.profile_picture = profile_picture;
 
   try {
     let contact_create_response = await contact.create();
@@ -34,7 +34,6 @@ contactController.create = async (req, res) => {
 
     if (contact.autochat) {
       if (wa.isConnected()) {
-        const jid = contact.phone + '@s.whatsapp.net';
         await wa.getSocket().sendMessage(jid, { text: `Olá é da ${contact.business}` });
       } else {
         console.warn("WhatsApp não está pronto para enviar mensagens.");

@@ -39,6 +39,10 @@
         src: message.content
       });
       message_content.append(image_content);
+
+      image_content.addEventListener("click", () => {
+        lib.image.zoom(message.content);
+      });
     }
 
     if (message.type == "audio") {
