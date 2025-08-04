@@ -1,26 +1,30 @@
-<div id="chat-container" class="box a3-4 container border-st"></div>
+<div id="chat-container" class="box a3-4 container"
+  style="background-image: url('images/bg/chat/bg-1.png'); background-size: cover; background-position: center;">
+</div>
 
 <script>
+  let currentChatContact = null;
+
   document.addEventListener("DOMContentLoaded", () => {
     const chat_container = document.getElementById("chat-container");
     chat_container.style.height = window.innerHeight + "px";
 
     let identity_box = lib.element.create("div", {
       id: "identity-box",
-      class: "box a1 container border",
+      class: "box a1 container ground",
       style: `height: ${parseInt(window.innerHeight) * 0.12}px;`
     });
     chat_container.append(identity_box);
 
     let message_box = lib.element.create("div", {
       id: "message-box",
-      class: "box a1 container border-st scroll-y",
+      class: "box a1 container scroll-y padding-20",
     });
     chat_container.append(message_box);
 
     let message_input_box = lib.element.create("div", {
       id: "message-input-box",
-      class: "box a1 container border",
+      class: "box a1 container ground",
       style: `height: ${parseInt(window.innerHeight) * 0.10}px;`
     });
     chat_container.append(message_input_box);
@@ -50,18 +54,29 @@
     let contact = await API.response(Contact.filter, { phone });
     if (!contact) { return; }
 
+    currentChatContact = phone;
+
     contact.messages = await API.response(Message.filter, { contact_phone: phone });
     if (!contact.messages) { return; }
-
-    console.log(contact.messages);
 
     let identity_box = document.getElementById("identity-box");
     let message_box = document.getElementById("message-box");
     let message_input = document.getElementById("message-input-box");
 
+    message_box.innerHTML = "";
+
+    contact.messages = lib.sort(contact.messages, "datetime");
+
     contact.messages.forEach(message => {
       message_box.append(messageDiv(message));
     });
+
+    message_box.scrollTop = message_box.scrollHeight;
+
+    // message_box.scrollTo({
+    //   top: message_box.scrollHeight,
+    //   behavior: "smooth"
+    // });
   };
 
   function identityDiv() {

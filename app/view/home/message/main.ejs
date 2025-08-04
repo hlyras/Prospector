@@ -10,6 +10,11 @@
     let contact_div = document.getElementById(`contact-${sender}`);
     if (!contact_div) return;
 
+    if (currentChatContact == sender) {
+      let message_div = messageDiv(message);
+      document.getElementById("message-box").append(message_div);
+    }
+
     let profile_picture = document.getElementById(`profile-picture-${sender}`);
 
     if (data.profile_picture && profile_picture?.dataset.empty) {

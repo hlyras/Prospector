@@ -3,6 +3,9 @@ const activeWebSockets = require('../../middleware/websocket/connectionStore'); 
 
 const lib = require('jarmlib');
 
+const wa = require('../../middleware/baileys/main');
+const { downloadMedia } = require('../../middleware/baileys/controller');
+
 const messageController = {};
 
 messageController.receipt = async ({ data }) => {
@@ -15,6 +18,7 @@ messageController.receipt = async ({ data }) => {
   message.contact_phone = sender ? sender : null;
   message.from_me = data.key.fromMe ? 1 : 0;
   message.datetime = data.messageTimestamp * 1000;
+  message.raw = JSON.stringify(data);
 
   if (data.message.extendedTextMessage) {
     message.type = "text";
@@ -28,17 +32,17 @@ messageController.receipt = async ({ data }) => {
 
   if (data.message.imageMessage) {
     message.type = "image";
-    message.content = data.message.imageMessage.url;
+    message.content = await downloadMedia(data, wa.getSocket());
   }
 
   if (data.message.audioMessage) {
     message.type = "audio";
-    message.content = data.message.audioMessage.url;
+    message.content = await downloadMedia(data, wa.getSocket());
   }
 
   if (data.message.videoMessage) {
     message.type = "video";
-    message.content = data.message.videoMessage.url;
+    message.content = await downloadMedia(data, wa.getSocket());
   }
 
   try {

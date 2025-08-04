@@ -1,16 +1,67 @@
 <script>
   function messageDiv(message) {
     let message_div = lib.element.create("div", {
-      class: "box b1 container border-st right"
+      class: "box b2-3 container margin-top-5"
     });
-    // message.from_me && lib.addCss(message_div, ["right"]);
 
-    console.log(message);
+    if (message.from_me == 1) {
+      message_div.style.marginLeft = "auto";
+    }
 
-    let text_content = lib.element.create("div", {
-      class: "box b2-3 container wrap border-st"
-    }, message.content);
-    message_div.append(text_content);
+    let message_content = lib.element.create("div", {
+      class: "mobile-box container padding-3",
+      style: "max-width: 100%;display: inline-block;"
+    });
+    message_div.append(message_content);
+
+    if (message.from_me == 1) {
+      message_content.style.marginLeft = "auto";
+      lib.addCss(message_content, ["speech-triangle-right"]);
+    } else {
+      lib.addCss(message_content, ["speech-triangle-left"]);
+    }
+
+    if (message.type == "text" || message.type == "conversation") {
+      let text_content = lib.element.create("div", {
+        class: "mobile-box wrap ground radius-5 lucida-grande rem08 padding-top-2 padding-right-10 padding-left-10 padding-bottom-2",
+        style: `
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+        `
+      }, message.content);
+      message_content.append(text_content);
+    }
+
+    if (message.type == "image") {
+      let image_content = lib.element.create("img", {
+        class: "image-prop height-250",
+        src: message.content
+      });
+      message_content.append(image_content);
+    }
+
+    if (message.type == "audio") {
+      let audio_content = lib.element.create("audio", {
+        controls: true,
+        src: message.content
+      });
+      message_content.append(audio_content);
+    }
+
+    if (message.type == "video") {
+      let video_content = lib.element.create("video", {
+        class: "height-250",
+        controls: true,
+        src: message.content
+      });
+      message_content.append(video_content);
+    }
+
+    let message_datetime = lib.element.create("div", {
+      class: "mobile-box rem06 padding-bottom-2 padding-left-5 padding-right-5 right"
+    }, lib.timestampToFulldate(message.datetime));
+    message_content.append(message_datetime);
 
     return message_div;
   };
