@@ -19,10 +19,10 @@ const Contact = function () {
   };
 
   this.update = () => {
-    if (!this.phone) { return { err: "O telefone do contato é inválido" }; }
+    if (!this.jid) { return { err: "O telefone do contato é inválido" }; }
 
     let obj = lib.convertTo.object(this);
-    let { query, values } = lib.Query.update(obj, 'cms_prospector.contact', 'phone');
+    let { query, values } = lib.Query.update(obj, 'cms_prospector.contact', 'jid');
 
     return db(query, values);
   };
@@ -37,6 +37,28 @@ Contact.filter = ({ props, inners, lefts, params, strict_params, order_params })
     .params(params)
     .strictParams(strict_params)
     .order(order_params).build();
+  return db(query, values);
+};
+
+Contact.findByJid = (jid) => {
+  let { query, values } = new lib.Query().select()
+    .props([
+      "contact.*",
+      "last_message.type last_message_type",
+      "last_message.content last_message_content",
+      "last_message.wa_id last_message_wa_id",
+      "last_message.participant last_message_participant",
+      "last_message.from_me last_message_from_me",
+      "last_message.datetime last_message_datetime"
+    ])
+    .table("cms_prospector.contact")
+    .lefts([["cms_prospector.message last_message",
+      "last_message.jid", "contact.jid",
+      "last_message.datetime", "(SELECT MAX(datetime) FROM cms_prospector.message WHERE message.jid = contact.jid)"
+    ]])
+    .strictParams({ keys: ["contact.jid"], values: [jid] })
+    .build();
+  console.log(query);
   return db(query, values);
 };
 

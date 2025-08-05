@@ -11,17 +11,15 @@ const contactController = {};
 contactController.create = async (req, res) => {
   let contact = new Contact();
   contact.business = req.body.business;
-  contact.phone = req.body.phone;
-  contact.participant = req.body.participant;
+  contact.jid = `${req.body.jid}@s.whatsapp.net`;
+  contact.participant = null;
   contact.name = req.body.name;
   contact.autochat = !isNaN(req.body.autochat)
     ? parseInt(req.body.autochat) : 0;
   contact.created = 1;
 
-  const jid = `${contact.phone}@s.whatsapp.net`;
-
   let profile_picture = null;
-  profile_picture = await getProfilePicWithTimeout(wa.getSocket(), jid);
+  profile_picture = await getProfilePicWithTimeout(wa.getSocket(), contact.jid);
   contact.profile_picture = profile_picture;
 
   try {
@@ -34,7 +32,9 @@ contactController.create = async (req, res) => {
 
     if (contact.autochat) {
       if (wa.isConnected()) {
-        await wa.getSocket().sendMessage(jid, { text: `Olá é da ${contact.business}` });
+        await wa.getSocket().sendMessage(contact.jid, {
+          text: `Olá é da ${contact.business}`
+        });
       } else {
         console.warn("WhatsApp não está pronto para enviar mensagens.");
       }
@@ -49,7 +49,7 @@ contactController.create = async (req, res) => {
 
 contactController.update = async (req, res) => {
   let contact = new Contact();
-  contact.phone = req.body.phone;
+  contact.jid = req.body.jid;
   contact.business = req.body.business;
   contact.name = req.body.name;
   contact.autochat = req.body.autochat;
@@ -63,8 +63,7 @@ contactController.update = async (req, res) => {
 
     if (contact.autochat) {
       if (wa.isConnected()) {
-        const jid = contact.phone + '@s.whatsapp.net';
-        await wa.getSocket().sendMessage(jid, { text: `Olá é da ${contact.business}` });
+        await wa.getSocket().sendMessage(contact.jid, { text: `Olá é da ${contact.business}` });
       } else {
         console.warn("WhatsApp não está pronto para enviar mensagens.");
       }
@@ -85,20 +84,20 @@ contactController.filter = async (req, res) => {
         "last_message.type last_message_type",
         "last_message.content last_message_content",
         "last_message.wa_id last_message_wa_id",
+        "last_message.participant last_message_participant",
         "last_message.from_me last_message_from_me",
         "last_message.datetime last_message_datetime",
       ],
       lefts: [
         ["cms_prospector.message last_message",
-          "last_message.contact_phone", "contact.phone",
-          "last_message.datetime", "(SELECT MAX(datetime) FROM cms_prospector.message WHERE contact_phone = contact.phone)"
+          "last_message.jid", "contact.jid",
+          "last_message.datetime", "(SELECT MAX(datetime) FROM cms_prospector.message WHERE jid = contact.jid)"
         ]
       ],
       strict_params: { keys: [], values: [] }
     };
 
-    lib.Query.fillParam("contact.phone", req.body.phone, contact_options.strict_params);
-
+    lib.Query.fillParam("contact.jid", req.body.jid, contact_options.strict_params);
     let contacts = await Contact.filter(contact_options);
 
     if (!contacts.length) {

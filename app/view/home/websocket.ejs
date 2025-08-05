@@ -15,6 +15,10 @@
       socket.onmessage = (event) => {
         const { data, message } = JSON.parse(event.data);
 
+        if (!data.key.remoteJid) {
+          return;
+        }
+
         if (lib.splitTextBy(data.key.remoteJid)[0] == "status") {
           return;
         }

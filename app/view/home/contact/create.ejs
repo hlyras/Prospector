@@ -32,13 +32,13 @@
     contact_create_form.append(lib.element.create("div", {
       class: "box b1 lucida-grande bold rem08 margin-top-10"
     }, "WhatsApp da empresa"));
-    let contact_create_phone = lib.element.create("input", {
+    let contact_create_jid = lib.element.create("input", {
       class: "box b1 lucida-grande rem08 border-bottom-lg-st padding-10",
       placeholder: "WhatsApp da empresa",
       role: "presentation",
       autocomplete: "off"
     });
-    contact_create_form.append(contact_create_phone);
+    contact_create_form.append(contact_create_jid);
 
     contact_create_form.append(lib.element.create("div", {
       class: "box b1 lucida-grande bold rem08 margin-top-10"
@@ -69,7 +69,7 @@
 
       let contact_options = {
         business: contact_create_business.value,
-        phone: contact_create_phone.value,
+        jid: contact_create_jid.value,
         autochat: contact_create_chat.value
       };
 

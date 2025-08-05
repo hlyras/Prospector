@@ -4,13 +4,19 @@ const path = require("path");
 const mime = require("mime-types");
 
 function getProfilePicWithTimeout(waSocket, jid, timeout = 5000) {
+  if (jid.endsWith('@g.us')) return Promise.resolve(null); // evita erro para grupos
+
   return Promise.race([
-    waSocket.profilePictureUrl(jid, 'image'),
-    new Promise((resolve) =>
-      setTimeout(() => resolve(null), timeout)
-    )
+    (async () => {
+      try {
+        return await waSocket.profilePictureUrl(jid, 'image');
+      } catch (err) {
+        return null;
+      }
+    })(),
+    new Promise((resolve) => setTimeout(() => resolve(null), timeout))
   ]);
-};
+}
 
 async function downloadMedia(data, sock) {
   const supportedTypes = {

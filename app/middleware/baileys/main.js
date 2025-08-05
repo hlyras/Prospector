@@ -1,7 +1,6 @@
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const { Boom } = require('@hapi/boom');
 const waEmitter = require('./emitter');
-const { getProfilePicWithTimeout } = require('./controller');
 
 let instance = null;
 
@@ -66,20 +65,6 @@ class WhatsAppSession {
         if (!msg.message) continue;
 
         const data = msg;
-
-        let profile_picture = null;
-        profile_picture = await getProfilePicWithTimeout(this.sock, msg.key.remoteJid);
-        data.profile_picture = profile_picture;
-
-        // msg.key.fromMe
-        // console.log('DATA: ', data);
-
-        // if (msg.key.fromMe) {
-        //   // message.extendedTextMessage.contextInfo.stanzaId
-        //   console.log('FROM ME: ', data);
-        //   continue;
-        // }
-
         waEmitter.emit('received-message', { data });
       }
     });

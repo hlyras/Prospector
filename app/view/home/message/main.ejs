@@ -2,24 +2,29 @@
 
 <script>
   async function receivedMessage({ data, message }) {
-    console.log('Message', data);
+    let contact_div = document.getElementById(`contact-${data.key.remoteJid}`);
+    if (!contact_div) {
+      let contact_box = document.getElementById("contact-filter-box");
 
-    let sender = lib.splitTextBy(data.key.remoteJid, "@")[0];
-    if (!sender) return;
+      let contact = (await API.response(Contact.filter, {
+        jid: data.key.remoteJid
+      }))[0];
+      if (!contact) return;
 
-    let contact_div = document.getElementById(`contact-${sender}`);
-    if (!contact_div) return;
+      contact_div = contactDiv(contact);
+      contact_box.prepend(contact_div);
+    }
 
-    if (currentChatContact == sender) {
+    if (currentChatContact == data.key.remoteJid) {
       let message_div = messageDiv(message);
       document.getElementById("message-box").append(message_div);
     }
 
-    let profile_picture = document.getElementById(`profile-picture-${sender}`);
+    let profile_picture = document.getElementById(`profile-picture-${data.key.remoteJid}`);
 
     if (data.profile_picture && profile_picture?.dataset.empty) {
       let response = await API.response(Contact.update, {
-        phone: sender,
+        jid: data.key.remoteJid,
         profile_picture: data.profile_picture
       }, profile_picture);
 
@@ -27,25 +32,10 @@
     } else {
       if ((data.profile_picture && profile_picture.src) && profile_picture.src != data.profile_picture) {
         let response = await API.response(Contact.update, {
-          phone: sender,
+          jid: data.key.remoteJid,
           profile_picture: data.profile_picture
         }, profile_picture);
       }
     }
-
-    let last_message_datetime = document.getElementById(`last-message-datetime-${sender}`);
-    last_message_datetime.innerHTML = "";
-    last_message_datetime.innerHTML = lib.timestampToFulldate(message.datetime);
-
-    let last_message = document.getElementById(`last-message-${sender}`);
-    last_message.innerHTML = "";
-
-    if (message.type == "conversation" || message.type == "text") {
-      last_message.innerHTML = lib.string.cut(message.content, 30);
-    }
-
-    if (message.type == "image") { last_message.innerHTML = "📸 Foto"; }
-    if (message.type == "video") { last_message.innerHTML = "🎬 Vídeo"; }
-    if (message.type == "audio") { last_message.innerHTML = "🔊 Áudio"; }
   };
 </script>
