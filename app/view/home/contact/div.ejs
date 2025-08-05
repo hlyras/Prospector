@@ -19,7 +19,6 @@
       'data-empty': contact.profile_picture ? false : true
     });
     profile_picture_box.append(profile_picture);
-    console.log(`profile-picture-${contact.jid}`);
 
     let info_box = lib.element.create("div", {
       class: "mobile-box b5-6 container v-center"
@@ -27,24 +26,14 @@
     contact_div.append(info_box);
 
     let name_box = lib.element.create("div", {
-      class: "mobile-box b2 container v-center"
+      class: "mobile-box b1 container v-center"
     });
     info_box.append(name_box);
 
     let name = lib.element.create("div", {
       class: "mobile-box b1 lucida-grande em08 text-shadow"
-    }, contact.business || contact.name || "");
+    }, contact.business || contact.name || lib.splitTextBy(contact.jid, "@")[0]);
     name_box.append(name);
-
-    let identify_box = lib.element.create("div", {
-      class: "mobile-box b2 container v-center"
-    });
-    info_box.append(identify_box);
-
-    let phone = lib.element.create("div", {
-      class: "mobile-box b1 em07 text-shadow v-center right"
-    }, lib.splitTextBy(contact.jid, "@")[0]);
-    identify_box.append(phone);
 
     if (contact.last_message_type == "text") { lib.string.cut(contact.last_message_content, 30); }
     if (contact.last_message_type == "conversation") { lib.string.cut(contact.last_message_content, 30); }

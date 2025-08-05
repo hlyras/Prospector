@@ -58,7 +58,6 @@ Contact.findByJid = (jid) => {
     ]])
     .strictParams({ keys: ["contact.jid"], values: [jid] })
     .build();
-  console.log(query);
   return db(query, values);
 };
 

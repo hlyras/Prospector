@@ -4,8 +4,6 @@ const path = require("path");
 const mime = require("mime-types");
 
 function getProfilePicWithTimeout(waSocket, jid, timeout = 5000) {
-  if (jid.endsWith('@g.us')) return Promise.resolve(null); // evita erro para grupos
-
   return Promise.race([
     (async () => {
       try {

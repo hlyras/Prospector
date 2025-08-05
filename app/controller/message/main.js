@@ -25,6 +25,7 @@ messageController.receipt = async ({ data }) => {
     contact.created = 0;
 
     let profile_picture = await getProfilePicWithTimeout(wa.getSocket(), data.key.remoteJid);
+    contact.profile_picture = profile_picture;
     data.profile_picture = profile_picture;
 
     if (isGroup) {

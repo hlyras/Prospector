@@ -2,10 +2,10 @@
 
 <script>
   async function receivedMessage({ data, message }) {
+    let contact_box = document.getElementById("contact-filter-box");
     let contact_div = document.getElementById(`contact-${data.key.remoteJid}`);
-    if (!contact_div) {
-      let contact_box = document.getElementById("contact-filter-box");
 
+    if (!contact_div) {
       let contact = (await API.response(Contact.filter, {
         jid: data.key.remoteJid
       }))[0];
@@ -19,6 +19,8 @@
       let message_div = messageDiv(message);
       document.getElementById("message-box").append(message_div);
     }
+
+    contact_box.prepend(contact_div);
 
     let profile_picture = document.getElementById(`profile-picture-${data.key.remoteJid}`);
 
@@ -37,5 +39,20 @@
         }, profile_picture);
       }
     }
+
+    let last_message_datetime = document.getElementById(`last-message-datetime-${data.key.remoteJid}`);
+    last_message_datetime.innerHTML = "";
+    last_message_datetime.innerHTML = lib.splitTextBy(lib.timestampToFulldate(message.datetime), " ")[1];
+
+    let last_message = document.getElementById(`last-message-${data.key.remoteJid}`);
+    last_message.innerHTML = "";
+
+    if (message.type == "conversation" || message.type == "text") {
+      last_message.innerHTML = lib.string.cut(message.content, 30);
+    }
+
+    if (message.type == "image") { last_message.innerHTML = "📸 Foto"; }
+    if (message.type == "video") { last_message.innerHTML = "🎬 Vídeo"; }
+    if (message.type == "audio") { last_message.innerHTML = "🔊 Áudio"; }
   };
 </script>

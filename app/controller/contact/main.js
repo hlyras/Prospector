@@ -94,7 +94,8 @@ contactController.filter = async (req, res) => {
           "last_message.datetime", "(SELECT MAX(datetime) FROM cms_prospector.message WHERE jid = contact.jid)"
         ]
       ],
-      strict_params: { keys: [], values: [] }
+      strict_params: { keys: [], values: [] },
+      order_params: [["last_message.datetime", "desc"]]
     };
 
     lib.Query.fillParam("contact.jid", req.body.jid, contact_options.strict_params);
