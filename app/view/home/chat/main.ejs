@@ -9,24 +9,13 @@
     const chat_container = document.getElementById("chat-container");
     chat_container.style.height = window.innerHeight + "px";
 
-    let identity_box = lib.element.create("div", {
-      id: "identity-box",
-      class: "box a1 container ground",
-      style: `height: ${parseInt(window.innerHeight) * 0.08}px;`
-    });
+    let identity_box = identityDiv();
     chat_container.append(identity_box);
 
-    let message_box = lib.element.create("div", {
-      id: "message-box",
-      class: "box a1 container scroll-y padding-20",
-    });
+    let message_box = messageBox();
     chat_container.append(message_box);
 
-    let message_input_box = lib.element.create("div", {
-      id: "message-input-box",
-      class: "box a1 container ground",
-      style: `height: ${parseInt(window.innerHeight) * 0.10}px;`
-    });
+    let message_input_box = messageInputBox();
     chat_container.append(message_input_box);
 
     // functions
@@ -42,8 +31,6 @@
     // events
     window.addEventListener("resize", function () {
       chat_container.style.height = window.innerHeight + "px";
-      console.log("A tela foi redimensionada. Nova altura:", window.innerHeight);
-
       resizeMessageBox();
     });
 
@@ -101,9 +88,68 @@
     });
 
     message_box.scrollTop = message_box.scrollHeight;
+
+    // Message Input box
+    message_input
   };
 
   function identityDiv() {
+    let identity_div = lib.element.create("div", {
+      id: "identity-box",
+      class: "box a1 container ground",
+      style: `height: ${parseInt(window.innerHeight) * 0.08}px;`
+    });
+    return identity_div;
+  };
 
+  function messageBox() {
+    let message_box = lib.element.create("div", {
+      id: "message-box",
+      class: "box a1 container scroll-y padding-20",
+    });
+    return message_box;
+  }
+
+  function messageInputBox() {
+    let message_input_container = lib.element.create("div", {
+      id: "message-input-box",
+      class: "box a1 container h-center",
+      style: `height: ${parseInt(window.innerHeight) * 0.10}px;`
+    });
+
+    let message_input_box = lib.element.create("div", {
+      class: "mobile-box b11-12 container ground noborder shadow radius-50 padding-10",
+      style: "height: 75%;align-self: center;"
+    });
+    message_input_container.append(message_input_box);
+
+    let input_file_icon = lib.element.icon("b9 icon", "20", "/images/icon/increase.png")
+    message_input_box.append(input_file_icon);
+
+    let message_input = lib.element.create("input", {
+      class: "mobile-box b7-9 rem09 noborder v-center padding-5",
+      placeholder: "Digite uma mensagem"
+    });
+    message_input_box.append(message_input);
+
+    let send_message_icon = lib.element.icon("b9 icon", "30", "/images/icon/send.png")
+    message_input_box.append(send_message_icon);
+
+    send_message_icon.addEventListener("click", async () => {
+      if (!currentChatContact) return;
+      if (!message_input.value) return;
+
+      let message = {
+        jid: currentChatContact,
+        content: message_input.value
+      };
+
+      let response = await API.response(Message.send, message);
+      console.log(response);
+
+      message_input.value = "";
+    });
+
+    return message_input_container;
   };
 </script>

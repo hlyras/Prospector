@@ -6,7 +6,7 @@ const Message = require("./../controller/message/main");
 
 waEmitter.on('received-message', Message.receipt);
 
-// router.post('/send', lib.route.toHttps, Message.send);
+router.post('/send', lib.route.toHttps, Message.send);
 router.post('/filter', lib.route.toHttps, Message.filter);
 
 module.exports = router;

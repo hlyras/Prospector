@@ -10,6 +10,19 @@ const { downloadMedia } = require('../../middleware/baileys/controller');
 
 const messageController = {};
 
+messageController.send = async (req, res) => {
+  if (wa.isConnected()) {
+    let response = await wa.getSocket().sendMessage(req.body.jid, {
+      text: req.body.content
+    });
+    res.send(response);
+  } else {
+    let msg = "WhatsApp não está pronto para enviar mensagens.";
+    res.send({ msg });
+  }
+
+};
+
 messageController.receipt = async ({ data }) => {
   let sender = data.key.remoteJid.split("@")[0];
   if (sender == "status") return;
@@ -40,7 +53,7 @@ messageController.receipt = async ({ data }) => {
     catch (error) { console.log("User not created: ", error); }
   }
 
-  if (contact && !contact.name && !data.key.fromMe) {
+  if (contact && !data.key.fromMe) {
     let contact = new Contact();
     contact.jid = data.key.remoteJid;
 

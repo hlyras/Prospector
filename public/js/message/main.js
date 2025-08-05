@@ -1,7 +1,7 @@
 const Message = {};
 
-Message.create = async (message) => {
-  let response = await fetch("/message/create", {
+Message.send = async (message) => {
+  let response = await fetch("/message/send", {
     method: "POST",
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(message)

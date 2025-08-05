@@ -1,7 +1,7 @@
 <script>
   function messageDiv(message) {
     let message_div = lib.element.create("div", {
-      class: "box b2-3 container margin-top-5"
+      class: "mobile-box b2-3 container margin-top-5"
     });
 
     if (message.from_me == 1) {
@@ -35,7 +35,7 @@
 
     if (message.type == "image") {
       let image_content = lib.element.create("img", {
-        class: "image-prop height-250",
+        class: "image-prop image-fit max-height-250",
         src: message.content
       });
       message_content.append(image_content);

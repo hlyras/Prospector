@@ -1,4 +1,4 @@
-<div id="contact-filter-box" class="box a1 container"></div>
+<div id="contact-box" class="box a1 container scroll-y"></div>
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
@@ -7,7 +7,7 @@
   });
 
   function contactFilter(contacts) {
-    let contact_box = document.getElementById("contact-filter-box");
+    let contact_box = document.getElementById("contact-box");
     contact_box.innerHTML = "";
 
     if (!contacts.length) {

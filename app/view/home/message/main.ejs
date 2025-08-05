@@ -2,7 +2,7 @@
 
 <script>
   async function receivedMessage({ data, message }) {
-    let contact_box = document.getElementById("contact-filter-box");
+    let contact_box = document.getElementById("contact-box");
     let contact_div = document.getElementById(`contact-${data.key.remoteJid}`);
 
     if (!contact_div) {
