@@ -83,12 +83,13 @@
     identity_info_box.append(identity_contact_box);
 
     identity_contact_box.append(lib.element.create("div", {
-      class: "mobile-box b1 lucida-grande em09 text-shadow v-center"
+      class: "mobile-box lucida-grande em09 text-shadow v-center",
+      style: "flex-grow: 1;"
     }, contact.business || contact.name || ""));
 
-    identity_contact_box.append(lib.element.create("div", {
+    lib.splitTextBy(contact.jid, "@")[1] != "g.us" && identity_contact_box.append(lib.element.create("div", {
       class: "mobile-box b1 em08 text-shadow v-center"
-    }, contact.jid));
+    }, lib.splitTextBy(contact.jid, "@")[0]));
 
     // Message box
     message_box.innerHTML = "";
