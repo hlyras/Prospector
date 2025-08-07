@@ -2,6 +2,7 @@ const lib = require('jarmlib');
 
 const wa = require('../../middleware/baileys/main');
 const { getProfilePicWithTimeout } = require('../../middleware/baileys/controller');
+const ChatGPTAPI = require('../../middleware/chatgpt/main');
 
 const Contact = require("../../model/contact/main");
 const Message = require("../../model/message/main");
@@ -32,8 +33,17 @@ contactController.create = async (req, res) => {
 
     if (contact.autochat) {
       if (wa.isConnected()) {
+        let response = await ChatGPTAPI(`
+          Contexto: Você é um vendendor que está prospectando e vai enviar a primeira mensagem para o cliente.
+          Para isso você precisa identificar se o artigo é "da" ou "do" em relação ao nome da empresa.
+          E retornar apenas a mensagem substituindo o "dx":
+                     
+          Boa tarde é dx ${contact.business}?`
+        );
+        console.log("Resposta do CHATGPT: ", response);
+
         await wa.getSocket().sendMessage(contact.jid, {
-          text: `Olá é da ${contact.business}`
+          text: response
         });
       } else {
         console.warn("WhatsApp não está pronto para enviar mensagens.");

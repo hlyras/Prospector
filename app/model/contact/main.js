@@ -26,6 +26,11 @@ const Contact = function () {
 
     return db(query, values);
   };
+
+  this.resetTyping = async () => {
+    const query = "UPDATE cms_prospector.contact SET typing = NULL WHERE jid = ?";
+    await db(query, [this.jid]);
+  };
 };
 
 Contact.filter = ({ props, inners, lefts, params, strict_params, order_params }) => {

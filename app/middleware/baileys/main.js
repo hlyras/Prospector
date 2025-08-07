@@ -28,45 +28,80 @@ class WhatsAppSession {
       getMessage: async () => ({ conversation: 'Mensagem não encontrada localmente.' }),
     });
 
-    this.sock.ev.on('creds.update', saveCreds);
-
-    this.sock.ev.on('connection.update', (update) => {
-      const { connection, lastDisconnect, qr } = update;
-
-      if (qr) {
-        this.qrCodeString = qr;
-        console.log('📲 Escaneie o QR Code para conectar.');
+    // process all events com ev.process
+    this.sock.ev.process(async (events) => {
+      if (events['creds.update']) {
+        await saveCreds();
       }
 
-      if (connection === 'close') {
-        const code = new Boom(lastDisconnect?.error)?.output?.statusCode;
-        const shouldReconnect = code !== DisconnectReason.loggedOut;
-        console.log('❌ Conexão encerrada:', lastDisconnect?.error?.message);
-        this.connected = false;
-        this.sock = null;
+      if (events['connection.update']) {
+        const { connection, lastDisconnect, qr } = events['connection.update'];
 
-        if (shouldReconnect) {
-          console.log('🔄 Reconectando...');
-          this.connect(this.sessionID);
-        } else {
-          console.log('📴 Sessão finalizada, necessário escanear QR novamente.');
+        if (qr) {
+          this.qrCodeString = qr;
+          console.log('📲 Escaneie o QR Code para conectar.');
+        }
+
+        if (connection === 'close') {
+          const code = new Boom(lastDisconnect?.error)?.output?.statusCode;
+          const shouldReconnect = code !== DisconnectReason.loggedOut;
+          console.log('❌ Conexão encerrada:', lastDisconnect?.error?.message);
+          this.connected = false;
+          this.sock = null;
+
+          if (shouldReconnect) {
+            console.log('🔄 Reconectando...');
+            this.connect();
+          } else {
+            console.log('📴 Sessão finalizada, necessário escanear QR novamente.');
+          }
+        }
+
+        if (connection === 'open') {
+          console.log('✅ Conectado com sucesso!');
+          this.connected = true;
+          this.qrCodeString = null;
         }
       }
 
-      if (connection === 'open') {
-        console.log('✅ Conectado com sucesso!');
-        this.connected = true;
-        this.qrCodeString = null;
-      }
-    });
+      if (events['messages.upsert']) {
+        const { messages } = events['messages.upsert'];
+        for (const msg of messages) {
+          if (!msg.message) continue;
 
-    this.sock.ev.on('messages.upsert', async ({ messages }) => {
-      for (const msg of messages) {
-        if (!msg.message) continue;
-
-        const data = msg;
-        waEmitter.emit('received-message', { data });
+          const data = msg;
+          waEmitter.emit('received-message', { data });
+        }
       }
+
+      // if (events['message-receipt.update']) {
+      //   console.log('📩 RECEIPT update:', JSON.stringify(events['message-receipt.update'], null, 2));
+      // }
+
+      // if (events['messages.update']) {
+      //   console.log('📤 MESSAGE STATUS update:', JSON.stringify(events['messages.update'], null, 2));
+      // }
+
+      // (opcional) Adicione outros eventos que queira monitorar:
+      // if (events['message-receipt.update']) {
+      //   console.log(events['message-receipt.update'])
+      // }
+
+      // if (events['presence.update']) {
+      //   console.log('👤 PRESENCE update:', events['presence.update']);
+      // }
+
+      // if (events['chats.update']) {
+      //   console.log('💬 CHATS update:', events['chats.update']);
+      // }
+
+      // if (events['contacts.update']) {
+      //   console.log('📇 CONTACTS update:', events['contacts.update']);
+      // }
+
+      // if (events['messages.reaction']) {
+      //   console.log('❤️ REACTION:', events['messages.reaction']);
+      // }
     });
 
     return this.sock;

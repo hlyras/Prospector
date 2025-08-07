@@ -17,7 +17,7 @@
     "jarmlib": "^1.0.70",
     "mysql2": "^3.9.7",
     "nodemailer": "^6.7.2",
-    "openai": "^4.29.1",
+    "openai": "^4.104.0",
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
     "uuid": "^11.1.0"
