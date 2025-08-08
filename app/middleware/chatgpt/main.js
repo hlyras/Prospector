@@ -5,15 +5,16 @@ const openai = new OpenAIApi({
 });
 
 const ChatGPTAPI = async (message) => {
-  const completion = await openai.chat.completions.create({
-    messages: [{
-      role: "system",
-      content: message
-    }],
-    model: "gpt-4o",
-    // model: "gpt-3.5-turbo",
-    // temperature: 0.7
-  });
+  const completion = await openai.chat.completions.create(message);
+
+  // {
+  //   model: "gpt-3.5-turbo",
+  //   messages: [{
+  //     role: "system",
+  //     content: JSON.stringify(message)
+  //   }],
+  //   temperature: 0.7
+  // }
 
   return completion.choices[0].message.content;
 };

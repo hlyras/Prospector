@@ -33,13 +33,26 @@ contactController.create = async (req, res) => {
 
     if (contact.autochat) {
       if (wa.isConnected()) {
-        let response = await ChatGPTAPI(`
-          Contexto: Você é um vendendor que está prospectando e vai enviar a primeira mensagem para o cliente.
-          Para isso você precisa identificar se o artigo é "da" ou "do" em relação ao nome da empresa.
-          E retornar apenas a mensagem substituindo o "dx":
-                     
-          Boa tarde é dx ${contact.business}?`
-        );
+        let response = await ChatGPTAPI({
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content: `
+Você é um vendedor que está prospectando e vai enviar a primeira mensagem para o cliente.
+Para isso, você precisa identificar se o artigo correto é "da" ou "do" em relação ao nome da empresa.
+Retorne apenas a mensagem final substituindo o "dx" pelo artigo correto.
+
+Por exemplo, se a empresa for "Amazon", retorne: "Boa tarde é da Amazon?"
+`
+            },
+            {
+              role: "user",
+              content: `Boa tarde é dx ${contact.business}?`
+            }
+          ]
+        });
+
         console.log("Resposta do CHATGPT: ", response);
 
         await wa.getSocket().sendMessage(contact.jid, {
