@@ -11,8 +11,6 @@ const { downloadMedia } = require('../../middleware/baileys/controller');
 const ChatGPTAPI = require('../../middleware/chatgpt/main');
 const prospect_flow = require('./flow/prospect');
 
-console.log(prospect_flow);
-
 const messageController = {};
 
 messageController.send = async (req, res) => {
@@ -56,6 +54,14 @@ messageController.sendByAi = async (contact) => {
   });
 
   console.log(response);
+
+  if (JSON.parse(response).tarefa_2 == true) {
+    contact.flow_step = parseInt(contact.flow_step) + 1;
+    if (contact.flow_step == 5) {
+      contact.autochat = 0;
+    }
+    contact.update();
+  }
 
   await wa.getSocket().sendMessage(contact.jid, {
     text: JSON.parse(response).output
@@ -155,15 +161,18 @@ messageController.receipt = async ({ data }) => {
       await contact_chat.update();
 
       setTimeout(async () => {
-        const updatedContact = (await Contact.findByJid(contact.jid))[0];
+        const updated_contact = (await Contact.findByJid(contact.jid))[0];
 
-        const lastMessageDelay = Date.now() - updatedContact.typing;
+        const lastMessageDelay = Date.now() - updated_contact.typing;
 
         if (lastMessageDelay >= 3000) {
           await contact_chat.resetTyping();
-          await messageController.sendByAi(contact);
-          contact_chat.flow_step = parseInt(updatedContact.flow_step) + 1;
-          contact_chat.update();
+          let contact_info = new Contact();
+          contact_info.jid = updated_contact.jid;
+          contact_info.business = updated_contact.business;
+          contact_info.flow_step = parseInt(updated_contact.flow_step);
+
+          await messageController.sendByAi(contact_info);
         }
       }, 3000);
     }

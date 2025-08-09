@@ -18,6 +18,7 @@ contactController.create = async (req, res) => {
   contact.autochat = !isNaN(req.body.autochat)
     ? parseInt(req.body.autochat) : 0;
   contact.created = 1;
+  contact.flow_step = 1;
 
   let profile_picture = null;
   profile_picture = await getProfilePicWithTimeout(wa.getSocket(), contact.jid);
@@ -39,16 +40,22 @@ contactController.create = async (req, res) => {
             {
               role: "system",
               content: `
-Você é um vendedor que está prospectando e vai enviar a primeira mensagem para o cliente.
-Para isso, você precisa identificar se o artigo correto é "da" ou "do" em relação ao nome da empresa.
-Retorne apenas a mensagem final substituindo o "dx" pelo artigo correto.
+Preciso identificar se o nome da empresa deve ser referido como masculino ou feminino.
+Substitua 'dx' pelo artigo correto "da" ou "do" levando em consideração o nome da empresa.
 
-Por exemplo, se a empresa for "Amazon", retorne: "Boa tarde é da Amazon?"
-`
-            },
-            {
-              role: "user",
-              content: `Boa tarde é dx ${contact.business}?`
+Exemplo:
+Bom dia, é da Coca-cola?
+Bom dia, é do atacadão?
+
+O que preciso:
+Bom dia, é dx ${contact.business}?
+
+Atenção o JSON precisa ser formatado corretamente, sem blocos de código, sem texto explicativo, sem comentários.  
+Todas as chaves e strings devem estar entre aspas duplas e as quebras de linha devem ser representadas como \n.
+{
+  "output": "Retorne com a melhor resposta."
+}
+      `
             }
           ]
         });
@@ -56,7 +63,7 @@ Por exemplo, se a empresa for "Amazon", retorne: "Boa tarde é da Amazon?"
         console.log("Resposta do CHATGPT: ", response);
 
         await wa.getSocket().sendMessage(contact.jid, {
-          text: response
+          text: JSON.parse(response).output
         });
       } else {
         console.warn("WhatsApp não está pronto para enviar mensagens.");
