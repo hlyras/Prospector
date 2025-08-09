@@ -26,7 +26,7 @@ Esse catálogo é criado através de nossa plataforma que pode ser acessada pelo
 
 Através da plataforma você tem total controle do catálogo, podendo adicionar e atualizar os produtos por conta própria.\n\n
 
-O catálogo custa R$49,90 por mês mas não exige assinatura, funciona como créditos de celular onde você recarrega e utiliza por 30 dias.\n\n
+O catálogo custa R$49,90 por mês mas não exige assinatura, funciona como créditos de celular, você recarrega e utiliza por 30 dias.\n\n
 
 Nós daremos consultoria gratuita durante a construção do seu catálogo.\n\n
 
@@ -65,7 +65,7 @@ ${basic_info}
 Atenção, preciso que faça as tarefas e o Output de forma EXTREMAMENTE DILIGENTE!
 Tarefa_1: Identificar através da resposta do cliente no histórico se o contato pertence a empresa perguntada.
 Caso sim: Enviar próxima mensagem do fluxo;
-Caso não: Responda apenas: "Tudo bem, surgindo interesse estou a disposição.";
+Caso não: Responda apenas: "Tudo bem, obrigado.";
 Caso Pergunte algo fora do fluxo: Responder de forma breve e concatenar com 2 quebras de linha a próxima pergunta do fluxo;
 Tarefa_2: A próxima mensagem do fluxo será enviada no output?;
 

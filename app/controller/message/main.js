@@ -55,13 +55,44 @@ messageController.sendByAi = async (contact) => {
 
   console.log(response);
 
+  // O contato é da empresa
+  if (contact.flow_step == 1 && JSON.parse(response).tarefa_2 == true) {
+    console.log("É DA EMPRESA");
+    contact.status = "Conectado";
+  }
+
+  if (contact.flow_step == 1 && JSON.parse(response).tarefa_2 == false) {
+    contact.autochat = 0;
+  }
+
+  // O cliente tem interesse no catálogo
+  if (contact.flow_step == 2 && JSON.parse(response).tarefa_2 == true) {
+    contact.status = "Interessado";
+  }
+
+  if (contact.flow_step == 2 && JSON.parse(response).tarefa_2 == false) {
+    contact.autochat = 0;
+  }
+
+  // O cliente quer ver a demonstração
+  if (contact.flow_step == 4 && JSON.parse(response).tarefa_2 == true) {
+    contact.status = "Demonstração";
+  }
+
+  if (contact.flow_step == 4 && JSON.parse(response).tarefa_2 == false) {
+    contact.autochat = 0;
+  }
+
+  // O cliente chegou ao final do fluxo
   if (JSON.parse(response).tarefa_2 == true) {
     contact.flow_step = parseInt(contact.flow_step) + 1;
+
     if (contact.flow_step == 5) {
       contact.autochat = 0;
     }
-    contact.update();
   }
+
+  contact.update();
 
   await wa.getSocket().sendMessage(contact.jid, {
     text: JSON.parse(response).output
