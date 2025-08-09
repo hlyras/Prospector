@@ -1,14 +1,17 @@
 const Contact = require("../../model/contact/main");
 const Message = require("../../model/message/main");
-const activeWebSockets = require('../../middleware/websocket/connectionStore');
-const { getProfilePicWithTimeout } = require('../../middleware/baileys/controller');
-// ChatGPTAPI
-const ChatGPTAPI = require('../../middleware/chatgpt/main');
 
 const lib = require('jarmlib');
 
 const wa = require('../../middleware/baileys/main');
+const activeWebSockets = require('../../middleware/websocket/connectionStore');
+const { getProfilePicWithTimeout } = require('../../middleware/baileys/controller');
 const { downloadMedia } = require('../../middleware/baileys/controller');
+
+const ChatGPTAPI = require('../../middleware/chatgpt/main');
+const prospect_flow = require('./flow/prospect');
+
+console.log(prospect_flow);
 
 const messageController = {};
 
@@ -25,25 +28,6 @@ messageController.send = async (req, res) => {
 };
 
 messageController.sendByAi = async (contact) => {
-  const flow = [`Boa tarde é da empresa ${contact.business}?`,
-    "Oi, meu nome é Gabriel, represento a Cotálogo e nossa proposta é aprimorar a apresentação, divulgação e atendimento das empresas através de um catálogo digital como esse: \n\n\
-\
-suaempresa.cotalogo.com\n\n\
-\
-Gostaria de ter um personalizado para sua empresa?",
-    "Legal, esse catálogo é criado através de nossa plataforma que pode ser acessada pelo celular ou computador.\n\n\
-\
-Através da plataforma você tem total controle do catálogo, podendo adicionar e atualizar os produtos por conta própria.\n\n\
-\
-O catálogo custa R$49,90 por mês mas não exige assinatura, funciona como créditos de celular onde você recarrega e utiliza por 30 dias.\n\n\
-\
-Nós daremos consultoria gratuita durante a construção do seu catálogo.\n\n\
-\
-Qual é o seu nome?",
-    "Eu posso criar um esboço do seu catálogo, gostaria de ver como fica?",
-    "Legal, me envia por favor a foto da sua logomarca e de 2 produtos com nome e preço."
-  ];
-
   let message_options = {
     props: [
       "message.type",
@@ -63,65 +47,12 @@ Qual é o seu nome?",
   for (let i = parseInt(message_history.length) - 1; i >= 0; i--) {
     let sender = message_history[i].from_me ? "Bot" : "Cliente";
     let content = message_history[i].content || "";
-
-    // Adiciona ao histórico com quebra de linha
     history += `[${sender}]: ${content}\n`;
   };
 
-  console.log('flow[contact.flow_step]', flow[contact.flow_step]);
-  console.log('history', history);
-
   let response = await ChatGPTAPI({
     model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content: `
-Informações base: 
-Seu nome é Gabriel;
-Você está prospectando um cliente através de um fluxo de mensagens;
-Você é representante da Cotálogo, uma empresa provedora de catálogos digitais;
-
-Você receberá:
-1. Um histórico de mensagens;
-2. A última pergunta do fluxo;
-3. A próxima pergunta do fluxo;
-
-Preciso que faça essas 3 tarefas e o Output de forma EXTREMAMENTE DILIGENTE!
-Tarefa 1: Analisar se as últimas mensagens do cliente no histórico responde a última pergunta do fluxo mesmo que indiretamente;
-Tarefa 2: Identificar perguntas ou dúvidas feitas pelo cliente;
-Tarefa 3: No conteúdo da próxima pergunta do fluxo tem resposta para a pergunta identificada na tarefa 2?;
-output: "caso o conteúdo da próxima pergunta não responda o questionamento do cliente deve ser fornecida uma resposta personalizada, caso não haja questionamentos apenas enviar a próxima mensagem do fluxo"
-
-Regra importante: 
-Devem ser respeitadas as quebras de linhas duplas das mensagens do fluxo;
-
-Responda **apenas** com JSON válido, sem blocos de código, sem texto explicativo, sem comentários.  
-Todas as chaves e strings devem estar entre aspas duplas e as quebras de linha devem ser representadas como \n.
-{
-  "tarefa_1": true|false,
-  "tarefa_1_explicação": "Explique de forma breve",
-  "tarefa_2": true|false,
-  "tarefa_2_explicação": "Explique de forma breve",
-  "tarefa_3": true|false,
-  "tarefa_3_explicação": "Explique de forma breve",
-  "output": "Caso personalizada, deve ser concatenada a resposta para a pergunta do cliente e logo abaixo a próxima mensagem do fluxo."
-}
-      `},
-      {
-        role: "system",
-        content: `
-Histórico:
-${history}
-
-Última pergunta do fluxo:
-${flow[parseInt(contact.flow_step) - 1]}
-
-Próxima pergunta do fluxo:
-${flow[parseInt(contact.flow_step)]}
-        `
-      }
-    ]
+    messages: prospect_flow[contact.flow_step](contact, history)
   });
 
   console.log(response);
@@ -251,7 +182,9 @@ messageController.filter = async (req, res) => {
   try {
     let message_options = {
       props: [],
-      strict_params: { keys: [], values: [] }
+      strict_params: { keys: [], values: [] },
+      order_params: [["message.datetime", "desc"]],
+      limit: 200
     };
 
     lib.Query.fillParam("message.jid", req.body.jid, message_options.strict_params);
