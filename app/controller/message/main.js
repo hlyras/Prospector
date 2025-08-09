@@ -30,12 +30,12 @@ messageController.sendByAi = async (contact) => {
 \
 suaempresa.cotalogo.com\n\n\
 \
-Gostaria de ter um personalizado para sua empresa ? ",
+Gostaria de ter um personalizado para sua empresa?",
     "Legal, esse catálogo é criado através de nossa plataforma que pode ser acessada pelo celular ou computador.\n\n\
 \
 Através da plataforma você tem total controle do catálogo, podendo adicionar e atualizar os produtos por conta própria.\n\n\
 \
-O catálogo custa R$49, 90 por mês mas não exige assinatura, funciona como créditos de celular onde você recarrega e utiliza por 30 dias.\n\n\
+O catálogo custa R$49,90 por mês mas não exige assinatura, funciona como créditos de celular onde você recarrega e utiliza por 30 dias.\n\n\
 \
 Nós daremos consultoria gratuita durante a construção do seu catálogo.\n\n\
 \
@@ -72,31 +72,40 @@ Qual é o seu nome?",
   console.log('history', history);
 
   let response = await ChatGPTAPI({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4o-mini",
     messages: [
       {
         role: "system",
         content: `
-Você é um autobot fazendo a prospecção de uma empresa.
-Seu nome é Gabriel e sua conversa deve ser humanizada simulando uma pessoa real.
-Você é representante da Cotálogo, uma empresa provedora de catálogos digitais.
-      
+Informações base: 
+Seu nome é Gabriel;
+Você está prospectando um cliente através de um fluxo de mensagens;
+Você é representante da Cotálogo, uma empresa provedora de catálogos digitais;
+
 Você receberá:
-1. Um histórico de mensagens.
-2. A pergunta que deveria ter sido respondida.
-3. A próxima pergunta do fluxo
+1. Um histórico de mensagens;
+2. A última pergunta do fluxo;
+3. A próxima pergunta do fluxo;
 
-Sua primeira tarefa é analisar se as últimas mensagens do cliente responde a essa pergunta.
-A segunda tarefa é identificar se o cliente fez alguma pergunta.
-A terceira tarefa é identificar se a próxima pergunta do fluxo responde a pergunta do cliente ou não. 
-A "resposta_indicada" deve ser compativel com a próxima pergunta, pois será usada a "resposta_indicada" antes da próxima pergunta na mesma mensagem.
+Preciso que faça essas 3 tarefas e o Output de forma EXTREMAMENTE DILIGENTE!
+Tarefa 1: Analisar se as últimas mensagens do cliente no histórico responde a última pergunta do fluxo mesmo que indiretamente;
+Tarefa 2: Identificar perguntas ou dúvidas feitas pelo cliente;
+Tarefa 3: No conteúdo da próxima pergunta do fluxo tem resposta para a pergunta identificada na tarefa 2?;
+output: "caso o conteúdo da próxima pergunta não responda o questionamento do cliente deve ser fornecida uma resposta personalizada, caso não haja questionamentos apenas enviar a próxima mensagem do fluxo"
 
-Retorne APENAS em JSON no formato:
+Regra importante: 
+Devem ser respeitadas as quebras de linhas duplas das mensagens do fluxo;
+
+Responda **apenas** com JSON válido, sem blocos de código, sem texto explicativo, sem comentários.  
+Todas as chaves e strings devem estar entre aspas duplas e as quebras de linha devem ser representadas como \n.
 {
-  "respondeu": true|false,
-  "justificativa": "explicação breve"
-  "perguntou": true|false,
-  "resposta_indicada:": "Você deve fornecer a resposta ideal para a pergunta do cliente."
+  "tarefa_1": true|false,
+  "tarefa_1_explicação": "Explique de forma breve",
+  "tarefa_2": true|false,
+  "tarefa_2_explicação": "Explique de forma breve",
+  "tarefa_3": true|false,
+  "tarefa_3_explicação": "Explique de forma breve",
+  "output": "Caso personalizada, deve ser concatenada a resposta para a pergunta do cliente e logo abaixo a próxima mensagem do fluxo."
 }
       `},
       {
@@ -105,11 +114,11 @@ Retorne APENAS em JSON no formato:
 Histórico:
 ${history}
 
-Pergunta que deveria ser respondida:
-${flow[parseInt(contact.flow_step)]}
+Última pergunta do fluxo:
+${flow[parseInt(contact.flow_step) - 1]}
 
 Próxima pergunta do fluxo:
-${flow[parseInt(contact.flow_step) + 1]}
+${flow[parseInt(contact.flow_step)]}
         `
       }
     ]
@@ -117,146 +126,10 @@ ${flow[parseInt(contact.flow_step) + 1]}
 
   console.log(response);
 
-  // console.log(message_history[i].content);
-  // messages.push({
-  //   "role": `${message_history[i].from_me ? "system" : "user"}`,
-  //   "content": `${message_history[i].content}`
-  // });
-
-  // [Cliente]: Olá, tudo bem?
-  // [Bot]: Olá! Qual é o seu nome?
-  // [Cliente]: João
-
-  // let response = await ChatGPTAPI(JSON.stringify({
-  //   model: "gpt-4o-mini",
-  //   messages: [
-  //     {
-  //       role: "system",
-  //       content: `
-  //       Você receberá:
-  //       1. Um histórico de mensagens.
-  //       2. A pergunta que deveria ter sido respondida.
-
-  //       Sua tarefa é analisar se as últimas mensagens do cliente responde a essa pergunta.
-  //       Retorne APENAS em JSON no formato:
-  //       {
-  //         "respondeu": true|false,
-  //         "justificativa": "explicação breve"
-  //       }
-  //     `
-  //     },
-  //     {
-  //       role: "user",
-  //       content: `
-  //       Histórico:
-  //       ${history}
-
-  //       Pergunta que deveria ser respondida:
-  //       ${flow[contact.flow_step]}
-  //     `
-  //     }
-  //   ]
-  // }));
-
-  // console.log("Resposta do CHATGPT: ", response);
-
-  // await wa.getSocket().sendMessage(jid, {
-  //   text: response
-  // });
-
-  // let step = 0;
-
-  // console.log(flow);
-
-  // let message_options = {
-  //   props: [
-  //     "message.type",
-  //     "message.datetime",
-  //     "message.content",
-  //     "message.from_me",
-  //   ],
-  //   strict_params: { keys: [], values: [] },
-  //   order_params: [["message.datetime", "desc"]],
-  //   limit: 10
-  // };
-
-  // lib.Query.fillParam("message.jid", jid, message_options.strict_params);
-  // let message_history = await Message.filter(message_options);
-
-  // const messages = [
-  //   {
-  //     role: "system",
-  //     content: `Você é um chatbot comercial. Deve seguir exatamente as mensagens do fluxo na ordem. Fluxo: ${flow.join("\n\n")}`
-  //   },
-  //   { role: "system", content: `Passo atual: ${step}` },
-  //   ...message_history
-  // ];
+  await wa.getSocket().sendMessage(contact.jid, {
+    text: JSON.parse(response).output
+  });
 };
-
-// messageController.sendByAi = async (jid) => {
-//   console.log(jid);
-
-//   let message_options = {
-//     props: [
-//       "message.type",
-//       "message.datetime",
-//       "message.content",
-//       "message.from_me",
-//     ],
-//     strict_params: { keys: [], values: [] },
-//     order_params: [["message.datetime", "desc"]],
-//     limit: 10
-//   };
-
-//   lib.Query.fillParam("message.jid", jid, message_options.strict_params);
-//   let message_history = await Message.filter(message_options);
-
-//   let messages = [{
-//     role: "system",
-//     content: `Você é um chatbot que está fazendo uma prospecção ativa.Você deve fazer as seguintes 4 perguntas na ordem, não deve alterar as palavras das mensagens pois cada uma tem um objetivo: \
-//       Caso o cliente pergunte algo fora do fluxo, responda a pergunta dele de acordo com as informações disponíveis na mensagem 2 e logo após responder faça a próxima mensagem do fluxo.
-//       As mensagens do fluxo NÃO DEVEM SER MODIFICADAS, as mensagens devem ser enviadas estritamente como informadas e com quebras de linhas.
-
-//       1. Oi, meu nome é Gabriel, represento a Cotálogo e nossa proposta é aprimorar a apresentação, divulgação e atendimento das empresas através de um catálogo digital como esse:
-
-//       suaempresa.cotalogo.com
-
-//       Gostaria de ter um personalizado para sua empresa ?
-
-//       2. Legal, esse catálogo é criado através de nossa plataforma que pode ser acessada pelo celular ou computador.
-
-//       Através da plataforma você tem total controle do catálogo, podendo adicionar e atualizar os produtos por conta própria.
-
-//       O catálogo custa R$49, 90 por mês mas não exige assinatura, funciona como créditos de celular onde você recarrega e utiliza por 30 dias.
-
-//       Nós daremos consultoria gratuita durante a construção do seu catálogo.
-
-//       Qual é o seu nome ?
-
-//       3. Eu posso criar um esboço do seu catálogo, gostaria de ver como fica ?
-
-//       4. Legal, me envia por favor a foto da sua logomarca e de 2 produtos com nome e preço.
-
-//       -> Analise o histórico enviado a seguir e com base na última mensagem da conversa escolha a próxima que deve ser enviada.`
-//   }];
-
-//   for (let i = message_history.length - 1; i >= 0; i--) {
-//     // console.log(message_history[i].content);
-//     messages.push({
-//       "role": `${message_history[i].from_me ? "system" : "user"}`,
-//       "content": `${message_history[i].content}`
-//     });
-//   };
-
-//   console.log(messages);
-
-//   let response = await ChatGPTAPI(messages);
-//   console.log("Resposta do CHATGPT: ", response);
-
-//   await wa.getSocket().sendMessage(jid, {
-//     text: response
-//   });
-// };
 
 messageController.receipt = async ({ data }) => {
   let sender = data.key.remoteJid.split("@")[0];
@@ -358,6 +231,8 @@ messageController.receipt = async ({ data }) => {
         if (lastMessageDelay >= 3000) {
           await contact_chat.resetTyping();
           await messageController.sendByAi(contact);
+          contact_chat.flow_step = parseInt(updatedContact.flow_step) + 1;
+          contact_chat.update();
         }
       }, 3000);
     }
