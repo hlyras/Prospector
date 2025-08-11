@@ -53,7 +53,7 @@ messageController.sendByAi = async (contact) => {
     messages: prospect_flow[contact.flow_step](contact, history)
   });
 
-  console.log(response);
+  // console.log(response);
 
   // O contato é da empresa
   if (contact.flow_step == 1 && JSON.parse(response).tarefa_2 == true) {
