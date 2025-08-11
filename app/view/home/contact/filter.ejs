@@ -80,18 +80,19 @@
     let contact_box = document.getElementById("contact-box");
     contact_box.innerHTML = "";
 
+    let contact_report = document.getElementById("contact-report");
+    contact_report.innerHTML = "";
+
+    contact_report.append(lib.element.create("div", {
+      class: "box b1 lucida-grande em08 right"
+    }, `Contatos: ${contacts.length}`));
+
     if (!contacts.length) {
       contact_box.innerHTML = "";
       return contact_box.append(lib.element.create("div", {
         class: "box b1 lucida-grande center"
       }, "Nenhum contato"));
     }
-
-    let contact_report = document.getElementById("contact-report");
-    contact_report.innerHTML = "";
-    contact_report.append(lib.element.create("div", {
-      class: "box b1 lucida-grande em08 right"
-    }, `Contatos: ${contacts.length}`));
 
     contacts?.forEach(contact => {
       let contact_div = contactDiv(contact);
