@@ -14,6 +14,20 @@
       socket.onmessage = (event) => {
         const { data, message } = JSON.parse(event.data);
 
+        if (data.notify_alert) {
+          if (document.getElementById(`contact-${data.jid}`)) {
+            lib.display(`contact-${data.jid}-notify`, "");
+          }
+
+          console.log(data);
+
+          lib.display("all-users-icon-notify", "");
+          data.conected && lib.display("conected-icon-notify", "");
+          data.interested && lib.display("interested-icon-notify", "");
+          data.demo && lib.display("demo-icon-notify", "");
+          return;
+        }
+
         if (!data.key.remoteJid) {
           return;
         }

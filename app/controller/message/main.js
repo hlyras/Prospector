@@ -57,8 +57,19 @@ messageController.sendByAi = async (contact) => {
 
   // O contato é da empresa
   if (contact.flow_step == 1 && JSON.parse(response).tarefa_2 == true) {
-    console.log("É DA EMPRESA");
-    contact.status = "Conectado";
+    contact.status = "conectado";
+    contact.notify = 1;
+    for (const [sessionID, ws] of activeWebSockets.entries()) {
+      let data = {
+        jid: contact.jid,
+        notify_alert: true,
+        conected: true
+      };
+
+      if (ws.readyState === 1) { // ws.OPEN
+        ws.send(JSON.stringify({ data }));
+      }
+    };
   }
 
   if (contact.flow_step == 1 && JSON.parse(response).tarefa_2 == false) {
@@ -67,7 +78,19 @@ messageController.sendByAi = async (contact) => {
 
   // O cliente tem interesse no catálogo
   if (contact.flow_step == 2 && JSON.parse(response).tarefa_2 == true) {
-    contact.status = "Interessado";
+    contact.status = "interessado";
+    contact.notify = 1;
+    for (const [sessionID, ws] of activeWebSockets.entries()) {
+      let data = {
+        jid: contact.jid,
+        notify_alert: true,
+        interested: true
+      };
+
+      if (ws.readyState === 1) { // ws.OPEN
+        ws.send(JSON.stringify({ data }));
+      }
+    };
   }
 
   if (contact.flow_step == 2 && JSON.parse(response).tarefa_2 == false) {
@@ -76,7 +99,19 @@ messageController.sendByAi = async (contact) => {
 
   // O cliente quer ver a demonstração
   if (contact.flow_step == 4 && JSON.parse(response).tarefa_2 == true) {
-    contact.status = "Demonstração";
+    contact.status = "demonstração";
+    contact.notify = 1;
+    for (const [sessionID, ws] of activeWebSockets.entries()) {
+      let data = {
+        jid: contact.jid,
+        notify_alert: true,
+        demo: true
+      };
+
+      if (ws.readyState === 1) { // ws.OPEN
+        ws.send(JSON.stringify({ data }));
+      }
+    };
   }
 
   if (contact.flow_step == 4 && JSON.parse(response).tarefa_2 == false) {
@@ -112,6 +147,7 @@ messageController.receipt = async ({ data }) => {
     contact.jid = data.key.remoteJid;
     contact.autochat = 0;
     contact.created = 0;
+    contact.notify = 1;
 
     let profile_picture = await getProfilePicWithTimeout(wa.getSocket(), data.key.remoteJid);
     contact.profile_picture = profile_picture;
@@ -125,22 +161,49 @@ messageController.receipt = async ({ data }) => {
       contact.name = !data.key.fromMe && data.pushName ? data.pushName : null;
     }
 
+    for (const [sessionID, ws] of activeWebSockets.entries()) {
+      let data = {
+        jid: contact.jid,
+        notify_alert: true
+      };
+
+      if (ws.readyState === 1) { // ws.OPEN
+        ws.send(JSON.stringify({ data }));
+      }
+    };
+
     try { await contact.create(); }
     catch (error) { console.log("User not created: ", error); }
   }
 
   if (contact && !data.key.fromMe) {
-    let contact = new Contact();
-    contact.jid = data.key.remoteJid;
+    let update_contact = new Contact();
+    update_contact.jid = data.key.remoteJid;
+    update_contact.notify = 1;
 
     if (isGroup) {
       const metadata = await wa.getSocket().groupMetadata(data.key.remoteJid);
-      contact.name = metadata.subject ? metadata.subject : null;
+      update_contact.name = metadata.subject ? metadata.subject : null;
     } else {
-      contact.name = !data.key.fromMe && data.pushName ? data.pushName : null;
+      update_contact.name = !data.key.fromMe && data.pushName ? data.pushName : null;
     }
 
-    try { await contact.update(); }
+    for (const [sessionID, ws] of activeWebSockets.entries()) {
+      let data = {
+        jid: contact.jid,
+        notify_alert: true
+      };
+
+      if (contact.status == "conectado") { data.conected = true; }
+      if (contact.status == "interessado") { data.interested = true; }
+      if (contact.status == "demonstração") { data.demo = true; }
+
+      if (ws.readyState === 1) { // ws.OPEN
+        ws.send(JSON.stringify({ data }));
+      }
+    };
+
+    try { await update_contact.update(); }
     catch (error) { console.log("User not updated: ", error); }
   }
 
@@ -182,10 +245,7 @@ messageController.receipt = async ({ data }) => {
     if (message_create.err) { console.log(message_create.err); }
     message.id = message_create.insertId;
 
-    console.log('autochat', contact.autochat);
-    console.log('data.key.fromMe', data.key.fromMe);
-
-    if (contact.autochat == 1 && !data.key.fromMe) {
+    if (contact?.autochat == 1 && !data.key.fromMe) {
       let contact_chat = new Contact();
       contact_chat.jid = data.key.remoteJid;
       contact_chat.typing = Date.now();

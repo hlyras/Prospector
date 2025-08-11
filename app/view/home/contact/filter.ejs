@@ -1,9 +1,79 @@
-<div id="contact-box" class="box a1 container scroll-y"></div>
+<div id="contact-filter-icon" class="container h-center">
+  <select id="contact-filter-day"
+    class="box b1 center lucida-grande bold em08 border shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+    <option value="">Todos os dias</option>
+    <option value="hoje">Hoje</option>
+  </select>
+
+  <div id="all-users-icon" style="position: relative;"
+    class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+    <span id="all-users-icon-notify" class="badge padding-5 size-5 radius-50"
+      style="display: none;background-color: red;top:2px;right:2px;"></span>
+    <div class="mobile-box b1 lucida-grande em08 bold center margin-bottom-5 hide-in-mobile">Conectados</div>
+    <img class='image-prop mobile-box size-25' src='/images/icon/all-users.jpg'>
+  </div>
+
+  <div id="conected-icon" style="position: relative;"
+    class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+    <span id="conected-icon-notify" class="badge padding-5 size-5 radius-50"
+      style="display: none;background-color: red;top:2px;right:2px;"></span>
+    <div class="mobile-box b1 lucida-grande em08 bold center margin-bottom-5 hide-in-mobile">Conectados</div>
+    <img class='image-prop mobile-box size-25' src='/images/icon/conected.png'>
+  </div>
+
+  <div id="interested-icon" style="position: relative;"
+    class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+    <span id="interested-icon-notify" class="badge padding-5 size-5 radius-50"
+      style="display: none;background-color: red;top:2px;right:2px;"></span>
+    <div class="mobile-box b1 lucida-grande em08 bold center margin-bottom-5 hide-in-mobile">Interessados</div>
+    <img class='image-prop mobile-box size-25' src='/images/icon/interested.png'>
+  </div>
+
+  <div id="demo-icon" style="position: relative;"
+    class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+    <span id="demo-icon-notify" class="badge padding-5 size-5 radius-50"
+      style="display: none;background-color: red;top:2px;right:2px;"></span>
+    <div class="mobile-box b1 lucida-grande em08 bold center margin-bottom-5 hide-in-mobile">Demonstrações</div>
+    <img class='image-prop mobile-box size-25' src='/images/icon/demo.png'>
+  </div>
+</div>
+
+<div id="contact-report" class="container padding-5 margin-top-10"></div>
+<div id="contact-box" class="box a1 container margin-top-10 scroll-y"></div>
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
     let contacts = await API.response(Contact.filter, {});
     contactFilter(contacts);
+
+    const all_users_icon = document.getElementById("all-users-icon");
+    const conected_icon = document.getElementById("conected-icon");
+    const interested_icon = document.getElementById("interested-icon");
+    const demo_icon = document.getElementById("demo-icon");
+
+    all_users_icon.addEventListener("click", async () => {
+      let contacts = await API.response(Contact.filter, { status: "" });
+      lib.display("all-users-icon-notify", "none");
+      contactFilter(contacts);
+    });
+
+    conected_icon.addEventListener("click", async () => {
+      let contacts = await API.response(Contact.filter, { status: "conectado" });
+      lib.display("conected-icon-notify", "none");
+      contactFilter(contacts);
+    });
+
+    interested_icon.addEventListener("click", async () => {
+      let contacts = await API.response(Contact.filter, { status: "interessado" });
+      lib.display("interested-icon-notify", "none");
+      contactFilter(contacts);
+    });
+
+    demo_icon.addEventListener("click", async () => {
+      let contacts = await API.response(Contact.filter, { status: "demonstração" });
+      lib.display("demo-icon-notify", "none");
+      contactFilter(contacts);
+    });
   });
 
   function contactFilter(contacts) {
@@ -16,6 +86,12 @@
         class: "box b1 lucida-grande center"
       }, "Nenhum contato"));
     }
+
+    let contact_report = document.getElementById("contact-report");
+    contact_report.innerHTML = "";
+    contact_report.append(lib.element.create("div", {
+      class: "box b1 lucida-grande em08 right"
+    }, `Contatos: ${contacts.length}`));
 
     contacts?.forEach(contact => {
       let contact_div = contactDiv(contact);

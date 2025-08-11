@@ -7,7 +7,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     const chat_container = document.getElementById("chat-container");
-    chat_container.style.height = window.innerHeight + "px";
+    const header_container = document.getElementById("header-container");
 
     let identity_box = identityDiv();
     chat_container.append(identity_box);
@@ -30,12 +30,20 @@
 
     // events
     window.addEventListener("resize", function () {
-      chat_container.style.height = window.innerHeight + "px";
+      resizeChatContainer();
       resizeMessageBox();
     });
 
+    resizeChatContainer();
     resizeMessageBox();
   });
+
+  function resizeChatContainer() {
+    const chat_container = document.getElementById("chat-container");
+    const header_container = document.getElementById("header-container");
+
+    chat_container.style.height = (window.innerHeight - header_container.offsetHeight) + "px";
+  };
 
   async function openChat(jid) {
     let contact = (await API.response(Contact.filter, { jid }))[0];

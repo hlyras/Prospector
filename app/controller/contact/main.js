@@ -84,6 +84,7 @@ contactController.update = async (req, res) => {
   contact.name = req.body.name;
   contact.autochat = req.body.autochat;
   contact.profile_picture = req.body.profile_picture;
+  contact.notify = req.body.notify;
 
   try {
     let contact_update_response = await contact.update();
@@ -129,6 +130,7 @@ contactController.filter = async (req, res) => {
     };
 
     lib.Query.fillParam("contact.jid", req.body.jid, contact_options.strict_params);
+    lib.Query.fillParam("contact.status", req.body.status, contact_options.strict_params);
     let contacts = await Contact.filter(contact_options);
 
     if (!contacts.length) {

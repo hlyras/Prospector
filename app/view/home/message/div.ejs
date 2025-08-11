@@ -1,7 +1,7 @@
 <script>
   function messageDiv(message) {
     let message_div = lib.element.create("div", {
-      class: "mobile-box b2-3 container margin-top-5"
+      class: "mobile-box b4-5 container margin-top-5"
     });
 
     if (message.from_me == 1) {
@@ -23,11 +23,9 @@
 
     if (message.type == "text" || message.type == "conversation") {
       let text_content = lib.element.create("div", {
-        class: "mobile-box wrap ground radius-5 lucida-grande rem08 padding-top-2 padding-right-10 padding-left-10 padding-bottom-2",
+        class: "mobile-box pre-wrap ground radius-5 lucida-grande rem08 padding-top-2 padding-right-10 padding-left-10 padding-bottom-2",
         style: `
-        word-wrap: break-word;
         overflow-wrap: break-word;
-        white-space: normal;
         `
       }, message.content);
       message_content.append(text_content);

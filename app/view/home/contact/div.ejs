@@ -2,8 +2,28 @@
   function contactDiv(contact) {
     let contact_div = lib.element.create("div", {
       id: `contact-${contact.jid}`,
-      class: "box a1 container box-hover opacity-out-09 ground padding-8 pointer"
+      class: "box a1 container box-hover opacity-out-09 ground padding-8 pointer",
+      style: "position: relative;"
     });
+
+    let notify_batch = lib.element.create("span", {
+      id: `contact-${contact.jid}-notify`,
+      class: "badge padding-5 radius-50",
+      style: `background-color:red;top:5px;right:5px;`
+    });
+    contact_div.append(notify_batch);
+
+    console.log(contact.status);
+
+    if (contact.notify) {
+      lib.display(notify_batch, "");
+      if (!contact.status) { lib.display("all-users-icon-notify", ""); }
+      if (contact.status == "conectado") { lib.display("conected-icon-notify", ""); }
+      if (contact.status == "interessado") { lib.display("interested-icon-notify", ""); }
+      if (contact.status == "demonstração") { lib.display("demo-icon-notify", ""); }
+    } else {
+      lib.display(notify_batch, "none");
+    }
 
     let profile_picture_box = lib.element.create("div", {
       class: "mobile-box b6 container v-center"
@@ -66,6 +86,14 @@
 
     // events
     contact_div.addEventListener("click", () => {
+      if (contact.notify) {
+        let update_contact = {
+          jid: contact.jid,
+          notify: 0
+        }
+        lib.display(`contact-${contact.jid}-notify`, "none");
+        API.response(Contact.update, update_contact);
+      }
       openChat(contact.jid);
     });
 
