@@ -78,8 +78,6 @@ messageController.sendByAi = async (contact) => {
     messages: prospect_flow[contact.flow_step](contact, history)
   });
 
-  // console.log(response);
-
   // O contato é da empresa
   if (contact.flow_step == 1 && JSON.parse(response).tarefa_2 == true) {
     contact.status = "conectado";
@@ -119,7 +117,9 @@ messageController.sendByAi = async (contact) => {
   }
 
   if (contact.flow_step == 2 && JSON.parse(response).tarefa_2 == false) {
-    contact.autochat = 0;
+    if (JSON.parse(response).stop_step == false) {
+      contact.autochat = 0;
+    }
   }
 
   // O cliente quer ver a demonstração
@@ -143,10 +143,10 @@ messageController.sendByAi = async (contact) => {
     contact.autochat = 0;
   }
 
-  // O cliente chegou ao final do fluxo
   if (JSON.parse(response).tarefa_2 == true) {
     contact.flow_step = parseInt(contact.flow_step) + 1;
 
+    // O cliente chegou ao final do fluxo
     if (contact.flow_step == 5) {
       contact.autochat = 0;
     }
@@ -332,7 +332,7 @@ messageController.receipt = async ({ data }) => {
 
     for (const [sessionID, ws] of activeWebSockets.entries()) {
       if (ws.readyState === 1) { // ws.OPEN
-        console.log(message);
+        // console.log(message);
         ws.send(JSON.stringify({ data, message }));
       }
     };

@@ -15,7 +15,7 @@ contactController.create = async (req, res) => {
     return res.send({ msg: "Esse número não existe!" });
   }
 
-  if (!req.body.name) {
+  if (!req.body.business) {
     return res.send({ msg: "Informe o nome da empresa ou do contato" });
   }
 
@@ -53,11 +53,11 @@ Preciso identificar se o nome da empresa deve ser referido como masculino ou fem
 Complete .. com "da" ou "do" levando em consideração o nome da empresa.
 
 Exemplo:
-Bom dia, é da Coca-cola?
-Bom dia, é do atacadão?
+Boa tarde, é da Coca-cola?
+Boa tarde, é do atacadão?
 
 Frase base da resposta:
-Bom dia, é .. ${contact.business}?
+Boa tarde, é .. ${contact.business}?
 
 Atenção o JSON precisa ser formatado corretamente, sem blocos de código, sem texto explicativo, sem comentários.  
 Todas as chaves e strings devem estar entre aspas duplas e as quebras de linha devem ser representadas como \n.
@@ -69,7 +69,7 @@ Todas as chaves e strings devem estar entre aspas duplas e as quebras de linha d
           ]
         });
 
-        console.log("Resposta do CHATGPT: ", response);
+        // console.log("Resposta do CHATGPT: ", response);
 
         await wa.getSocket().sendMessage(contact.jid, {
           text: JSON.parse(response).output
