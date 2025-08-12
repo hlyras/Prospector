@@ -1,0 +1,18 @@
+<script>
+  function messageReaction(message) {
+    if (message.content) {
+      let message_div = document.getElementById(`message-${message.target_id}-content`);
+      message_div.append(lib.element.create("div", {
+        id: `message-${message.wa_id}-reaction`,
+        class: "badge em08 padding-3 radius-50 border",
+        style: "position: absolute;background-color: #fff;"
+      }, message.content));
+
+      if (message.origin_id) {
+        document.getElementById(`message-${message.origin_id}-reaction`).remove();
+      }
+    } else {
+      document.getElementById(`message-${message.origin_id}-reaction`).remove();
+    }
+  };
+</script>

@@ -1,4 +1,5 @@
 <%- include('./div.ejs') %>
+<%- include('./reaction.ejs') %>
 
 <script>
   async function receivedMessage({ data, message }) {
@@ -47,7 +48,7 @@
     let last_message = document.getElementById(`last-message-${data.key.remoteJid}`);
     last_message.innerHTML = "";
 
-    if (message.type == "conversation" || message.type == "text") {
+    if (message.type == "text") {
       last_message.innerHTML = lib.string.cut(message.content, 30);
     }
 

@@ -41,13 +41,9 @@ Message.filter = ({ props, inners, lefts, params, strict_params, in_params, orde
   return db(query, values);
 };
 
-Message.delete = ({ inners, params, strict_params }) => {
-  let { query, values } = new lib.Query().delete()
-    .table("cms_prospector.message")
-    .inners(inners)
-    .params(params)
-    .strictParams(strict_params).build();
-  return db(query, values);
-}
+Message.delete = (wa_id) => {
+  let query = `DELETE FROM cms_prospector.message WHERE wa_id = ?;`
+  return db(query, wa_id);
+};
 
 module.exports = Message;

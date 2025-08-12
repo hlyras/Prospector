@@ -111,7 +111,8 @@ ${basic_info}
 Atenção, preciso que faça as tarefas e o Output de forma EXTREMAMENTE DILIGENTE!
 Tarefa_1: Identificar através da resposta do cliente no histórico se ele tem interesse no catálogo.
 Caso "sim": Enviar próxima mensagem do fluxo com um "Legal" antes: Legal, esse cat...;
-Caso "não": Responda apenas: "Tudo bem, surgindo interesse a disposição.";
+Caso "não": Responda apenas: "Tudo bem, surgindo interesse estou a disposição.";
+Caso "sim, mas não no momento": Responda: "Tudo bem, surgindo interesse estou a disposição." mas retorne a tarefa_1 como true;
 Caso "Como funciona?": Enviar próxima mensagem do fluxo;
 Caso Pergunte algo fora do fluxo: Responder de forma breve e concatenar com 2 quebras de linha a próxima pergunta do fluxo;
 Tarefa_2: A próxima mensagem do fluxo será enviada no output?;

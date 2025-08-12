@@ -92,13 +92,11 @@
     contact.messages = lib.sort(contact.messages, "datetime");
 
     contact.messages.forEach(message => {
-      message_box.append(messageDiv(message));
+      let message_div = messageDiv(message);
+      message_div && message_box.append(message_div);
     });
 
     message_box.scrollTop = message_box.scrollHeight;
-
-    // Message Input box
-    message_input
   };
 
   function identityDiv() {

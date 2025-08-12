@@ -221,7 +221,7 @@ messageController.receipt = async ({ data }) => {
   }
 
   if (data.message.conversation) {
-    message.type = "conversation";
+    message.type = "text";
     message.content = data.message.conversation;
   }
 
@@ -240,36 +240,74 @@ messageController.receipt = async ({ data }) => {
     message.content = await downloadMedia(data, wa.getSocket());
   }
 
+  if (data.message.reactionMessage) {
+    message.type = "reaction";
+    message.target_id = data.message.reactionMessage.key.id;
+    message.content = data.message.reactionMessage.text;
+  }
+
   try {
-    let message_create = await message.create();
-    if (message_create.err) { console.log(message_create.err); }
-    message.id = message_create.insertId;
+    if (message.type == "reaction") {
+      if (!data.message.reactionMessage.text) {
+        let reaction_message = (await Message.filter({
+          strict_params: {
+            keys: ["jid", "type", "target_id", "from_me"],
+            values: [contact.jid, "reaction", message.target_id, data.key.fromMe ? 1 : 0]
+          }
+        }))[0];
 
-    if (contact?.autochat == 1 && !data.key.fromMe) {
-      let contact_chat = new Contact();
-      contact_chat.jid = data.key.remoteJid;
-      contact_chat.typing = Date.now();
-      await contact_chat.update();
+        message.origin_id = reaction_message.wa_id;
 
-      setTimeout(async () => {
-        const updated_contact = (await Contact.findByJid(contact.jid))[0];
+        Message.delete(reaction_message.wa_id);
+      } else {
+        let reaction_message = (await Message.filter({
+          strict_params: {
+            keys: ["jid", "type", "target_id", "from_me"],
+            values: [contact.jid, "reaction", message.target_id, data.key.fromMe ? 1 : 0]
+          }
+        }))[0];
 
-        const lastMessageDelay = Date.now() - updated_contact.typing;
+        let message_create = await message.create();
+        if (message_create.err) { console.log(message_create.err); }
+        message.id = message_create.insertId;
 
-        if (lastMessageDelay >= 3000) {
-          await contact_chat.resetTyping();
-          let contact_info = new Contact();
-          contact_info.jid = updated_contact.jid;
-          contact_info.business = updated_contact.business;
-          contact_info.flow_step = parseInt(updated_contact.flow_step);
-
-          await messageController.sendByAi(contact_info);
+        if (reaction_message) {
+          message.origin_id = reaction_message.wa_id;
+          Message.delete(reaction_message.wa_id);
         }
-      }, 3000);
+      }
+    } else {
+      let message_create = await message.create();
+      if (message_create.err) { console.log(message_create.err); }
+      message.id = message_create.insertId;
+
+      if (contact?.autochat == 1 && !data.key.fromMe && message.type == "text") {
+        let contact_chat = new Contact();
+        contact_chat.jid = data.key.remoteJid;
+        contact_chat.typing = Date.now();
+        await contact_chat.update();
+
+        setTimeout(async () => {
+          const updated_contact = (await Contact.findByJid(contact.jid))[0];
+
+          const lastMessageDelay = Date.now() - updated_contact.typing;
+
+          if (lastMessageDelay >= 3000) {
+            await contact_chat.resetTyping();
+            let contact_info = new Contact();
+            contact_info.jid = updated_contact.jid;
+            contact_info.business = updated_contact.business;
+            contact_info.flow_step = parseInt(updated_contact.flow_step);
+
+            await messageController.sendByAi(contact_info);
+          }
+        }, 3000);
+      }
     }
 
     for (const [sessionID, ws] of activeWebSockets.entries()) {
       if (ws.readyState === 1) { // ws.OPEN
+        console.log(message);
         ws.send(JSON.stringify({ data, message }));
       }
     };

@@ -41,14 +41,14 @@ contactController.create = async (req, res) => {
               role: "system",
               content: `
 Preciso identificar se o nome da empresa deve ser referido como masculino ou feminino.
-Substitua 'dx' pelo artigo correto "da" ou "do" levando em consideração o nome da empresa.
+Complete .. com "da" ou "do" levando em consideração o nome da empresa.
 
 Exemplo:
 Bom dia, é da Coca-cola?
 Bom dia, é do atacadão?
 
-O que preciso:
-Bom dia, é dx ${contact.business}?
+Frase base da resposta:
+Bom dia, é .. ${contact.business}?
 
 Atenção o JSON precisa ser formatado corretamente, sem blocos de código, sem texto explicativo, sem comentários.  
 Todas as chaves e strings devem estar entre aspas duplas e as quebras de linha devem ser representadas como \n.

@@ -1,5 +1,10 @@
 <script>
   function messageDiv(message) {
+    if (message.type == "reaction") {
+      messageReaction(message);
+      return null;
+    }
+
     let message_div = lib.element.create("div", {
       class: "mobile-box b4-5 container margin-top-5"
     });
@@ -9,8 +14,9 @@
     }
 
     let message_content = lib.element.create("div", {
+      id: `message-${message.wa_id}-content`,
       class: "mobile-box container padding-3",
-      style: "max-width: 100%;display: inline-block;"
+      style: "position: relative;max-width: 100%;display: inline-block;"
     });
     message_div.append(message_content);
 
