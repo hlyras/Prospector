@@ -55,5 +55,6 @@
     if (message.type == "image") { last_message.innerHTML = "📸 Foto"; }
     if (message.type == "video") { last_message.innerHTML = "🎬 Vídeo"; }
     if (message.type == "audio") { last_message.innerHTML = "🔊 Áudio"; }
+    if (message.type == "reaction") { last_message.innerHTML = message.content; }
   };
 </script>

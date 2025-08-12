@@ -10,9 +10,18 @@ const Message = require("../../model/message/main");
 const contactController = {};
 
 contactController.create = async (req, res) => {
+  const [wa_contact] = await wa.getSocket().onWhatsApp(`${req.body.jid}@s.whatsapp.net`);
+  if (!wa_contact?.exists) {
+    return res.send({ msg: "Esse número não existe!" });
+  }
+
+  if (!req.body.name) {
+    return res.send({ msg: "Informe o nome da empresa ou do contato" });
+  }
+
   let contact = new Contact();
   contact.business = req.body.business;
-  contact.jid = `${req.body.jid}@s.whatsapp.net`;
+  contact.jid = wa_contact.jid;
   contact.participant = null;
   contact.name = req.body.name;
   contact.autochat = !isNaN(req.body.autochat)

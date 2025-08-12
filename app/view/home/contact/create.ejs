@@ -85,7 +85,9 @@
       contact_icon.src = "/images/icon/add-contact.png";
       contact_create_box.style.display = "none";
 
-      lib.message(response.done || response.error);
+      contact_create_business.value = "";
+      contact_create_jid.value = "";
+
     });
 
     return contact_create_form;

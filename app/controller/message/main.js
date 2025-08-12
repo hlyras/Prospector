@@ -25,6 +25,31 @@ messageController.send = async (req, res) => {
   }
 };
 
+messageController.react = async (req, res) => {
+  if (wa.isConnected()) {
+    let response = await wa.getSocket().sendMessage(req.body.jid, {
+      react: {
+        text: req.body.content,
+        key: req.body.key
+      }
+    });
+    res.send(response);
+  } else {
+    let msg = "WhatsApp não está pronto para enviar mensagens.";
+    res.send({ msg });
+  }
+};
+
+// await sock.sendMessage(
+//   jid,
+//   {
+//     react: {
+//       text: '👍',         // emoji da reação (ou '' para remover)
+//       key: message.key    // o objeto key da mensagem alvo
+//     }
+//   }
+// );
+
 messageController.sendByAi = async (contact) => {
   let message_options = {
     props: [
@@ -292,7 +317,7 @@ messageController.receipt = async ({ data }) => {
 
           const lastMessageDelay = Date.now() - updated_contact.typing;
 
-          if (lastMessageDelay >= 3000) {
+          if (lastMessageDelay >= 15000) {
             await contact_chat.resetTyping();
             let contact_info = new Contact();
             contact_info.jid = updated_contact.jid;
@@ -301,7 +326,7 @@ messageController.receipt = async ({ data }) => {
 
             await messageController.sendByAi(contact_info);
           }
-        }, 3000);
+        }, 15000);
       }
     }
 
