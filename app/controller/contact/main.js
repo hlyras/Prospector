@@ -15,6 +15,10 @@ contactController.create = async (req, res) => {
     return res.send({ msg: "Esse número não existe!" });
   }
 
+  if ((await Contact.findByJid(wa_contact.jid)).length) {
+    return res.send({ msg: "Esse número já está cadastrado!" });
+  }
+
   if (!req.body.business) {
     return res.send({ msg: "Informe o nome da empresa ou do contato" });
   }
@@ -22,6 +26,7 @@ contactController.create = async (req, res) => {
   let contact = new Contact();
   contact.business = req.body.business;
   contact.jid = wa_contact.jid;
+  contact.datetime = lib.date.timestamp.generate();
   contact.participant = null;
   contact.name = req.body.name;
   contact.autochat = !isNaN(req.body.autochat)
@@ -134,6 +139,7 @@ contactController.filter = async (req, res) => {
           "last_message.datetime", "(SELECT MAX(datetime) FROM cms_prospector.message WHERE jid = contact.jid)"
         ]
       ],
+      period: { key: "contact.datetime", start: req.body.period_start, end: req.body.period_end },
       strict_params: { keys: [], values: [] },
       order_params: [["last_message.datetime", "desc"]]
     };

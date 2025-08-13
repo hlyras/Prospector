@@ -1,15 +1,21 @@
 <div id="contact-filter-icon" class="container h-center">
-  <select id="contact-filter-day"
+  <select id="contact-filter-period"
     class="box b1 center lucida-grande bold em08 border shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
     <option value="">Todos os dias</option>
-    <option value="hoje">Hoje</option>
+    <option value="today">Hoje</option>
+    <option value="period">Período</option>
   </select>
+
+  <div id="contact-period-container" class="box b1 container padding-5" style="display: none;">
+    <input type="date" id="contact_period_start" class="mobile-box b2 em08 border radius-2 padding-5">
+    <input type="date" id="contact_period_end" class="mobile-box b2 em08 border radius-2 padding-5">
+  </div>
 
   <div id="all-users-icon" style="position: relative;"
     class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
     <span id="all-users-icon-notify" class="badge padding-5 size-5 radius-50"
       style="display: none;background-color: red;top:2px;right:2px;"></span>
-    <div class="mobile-box b1 lucida-grande em08 bold center margin-bottom-5 hide-in-mobile">Todos</div>
+    <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">Todos</div>
     <img class='image-prop mobile-box size-25' src='/images/icon/all-users.jpg'>
   </div>
 
@@ -17,7 +23,7 @@
     class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
     <span id="conected-icon-notify" class="badge padding-5 size-5 radius-50"
       style="display: none;background-color: red;top:2px;right:2px;"></span>
-    <div class="mobile-box b1 lucida-grande em08 bold center margin-bottom-5 hide-in-mobile">Conectados</div>
+    <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">Conectados</div>
     <img class='image-prop mobile-box size-25' src='/images/icon/conected.png'>
   </div>
 
@@ -25,7 +31,7 @@
     class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
     <span id="interested-icon-notify" class="badge padding-5 size-5 radius-50"
       style="display: none;background-color: red;top:2px;right:2px;"></span>
-    <div class="mobile-box b1 lucida-grande em08 bold center margin-bottom-5 hide-in-mobile">Interessados</div>
+    <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">Interessados</div>
     <img class='image-prop mobile-box size-25' src='/images/icon/interested.png'>
   </div>
 
@@ -33,7 +39,7 @@
     class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
     <span id="demo-icon-notify" class="badge padding-5 size-5 radius-50"
       style="display: none;background-color: red;top:2px;right:2px;"></span>
-    <div class="mobile-box b1 lucida-grande em08 bold center margin-bottom-5 hide-in-mobile">Demonstrações</div>
+    <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">Demonstrações</div>
     <img class='image-prop mobile-box size-25' src='/images/icon/demo.png'>
   </div>
 </div>
@@ -51,27 +57,167 @@
     const interested_icon = document.getElementById("interested-icon");
     const demo_icon = document.getElementById("demo-icon");
 
+    function switchStatus(status) {
+      console.log(status);
+      let icon = document.getElementById(`${status}-icon`);
+
+      if (icon.dataset.selected) {
+        delete icon.dataset.selected;
+        lib.addCss(icon, ["shadow-lg-st", "border"]);
+        lib.removeCss(icon, ["shadow-st", "bg-solid"]);
+      } else {
+        icon.dataset.selected = true;
+        lib.addCss(icon, ["shadow-st", "bg-solid"]);
+        lib.removeCss(icon, ["shadow-lg-st", "border"]);
+      }
+
+      let status_list = ["all-users", "conected", "interested", "demo"];
+      status_list = status_list.filter(s => s !== status);
+
+      status_list.forEach(s => {
+        let icon = document.getElementById(`${s}-icon`);
+        delete icon.dataset.selected;
+
+        lib.addCss(icon, ["shadow-lg-st", "border"]);
+        lib.removeCss(icon, ["shadow-st", "bg-solid"]);
+      });
+    };
+
     all_users_icon.addEventListener("click", async () => {
-      let contacts = await API.response(Contact.filter, { status: "" });
+      switchStatus("all-users");
+
+      let contacts = await API.response(Contact.filter, {
+        period_start: lib.dateToTimestamp(contact_period_start.value),
+        period_end: contact_period_end.value ?
+          lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null,
+        status: ""
+      });
+
       lib.display("all-users-icon-notify", "none");
       contactFilter(contacts);
     });
 
     conected_icon.addEventListener("click", async () => {
-      let contacts = await API.response(Contact.filter, { status: "conectado" });
+      switchStatus("conected");
+
+      let contact = {
+        period_start: lib.dateToTimestamp(contact_period_start.value),
+        period_end: contact_period_end.value ?
+          lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null,
+        status: conected_icon.dataset.selected ? "conectado" : ""
+      }
+
+      console.log(contact);
+      let contacts = await API.response(Contact.filter, contact);
+
       lib.display("conected-icon-notify", "none");
       contactFilter(contacts);
     });
 
     interested_icon.addEventListener("click", async () => {
-      let contacts = await API.response(Contact.filter, { status: "interessado" });
+      switchStatus("interested");
+
+      let contacts = await API.response(Contact.filter, {
+        period_start: lib.dateToTimestamp(contact_period_start.value),
+        period_end: contact_period_end.value ?
+          lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null,
+        status: demo_icon.dataset.selected ? "interessado" : ""
+      });
+
       lib.display("interested-icon-notify", "none");
       contactFilter(contacts);
     });
 
     demo_icon.addEventListener("click", async () => {
-      let contacts = await API.response(Contact.filter, { status: "demonstração" });
+      switchStatus("demo");
+
+      let contacts = await API.response(Contact.filter, {
+        period_start: lib.dateToTimestamp(contact_period_start.value),
+        period_end: contact_period_end.value ?
+          lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null,
+        status: demo_icon.dataset.selected ? "demonstração" : ""
+      });
+
       lib.display("demo-icon-notify", "none");
+      contactFilter(contacts);
+    });
+
+    document.getElementById("contact-filter-period").addEventListener("change", async e => {
+      let contact = {}
+
+      if (e.target.value == "period") {
+        return lib.display("contact-period-container", "");
+      }
+
+      if (e.target.value == "") {
+        contact_period_start.value = "";
+        contact_period_end.value = "";
+        lib.display("contact-period-container", "none");
+      }
+
+      if (e.target.value == "today") {
+        contact_period_start.value = lib.convertDate(lib.genDate());
+        contact_period_end.value = lib.convertDate(lib.genDate());
+        lib.display("contact-period-container", "none");
+      }
+
+      contact.period_start = lib.dateToTimestamp(contact_period_start.value);
+      contact.period_end = contact_period_end.value ?
+        lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null;
+
+      let selected_icon = [all_users_icon, conected_icon, interested_icon, demo_icon]
+        .find(icon => icon.dataset.selected);
+      let selected_status = selected_icon ? lib.splitTextBy(selected_icon.id, "-icon")[0] : "";
+      if (selected_status == "") { contact.status = ""; }
+      if (selected_status == "conected") { contact.status = "conectado"; }
+      if (selected_status == "interested") { contact.status = "interessado"; }
+      if (selected_status == "demo") { contact.status = "demonstração"; }
+
+      console.log(contact);
+
+      let contacts = await API.response(Contact.filter, {
+        period_start: contact.period_start,
+        period_end: contact.period_end,
+        status: contact.status
+      });
+      contactFilter(contacts);
+    });
+
+    contact_period_start.addEventListener("change", async () => {
+      let contact = {}
+
+      contact.period_start = lib.dateToTimestamp(contact_period_start.value);
+      contact.period_end = contact_period_end.value ?
+        lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null;
+
+      let selected_icon = [all_users_icon, conected_icon, interested_icon, demo_icon]
+        .find(icon => icon.dataset.selected);
+      let selected_status = selected_icon ? lib.splitTextBy(selected_icon.id, "-icon")[0] : "";
+      if (selected_status == "") { contact.status = ""; }
+      if (selected_status == "conected") { contact.status = "conectado"; }
+      if (selected_status == "interested") { contact.status = "interessado"; }
+      if (selected_status == "demo") { contact.status = "demonstração"; }
+
+      let contacts = await API.response(Contact.filter, contact);
+      contactFilter(contacts);
+    });
+
+    contact_period_end.addEventListener("change", async () => {
+      let contact = {}
+
+      contact.period_start = lib.dateToTimestamp(contact_period_start.value);
+      contact.period_end = contact_period_end.value ?
+        lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null;
+
+      let selected_icon = [all_users_icon, conected_icon, interested_icon, demo_icon]
+        .find(icon => icon.dataset.selected);
+      let selected_status = selected_icon ? lib.splitTextBy(selected_icon.id, "-icon")[0] : "";
+      if (selected_status == "") { contact.status = ""; }
+      if (selected_status == "conected") { contact.status = "conectedo"; }
+      if (selected_status == "interested") { contact.status = "interessado"; }
+      if (selected_status == "demo") { contact.status = "demonstração"; }
+
+      let contacts = await API.response(Contact.filter, contact);
       contactFilter(contacts);
     });
   });
