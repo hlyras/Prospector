@@ -87,7 +87,8 @@
       let contact_options = {
         business: contact_create_business.value,
         jid: contact_create_jid.value,
-        autochat: contact_create_chat.value
+        autochat: contact_create_chat.value,
+        segment: contact_catalog_select.value
       };
 
       let response = await API.response(Contact.create, contact_options);

@@ -33,6 +33,7 @@ contactController.create = async (req, res) => {
     ? parseInt(req.body.autochat) : 0;
   contact.created = 1;
   contact.flow_step = 1;
+  contact.segment = req.body.segment;
 
   let profile_picture = null;
   profile_picture = await getProfilePicWithTimeout(wa.getSocket(), contact.jid);

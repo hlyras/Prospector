@@ -19,7 +19,7 @@ Bom dia é da empresa ${contact.business}?
   `, `
 Oi, meu nome é Gabriel, represento a Cotálogo e nossa proposta é aprimorar a apresentação, divulgação e atendimento das empresas através de um catálogo digital como esse:\n\n
 
-suafloricultura.cotalogo.com\n\n
+${contact.segment}\n\n
 
 Gostaria de ter um personalizado para sua empresa?
   `, `

@@ -323,6 +323,7 @@ messageController.receipt = async ({ data }) => {
             contact_info.jid = updated_contact.jid;
             contact_info.business = updated_contact.business;
             contact_info.flow_step = parseInt(updated_contact.flow_step);
+            contact_info.segment = updated_contact.segment;
 
             await messageController.sendByAi(contact_info);
           }
