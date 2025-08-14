@@ -57,6 +57,22 @@
       value: 0,
     }, "Desativar conversa automática"));
 
+    contact_create_form.append(lib.element.create("div", {
+      class: "box b1 lucida-grande bold rem08 margin-top-10"
+    }, "Segmento da empresa"));
+    let contact_catalog_select = lib.element.create("select", {
+      class: "box b1 lucida-grande rem08 disable-selected border-bottom-lg-st padding-10",
+    });
+    contact_create_form.append(contact_catalog_select);
+
+    contact_catalog_select.append(lib.element.create("option", {
+      value: "suafloricultura.cotalogo.com",
+    }, "Floricultura"));
+
+    contact_catalog_select.append(lib.element.create("option", {
+      value: "suajoalheria.cotalogo.com",
+    }, "Joalheria"));
+
     let submit_button = lib.element.create("input", {
       type: "submit",
       class: "box b1 btn-act lucida-grande bold noborder radius-3 shadow-lg-st padding-10 margin-top-10 pointer",

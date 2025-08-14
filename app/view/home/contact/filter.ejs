@@ -100,15 +100,12 @@
     conected_icon.addEventListener("click", async () => {
       switchStatus("conected");
 
-      let contact = {
+      let contacts = await API.response(Contact.filter, {
         period_start: lib.dateToTimestamp(contact_period_start.value),
         period_end: contact_period_end.value ?
           lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null,
         status: conected_icon.dataset.selected ? "conectado" : ""
-      }
-
-      console.log(contact);
-      let contacts = await API.response(Contact.filter, contact);
+      });
 
       lib.display("conected-icon-notify", "none");
       contactFilter(contacts);
@@ -121,7 +118,7 @@
         period_start: lib.dateToTimestamp(contact_period_start.value),
         period_end: contact_period_end.value ?
           lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null,
-        status: demo_icon.dataset.selected ? "interessado" : ""
+        status: interested_icon.dataset.selected ? "interessado" : ""
       });
 
       lib.display("interested-icon-notify", "none");
@@ -173,8 +170,6 @@
       if (selected_status == "interested") { contact.status = "interessado"; }
       if (selected_status == "demo") { contact.status = "demonstração"; }
 
-      console.log(contact);
-
       let contacts = await API.response(Contact.filter, {
         period_start: contact.period_start,
         period_end: contact.period_end,
@@ -213,7 +208,7 @@
         .find(icon => icon.dataset.selected);
       let selected_status = selected_icon ? lib.splitTextBy(selected_icon.id, "-icon")[0] : "";
       if (selected_status == "") { contact.status = ""; }
-      if (selected_status == "conected") { contact.status = "conectedo"; }
+      if (selected_status == "conected") { contact.status = "conectado"; }
       if (selected_status == "interested") { contact.status = "interessado"; }
       if (selected_status == "demo") { contact.status = "demonstração"; }
 
