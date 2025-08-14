@@ -66,7 +66,7 @@ ${basic_info}
 Atenção, preciso que faça as tarefas e o Output de forma EXTREMAMENTE DILIGENTE!
 Tarefa_1: Identificar através da resposta do cliente no histórico se o contato pertence a empresa perguntada.
 Caso sim: Enviar próxima mensagem do fluxo;
-Caso em aberto: Se o cliente apenas disser: "Posso ajudar", "Boa tarde, tudo bem?" (coisas indiretas), marcar tarefa_1 como true e enviar próxima mensagem do fluxo;
+Caso em aberto: Se o cliente apenas disser: "Posso ajudar", "Boa tarde, tudo bem?", "oi" (coisas indiretas), marcar tarefa_1 como true e enviar próxima mensagem do fluxo;
 Caso não: Responda apenas: "Tudo bem, obrigado.";
 Caso Pergunte algo fora do fluxo: Responder de forma breve e concatenar com 2 quebras de linha a próxima pergunta do fluxo;
 Tarefa_2: A próxima mensagem do fluxo será enviada no output?;
@@ -114,6 +114,7 @@ Atenção, preciso que faça as tarefas e o Output de forma EXTREMAMENTE DILIGEN
 Tarefa_1: Identificar através da resposta do cliente no histórico se ele tem interesse no catálogo.
 Caso "sim": Enviar próxima mensagem do fluxo com um "Legal" antes: Legal, esse cat...;
 Caso em aberto: Se o cliente apenas disser: "Posso ajudar", "Boa tarde", "tudo bem?", coisas indiretas, responda educadamente e pergunte novamente se Gostou do catálogo?, retorne false para a tarefa_2 e true para stop_step;
+Caso "ainda não ví": Responda apenas: "Tudo bem", retorne false para a tarefa_2 e true para stop_step;
 Caso "não": Responda apenas: "Tudo bem, surgindo interesse estou a disposição.";
 Caso "sim, mas não no momento": Responda: "Tudo bem, surgindo interesse estou a disposição." mas retorne a tarefa_1 como true;
 Caso "Como funciona?": Enviar próxima mensagem do fluxo;
