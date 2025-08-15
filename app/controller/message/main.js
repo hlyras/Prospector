@@ -60,7 +60,7 @@ messageController.sendByAi = async (contact) => {
     ],
     strict_params: { keys: [], values: [] },
     order_params: [["message.datetime", "desc"]],
-    limit: 5
+    limit: 20
   };
 
   lib.Query.fillParam("message.jid", contact.jid, message_options.strict_params);
@@ -78,85 +78,170 @@ messageController.sendByAi = async (contact) => {
     messages: prospect_flow[contact.flow_step](contact, history)
   });
 
-  // O contato é da empresa
-  if (contact.flow_step == 1 && JSON.parse(response).tarefa_2 == true) {
-    contact.status = "conectado";
-    contact.notify = 1;
-    for (const [sessionID, ws] of activeWebSockets.entries()) {
-      let data = {
-        jid: contact.jid,
-        notify_alert: true,
-        conected: true
+  let gpt_response = JSON.parse(response);
+
+  // console.log(gpt_response);
+
+  // O contato é da empresa?
+  if (contact.flow_step == 1) {
+    if (gpt_response.name) {
+      contact.name = gpt_response.name;
+    }
+
+    if (gpt_response.flow_step == "next") {
+      contact.status = "conectado";
+      contact.notify = 1;
+      contact.flow_step = parseInt(contact.flow_step) + 1;
+
+      for (const [sessionID, ws] of activeWebSockets.entries()) {
+        let data = {
+          jid: contact.jid,
+          notify_alert: true,
+          conected: true
+        };
+
+        if (ws.readyState === 1) {
+          ws.send(JSON.stringify({ data }));
+        }
       };
+    }
 
-      if (ws.readyState === 1) { // ws.OPEN
-        ws.send(JSON.stringify({ data }));
-      }
-    };
-  }
-
-  if (contact.flow_step == 1 && JSON.parse(response).tarefa_2 == false) {
-    contact.autochat = 0;
-  }
-
-  // O cliente tem interesse no catálogo
-  if (contact.flow_step == 2 && JSON.parse(response).tarefa_2 == true) {
-    contact.status = "interessado";
-    contact.notify = 1;
-    for (const [sessionID, ws] of activeWebSockets.entries()) {
-      let data = {
-        jid: contact.jid,
-        notify_alert: true,
-        interested: true
-      };
-
-      if (ws.readyState === 1) { // ws.OPEN
-        ws.send(JSON.stringify({ data }));
-      }
-    };
-  }
-
-  if (contact.flow_step == 2 && JSON.parse(response).tarefa_2 == false) {
-    if (JSON.parse(response).stop_step == false) {
+    if (gpt_response.flow_step == "exit") {
       contact.autochat = 0;
     }
+
+    if (gpt_response.reply == true) {
+      await wa.getSocket().sendMessage(contact.jid, {
+        text: gpt_response.output
+      });
+    }
+
+    contact.update();
   }
 
-  // O cliente quer ver a demonstração
-  if (contact.flow_step == 4 && JSON.parse(response).tarefa_2 == true) {
-    contact.status = "demonstração";
-    contact.notify = 1;
-    for (const [sessionID, ws] of activeWebSockets.entries()) {
-      let data = {
-        jid: contact.jid,
-        notify_alert: true,
-        demo: true
+  // O cliente tem interesse no catálogo?
+  else if (contact.flow_step == 2) {
+    if (gpt_response.name) {
+      contact.name = gpt_response.name;
+    }
+
+    if (gpt_response.flow_step == "next") {
+      contact.status = "interessado";
+      contact.notify = 1;
+
+      if (contact.name) { contact.flow_step = parseInt(contact.flow_step) + 2; }
+      else { contact.flow_step = parseInt(contact.flow_step) + 1; }
+
+      for (const [sessionID, ws] of activeWebSockets.entries()) {
+        let data = {
+          jid: contact.jid,
+          notify_alert: true,
+          interested: true
+        };
+
+        if (ws.readyState === 1) { ws.send(JSON.stringify({ data })); }
       };
+    }
 
-      if (ws.readyState === 1) { // ws.OPEN
-        ws.send(JSON.stringify({ data }));
-      }
-    };
-  }
+    // if (gpt_response.flow_step == "advance_two") {
+    //   contact.status = "interessado";
+    //   contact.notify = 1;
+    //   contact.flow_step = parseInt(contact.flow_step) + 2;
 
-  if (contact.flow_step == 4 && JSON.parse(response).tarefa_2 == false) {
-    contact.autochat = 0;
-  }
+    //   for (const [sessionID, ws] of activeWebSockets.entries()) {
+    //     let data = {
+    //       jid: contact.jid,
+    //       notify_alert: true,
+    //       interested: true
+    //     };
 
-  if (JSON.parse(response).tarefa_2 == true) {
-    contact.flow_step = parseInt(contact.flow_step) + 1;
+    //     if (ws.readyState === 1) { ws.send(JSON.stringify({ data })); }
+    //   };
+    // }
 
-    // O cliente chegou ao final do fluxo
-    if (contact.flow_step == 5) {
+    if (gpt_response.flow_step == "exit") {
       contact.autochat = 0;
     }
+
+    if (gpt_response.reply == true) {
+      await wa.getSocket().sendMessage(contact.jid, {
+        text: gpt_response.output
+      });
+    }
+
+    contact.update();
   }
 
-  contact.update();
+  // Informações / Perguntar o nome ou Oferecer esboço
+  else if (contact.flow_step == 3) {
+    if (gpt_response.name) {
+      contact.name = gpt_response.name;
+    }
 
-  await wa.getSocket().sendMessage(contact.jid, {
-    text: JSON.parse(response).output
-  });
+    if (gpt_response.flow_step == "next") {
+      contact.status = "interessado";
+      contact.notify = 1;
+      contact.flow_step = parseInt(contact.flow_step) + 1;
+
+      for (const [sessionID, ws] of activeWebSockets.entries()) {
+        let data = {
+          jid: contact.jid,
+          notify_alert: true,
+          interested: true
+        };
+
+        if (ws.readyState === 1) { ws.send(JSON.stringify({ data })); }
+      };
+    }
+
+    if (gpt_response.flow_step == "exit") {
+      contact.autochat = 0;
+    }
+
+    if (gpt_response.reply == true) {
+      await wa.getSocket().sendMessage(contact.jid, {
+        text: gpt_response.output
+      });
+    }
+
+    contact.update();
+  }
+
+  // O cliente tem interesse no esboço?
+  else if (contact.flow_step == 4) {
+    if (gpt_response.name) {
+      contact.name = gpt_response.name;
+    }
+
+    if (gpt_response.flow_step == "next") {
+      contact.status = "demonstração";
+      contact.notify = 1;
+      contact.flow_step = parseInt(contact.flow_step) + 1;
+      contact.autochat = 0;
+
+      for (const [sessionID, ws] of activeWebSockets.entries()) {
+        let data = {
+          jid: contact.jid,
+          notify_alert: true,
+          interested: true
+        };
+
+        if (ws.readyState === 1) { ws.send(JSON.stringify({ data })); }
+      };
+    }
+
+    if (gpt_response.flow_step == "exit") {
+      contact.autochat = 0;
+    }
+
+    if (gpt_response.reply == true) {
+      await wa.getSocket().sendMessage(contact.jid, {
+        text: gpt_response.output
+      });
+    }
+
+    contact.update();
+  }
 };
 
 messageController.receipt = async ({ data }) => {
@@ -183,7 +268,6 @@ messageController.receipt = async ({ data }) => {
       contact.name = metadata.subject ? metadata.subject : null;
     } else {
       contact.business = !data.key.fromMe && data.pushName ? data.pushName : null;
-      contact.name = !data.key.fromMe && data.pushName ? data.pushName : null;
     }
 
     for (const [sessionID, ws] of activeWebSockets.entries()) {
@@ -192,9 +276,7 @@ messageController.receipt = async ({ data }) => {
         notify_alert: true
       };
 
-      if (ws.readyState === 1) { // ws.OPEN
-        ws.send(JSON.stringify({ data }));
-      }
+      if (ws.readyState === 1) { ws.send(JSON.stringify({ data })); }
     };
 
     try { await contact.create(); }
@@ -210,7 +292,7 @@ messageController.receipt = async ({ data }) => {
       const metadata = await wa.getSocket().groupMetadata(data.key.remoteJid);
       update_contact.name = metadata.subject ? metadata.subject : null;
     } else {
-      update_contact.name = !data.key.fromMe && data.pushName ? data.pushName : null;
+      update_contact.business = !data.key.fromMe && data.pushName ? data.pushName : null;
     }
 
     for (const [sessionID, ws] of activeWebSockets.entries()) {
@@ -223,9 +305,7 @@ messageController.receipt = async ({ data }) => {
       if (contact.status == "interessado") { data.interested = true; }
       if (contact.status == "demonstração") { data.demo = true; }
 
-      if (ws.readyState === 1) { // ws.OPEN
-        ws.send(JSON.stringify({ data }));
-      }
+      if (ws.readyState === 1) { ws.send(JSON.stringify({ data })); }
     };
 
     try { await update_contact.update(); }
@@ -314,25 +394,25 @@ messageController.receipt = async ({ data }) => {
 
         setTimeout(async () => {
           const updated_contact = (await Contact.findByJid(contact.jid))[0];
-
           const lastMessageDelay = Date.now() - updated_contact.typing;
 
-          if (lastMessageDelay >= 15000) {
+          if (lastMessageDelay >= 10000) {
             await contact_chat.resetTyping();
             let contact_info = new Contact();
             contact_info.jid = updated_contact.jid;
             contact_info.business = updated_contact.business;
+            contact_info.name = updated_contact.name;
             contact_info.flow_step = parseInt(updated_contact.flow_step);
             contact_info.segment = updated_contact.segment;
 
             await messageController.sendByAi(contact_info);
           }
-        }, 15000);
+        }, 10000);
       }
     }
 
     for (const [sessionID, ws] of activeWebSockets.entries()) {
-      if (ws.readyState === 1) { // ws.OPEN
+      if (ws.readyState === 1) {
         // console.log(message);
         ws.send(JSON.stringify({ data, message }));
       }

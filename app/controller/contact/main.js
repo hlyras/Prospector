@@ -28,7 +28,6 @@ contactController.create = async (req, res) => {
   contact.jid = wa_contact.jid;
   contact.datetime = lib.date.timestamp.generate();
   contact.participant = null;
-  contact.name = req.body.name;
   contact.autochat = !isNaN(req.body.autochat)
     ? parseInt(req.body.autochat) : 0;
   contact.created = 1;
