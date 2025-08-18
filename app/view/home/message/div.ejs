@@ -17,8 +17,16 @@
     let message_content = lib.element.create("div", {
       id: `message-${message.wa_id}-content`,
       class: "mobile-box container padding-3",
+      style: "position: relative;"
     });
     message_div.append(message_content);
+
+    let message_reply = lib.element.create("img", {
+      class: "size-15 icon",
+      src: "/images/icon/reply.png",
+      style: "position: absolute;right:5px;top:5px;"
+    });
+    message_content.append(message_reply);
 
     let message_reaction_box = lib.element.create("div", {
       id: `message-${message.wa_id}-reaction-box`,
@@ -123,6 +131,54 @@
       };
 
       document.body.appendChild(react_box);
+    });
+
+    message_reply.addEventListener("click", () => {
+      event.stopPropagation();
+
+      currentReplyMessage = message.wa_id;
+
+      let message_input_box = document.getElementById("message-input-box");
+      lib.removeCss(message_input_box, ["radius-40"]);
+      lib.addCss(message_input_box, ["radius-bottom-25"]);
+
+      let message_reply_container = document.getElementById("message-reply-container");
+      lib.display(message_reply_container, "");
+
+      message_reply_container.innerHTML = "";
+
+      let message_reply_box = null;
+
+      if (message.type == "image") {
+        message_reply_box = lib.element.create("img", {
+          src: message.content,
+          class: "height-50 wrap center",
+          style: "position: relative;background-color: #f0f0f0;",
+        });
+        message_reply_container.append(message_reply_box);
+      }
+
+      if (message.type == "text") {
+        message_reply_box = lib.element.create("div", {
+          class: "box b1 wrap radius-3 height-50 padding-5",
+          style: "position: relative;background-color: #f0f0f0;",
+        }, message.content);
+        message_reply_container.append(message_reply_box);
+      }
+
+      let message_reply_close = lib.element.create("img", {
+        class: "size-20 icon",
+        src: "/images/icon/close-small.png",
+        style: "position: absolute;right:0px;top:0px;"
+      });
+      message_reply_box && message_reply_box.append(message_reply_close);
+
+      message_reply_close.addEventListener("click", () => {
+        lib.addCss(message_input_box, ["radius-40"]);
+        lib.removeCss(message_input_box, ["radius-bottom-25"]);
+        lib.display(message_reply_container, "none");
+        currentReplyMessage = null;
+      });
     });
 
     return message_div;

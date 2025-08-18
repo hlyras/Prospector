@@ -4,6 +4,7 @@
 
 <script>
   let currentChatContact = null;
+  let currentReplyMessage = null;
 
   document.addEventListener("DOMContentLoaded", () => {
     const chat_container = document.getElementById("chat-container");
@@ -56,7 +57,7 @@
 
     let identity_box = document.getElementById("identity-box");
     let message_box = document.getElementById("message-box");
-    let message_input = document.getElementById("message-input-box");
+    let message_input = document.getElementById("message-input-container");
 
     // identity box
     identity_box.innerHTML = "";
@@ -118,13 +119,21 @@
 
   function messageInputBox() {
     let message_input_container = lib.element.create("div", {
-      id: "message-input-box",
+      id: "message-input-container",
       class: "box a1 container h-center",
-      style: `height: ${parseInt(window.innerHeight) * 0.10}px;`
+      style: `position:relative;height: ${parseInt(window.innerHeight) * 0.10}px;`
     });
 
+    let message_reply = lib.element.create("div", {
+      id: "message-reply-container",
+      class: "mobile-box b11-12 container height-50 ground padding-5",
+      style: "position: absolute;top:-40px;display:none;"
+    });
+    message_input_container.append(message_reply);
+
     let message_input_box = lib.element.create("div", {
-      class: "mobile-box b11-12 container ground noborder shadow radius-50 padding-10",
+      id: "message-input-box",
+      class: "mobile-box b11-12 container ground noborder shadow radius-40 padding-10",
       style: "height: 75%;align-self: center;"
     });
     message_input_container.append(message_input_box);

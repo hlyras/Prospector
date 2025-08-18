@@ -26,6 +26,26 @@ messageController.send = async (req, res) => {
   }
 };
 
+messageController.reply = async (req, res) => {
+  let message = req.body.message;
+
+  if (wa.isConnected()) {
+    let response = await wa.getSocket()
+      .sendMessage(req.body.jid, {
+        text: req.body.content,
+        contextInfo: {
+          stanzaId: message.wa_id,
+          participant: message.jid,
+          quotedMessage: { conversation: message.content }
+        }
+      });
+    res.send(response);
+  } else {
+    let msg = "WhatsApp não está pronto para enviar mensagens.";
+    res.send({ msg });
+  }
+};
+
 messageController.react = async (req, res) => {
   if (wa.isConnected()) {
     let response = await wa.getSocket()
