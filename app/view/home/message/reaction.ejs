@@ -9,15 +9,12 @@
 
     last_message.innerHTML = message.content;
 
-    let message_div = document.getElementById(`message-${message.target_id}-content`);
-    if (!message_div) { return; }
+    let message_reaction_box = document.getElementById(`message-${message.target_id}-reaction-box`);
+    if (!message_reaction_box) { return; }
 
     if (message.content) {
-      message_div.append(lib.element.create("div", {
-        id: `message-${message.wa_id}-reaction`,
-        class: "badge em08 padding-3 radius-50 border",
-        style: "position: absolute;background-color: #fff;"
-      }, message.content));
+      let message_reaction_div = reactionDiv(message);
+      message_reaction_box.append(message_reaction_div);
 
       if (message.origin_id) {
         document.getElementById(`message-${message.origin_id}-reaction`).remove();
@@ -25,5 +22,18 @@
     } else {
       document.getElementById(`message-${message.origin_id}-reaction`).remove();
     }
+  };
+
+  function reactionDiv(message) {
+    let message_reaction_div = lib.element.create("div", {
+      id: `message-${message.wa_id}-reaction`,
+      class: "ground em08 padding-3 margin-1 radius-50 shadow-lg-st pointer noselect",
+    }, message.content);
+
+    message_reaction_div.addEventListener("click", () => {
+      console.log(message);
+    });
+
+    return message_reaction_div;
   };
 </script>

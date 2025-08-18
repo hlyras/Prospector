@@ -6,7 +6,8 @@
     }
 
     let message_div = lib.element.create("div", {
-      class: "mobile-box b4-5 container margin-top-5"
+      class: "mobile-box b4-5 container margin-top-5",
+      style: "position: relative;"
     });
 
     if (message.from_me == 1) {
@@ -16,15 +17,35 @@
     let message_content = lib.element.create("div", {
       id: `message-${message.wa_id}-content`,
       class: "mobile-box container padding-3",
-      style: "position: relative;max-width: 100%;display: inline-block;"
     });
     message_div.append(message_content);
+
+    let message_reaction_box = lib.element.create("div", {
+      id: `message-${message.wa_id}-reaction-box`,
+      class: "mobile-box b1 container padding-3",
+    });
+    message_div.append(message_reaction_box);
+
+    let message_react = lib.element.create("img", {
+      id: `message-${message.wa_id}-react`,
+      src: "/images/icon/react.png",
+      class: "badge size-15 padding-3 radius-50 border pointer icon",
+      style: "position: absolute;background-color: #fff;"
+    });
+
+    message_content.append(message_react);
 
     if (message.from_me == 1) {
       message_content.style.marginLeft = "auto";
       lib.addCss(message_content, ["speech-triangle-right"]);
+      message_react.style.left = `-25px`;
+      message_react.style.top = '50%';
+      message_react.style.transform = 'translateY(-50%)';
     } else {
       lib.addCss(message_content, ["speech-triangle-left"]);
+      message_react.style.right = `-25px`;
+      message_react.style.top = '50%';
+      message_react.style.transform = 'translateY(-50%)';
     }
 
     if (message.type == "text" || message.type == "conversation") {
@@ -52,7 +73,8 @@
     if (message.type == "audio") {
       let audio_content = lib.element.create("audio", {
         controls: true,
-        src: message.content
+        src: message.content,
+        class: "width-250"
       });
       message_content.append(audio_content);
     }
@@ -67,10 +89,76 @@
     }
 
     let message_datetime = lib.element.create("div", {
-      class: "mobile-box rem06 padding-bottom-2 padding-left-5 padding-right-5 right"
+      class: "mobile-box b1 rem06 padding-bottom-2 padding-left-5 padding-right-5 right"
     }, lib.timestampToFulldate(message.datetime));
     message_content.append(message_datetime);
 
+    message_react.addEventListener('click', function (event) {
+      event.stopPropagation();
+
+      let react_box = reactBox(event);
+
+      let emotes = ['👍', '❤️', '😂', '😯', '😢', '🙏'];
+      for (let i in emotes) {
+        let react_div = lib.element.create("div", {
+          class: "mobile-box b6 radius-50 box-hover padding-5 center pointer noselect"
+        }, emotes[i]);
+        react_box.append(react_div);
+
+        react_div.addEventListener("click", async () => {
+          let response = await API.response(Message.react, {
+            jid: message.jid,
+            key: {
+              remoteJid: message.jid,
+              id: message.wa_id,
+              fromMe: message.from_me,
+              participant: message.participant ?
+                message.participant : null
+            },
+            content: emotes[i]
+          }, "none");
+
+          react_box.remove();
+        });
+      };
+
+      document.body.appendChild(react_box);
+    });
+
     return message_div;
   };
+
+  function reactBox(e, message) {
+    document.querySelectorAll('.react-popup').forEach(el => el.remove());
+
+    const rect = e.target.getBoundingClientRect();
+    const screenHalfY = window.innerHeight / 2;
+    const screenHalfX = window.innerWidth / 2;
+    const opensUp = rect.top > screenHalfY;
+    const isRight = rect.left > screenHalfX;
+
+    const react_box = lib.element.create("div", {
+      class: "react-popup container ground border radius-50 shadow scroll-x-hide scroll-y-hide"
+    });
+    react_box.style.position = 'absolute';
+    react_box.style.width = '200px';
+    react_box.style.height = '35px';
+
+    react_box.style.left = isRight ?
+      (e.pageX - 160) + 'px' : (e.pageX - 100) + 'px'
+
+    react_box.style.top = opensUp ?
+      rect.top - 35 + 'px' : rect.top + 10 + 'px';
+
+    function handleOutsideClick(event) {
+      if (!react_box.contains(event.target)) {
+        react_box.remove();
+        document.removeEventListener('click', handleOutsideClick);
+      }
+    }
+
+    document.addEventListener('click', handleOutsideClick);
+
+    return react_box;
+  }
 </script>

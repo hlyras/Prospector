@@ -15,9 +15,10 @@ const messageController = {};
 
 messageController.send = async (req, res) => {
   if (wa.isConnected()) {
-    let response = await wa.getSocket().sendMessage(req.body.jid, {
-      text: req.body.content
-    });
+    let response = await wa.getSocket()
+      .sendMessage(req.body.jid, {
+        text: req.body.content
+      });
     res.send(response);
   } else {
     let msg = "WhatsApp não está pronto para enviar mensagens.";
@@ -27,28 +28,22 @@ messageController.send = async (req, res) => {
 
 messageController.react = async (req, res) => {
   if (wa.isConnected()) {
-    let response = await wa.getSocket().sendMessage(req.body.jid, {
-      react: {
-        text: req.body.content,
-        key: req.body.key
-      }
-    });
+    let response = await wa.getSocket()
+      .sendMessage(req.body.jid, {
+        react: {
+          text: req.body.content,
+          key: req.body.key,
+          participant: req.body.participant ?
+            req.body.participant : null
+        }
+      });
+
     res.send(response);
   } else {
     let msg = "WhatsApp não está pronto para enviar mensagens.";
     res.send({ msg });
   }
 };
-
-// await sock.sendMessage(
-//   jid,
-//   {
-//     react: {
-//       text: '👍',         // emoji da reação (ou '' para remover)
-//       key: message.key    // o objeto key da mensagem alvo
-//     }
-//   }
-// );
 
 messageController.sendByAi = async (contact) => {
   let message_options = {
@@ -362,7 +357,6 @@ messageController.receipt = async ({ data }) => {
         }))[0];
 
         message.origin_id = reaction_message.wa_id;
-
         Message.delete(reaction_message.wa_id);
       } else {
         let reaction_message = (await Message.filter({

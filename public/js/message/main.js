@@ -13,6 +13,19 @@ Message.send = async (message) => {
   return response;
 };
 
+Message.react = async (message) => {
+  let response = await fetch("/message/react", {
+    method: "POST",
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(message)
+  });
+  response = await response.json();
+
+  if (API.verifyResponse(response)) { return false; };
+
+  return response;
+};
+
 Message.update = async (message) => {
   let response = await fetch("/message/update", {
     method: "POST",

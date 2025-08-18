@@ -25,7 +25,7 @@ class WhatsAppSession {
 
     this.sock = makeWASocket({
       auth: state,
-      getMessage: async () => ({ conversation: 'Mensagem não encontrada localmente.' }),
+      getMessage: async () => ({ conversation: 'Mensagem não encontrada localmente.' })
     });
 
     // process all events com ev.process
