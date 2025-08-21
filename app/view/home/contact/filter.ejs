@@ -1,8 +1,8 @@
 <div id="contact-filter-icon" class="container h-center">
   <select id="contact-filter-period"
     class="box b1 center lucida-grande bold em08 border shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+    <option value="today" selected>Hoje</option>
     <option value="">Todos os dias</option>
-    <option value="today">Hoje</option>
     <option value="period">Período</option>
   </select>
 
@@ -44,12 +44,28 @@
   </div>
 </div>
 
-<div id="contact-report" class="container padding-5 margin-top-10"></div>
-<div id="contact-box" class="box a1 container margin-top-10 scroll-y"></div>
+<form id="contact-filter-form" class="container b1 padding-3 margin-top-3">
+  <input type="text" id="contact-filter-input" class="mobile-box b9-10 lucida-grande border-bottom-lg-st padding-3"
+    placeholder="Nome ou número do contato">
+  <div class="mobile-box container b10 v-center">
+    <img src="/images/icon/search.png" class="size-20 pointer icon">
+  </div>
+</form>
+
+<div id="contact-report" class="container b1 padding-5 margin-top-10"></div>
+<div id="contact-box" class="container a1 margin-top-10 scroll-y"></div>
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
-    let contacts = await API.response(Contact.filter, {});
+    contact_period_start.value = lib.convertDate(lib.genDate());
+    contact_period_end.value = lib.convertDate(lib.genDate());
+
+    let contact_options = {
+      period_start: contact_period_start.value,
+      period_end: contact_period_end.value
+    };
+
+    let contacts = await API.response(Contact.filter, contact_options);
     contactFilter(contacts);
 
     const all_users_icon = document.getElementById("all-users-icon");

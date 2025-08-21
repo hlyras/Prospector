@@ -31,14 +31,70 @@
       style: "position: relative;"
     }, message.content);
 
-    message_reaction_div.addEventListener("click", () => {
-      let reaction_box = lib.element.create("div", {
-        class: "badge ground border-st height-50 width-200",
-        style: "position: absolute;z-index: 9999"
-      });
-      message_reaction_div.append(reaction_box);
+    message_reaction_div.addEventListener("click", event => {
+      let reaction_box = reactionBox(event);
+
+      let emotes = ['👍', '❤️', '😂', '😯', '😢', '🙏'];
+      for (let i in emotes) {
+        let react_div = lib.element.create("div", {
+          class: "mobile-box b6 radius-50 box-hover padding-5 center pointer noselect"
+        }, emotes[i]);
+        reaction_box.append(react_div);
+
+        react_div.addEventListener("click", async () => {
+          let response = await API.response(Message.react, {
+            jid: message.jid,
+            key: {
+              remoteJid: message.jid,
+              id: message.wa_id,
+              fromMe: message.from_me,
+              participant: message.participant ?
+                message.participant : null
+            },
+            content: emotes[i]
+          }, "none");
+
+          reaction_box.remove();
+        });
+      };
+
+      document.body.appendChild(reaction_box);
     });
 
     return message_reaction_div;
   };
+
+  function reactionBox(e) {
+    document.querySelectorAll('.react-popup').forEach(el => el.remove());
+
+    const rect = e.target.getBoundingClientRect();
+    const screenHalfY = window.innerHeight / 2;
+    const screenHalfX = window.innerWidth / 2;
+    const opensUp = rect.top > screenHalfY;
+    const isRight = rect.left > screenHalfX;
+
+    const reaction_box = lib.element.create("div", {
+      class: "react-popup container ground border radius-50 shadow scroll-x-hide scroll-y-hide"
+    });
+    reaction_box.style.position = 'absolute';
+    reaction_box.style.width = '200px';
+    reaction_box.style.height = '35px';
+
+    reaction_box.style.left = isRight ?
+      (e.pageX - 160) + 'px' : (e.pageX - 100) + 'px'
+
+    reaction_box.style.top = opensUp ?
+      rect.top - 35 + 'px' : rect.top + 10 + 'px';
+
+    function handleOutsideClick(event) {
+      if (!reaction_box.contains(event.target)) {
+        reaction_box.remove();
+        document.removeEventListener('click', handleOutsideClick);
+      }
+    }
+
+    document.addEventListener('click', handleOutsideClick);
+
+    return reaction_box;
+  }
 </script>
