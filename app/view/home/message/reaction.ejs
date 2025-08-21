@@ -28,10 +28,15 @@
     let message_reaction_div = lib.element.create("div", {
       id: `message-${message.wa_id}-reaction`,
       class: "ground em08 padding-3 margin-1 radius-50 shadow-lg-st pointer noselect",
+      style: "position: relative;"
     }, message.content);
 
     message_reaction_div.addEventListener("click", () => {
-      console.log(message);
+      let reaction_box = lib.element.create("div", {
+        class: "badge ground border-st height-50 width-200",
+        style: "position: absolute;z-index: 9999"
+      });
+      message_reaction_div.append(reaction_box);
     });
 
     return message_reaction_div;

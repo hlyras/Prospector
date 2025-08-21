@@ -74,6 +74,10 @@
       value: "suajoalheria.cotalogo.com",
     }, "Joalheria"));
 
+    contact_catalog_select.append(lib.element.create("option", {
+      value: "seusexshop.cotalogo.com",
+    }, "Sexshop"));
+
     let submit_button = lib.element.create("input", {
       type: "submit",
       class: "box b1 btn-act lucida-grande bold noborder radius-3 shadow-lg-st padding-10 margin-top-10 pointer",
@@ -81,6 +85,12 @@
       value: "Iniciar prospecção"
     });
     contact_create_form.append(submit_button);
+
+    contact_create_jid.addEventListener("blur", () => {
+      if (contact_create_jid.value.startsWith("0")) {
+        contact_create_jid.value = "55" + contact_create_jid.value.substring(1);
+      }
+    });
 
     contact_create_form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -101,7 +111,7 @@
       let contact_create_box = document.getElementById('contact-create-box');
       let contact_icon = document.getElementById("contact-icon");
       contact_icon.src = "/images/icon/add-contact.png";
-      contact_create_box.style.display = "none";
+      // contact_create_box.style.display = "none";
 
       contact_create_business.value = "";
       contact_create_jid.value = "";

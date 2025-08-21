@@ -16,10 +16,16 @@
 
     let message_content = lib.element.create("div", {
       id: `message-${message.wa_id}-content`,
-      class: "mobile-box container padding-3",
+      class: "mobile-box container",
       style: "position: relative;"
     });
     message_div.append(message_content);
+
+    let message_content_data = lib.element.create("div", {
+      class: "box a1 ground",
+      style: "position: relative;"
+    });
+    message_content.append(message_content_data);
 
     let message_reply = lib.element.create("img", {
       class: "size-15 icon",
@@ -28,29 +34,22 @@
     });
     message_content.append(message_reply);
 
-    let message_reaction_box = lib.element.create("div", {
-      id: `message-${message.wa_id}-reaction-box`,
-      class: "mobile-box b1 container padding-3",
-    });
-    message_div.append(message_reaction_box);
-
     let message_react = lib.element.create("img", {
       id: `message-${message.wa_id}-react`,
       src: "/images/icon/react.png",
-      class: "badge size-15 padding-3 radius-50 border pointer icon",
+      class: "badge size-15 padding-3 radius-50 border shadow pointer icon",
       style: "position: absolute;background-color: #fff;"
     });
-
-    message_content.append(message_react);
+    message_content_data.append(message_react);
 
     if (message.from_me == 1) {
       message_content.style.marginLeft = "auto";
-      lib.addCss(message_content, ["speech-triangle-right"]);
+      lib.addCss(message_content_data, ["speech-triangle-right"]);
       message_react.style.left = `-25px`;
       message_react.style.top = '50%';
       message_react.style.transform = 'translateY(-50%)';
     } else {
-      lib.addCss(message_content, ["speech-triangle-left"]);
+      lib.addCss(message_content_data, ["speech-triangle-left"]);
       message_react.style.right = `-25px`;
       message_react.style.top = '50%';
       message_react.style.transform = 'translateY(-50%)';
@@ -63,7 +62,7 @@
         overflow-wrap: break-word;
         `
       }, message.content);
-      message_content.append(text_content);
+      message_content_data.append(text_content);
     }
 
     if (message.type == "image") {
@@ -71,7 +70,7 @@
         class: "image-prop image-fit max-height-250",
         src: message.content
       });
-      message_content.append(image_content);
+      message_content_data.append(image_content);
 
       image_content.addEventListener("click", () => {
         lib.image.zoom(message.content);
@@ -84,7 +83,7 @@
         src: message.content,
         class: "width-250"
       });
-      message_content.append(audio_content);
+      message_content_data.append(audio_content);
     }
 
     if (message.type == "video") {
@@ -93,13 +92,19 @@
         controls: true,
         src: message.content
       });
-      message_content.append(video_content);
+      message_content_data.append(video_content);
     }
 
     let message_datetime = lib.element.create("div", {
       class: "mobile-box b1 rem06 padding-bottom-2 padding-left-5 padding-right-5 right"
     }, lib.timestampToFulldate(message.datetime));
-    message_content.append(message_datetime);
+    message_content_data.append(message_datetime);
+
+    let message_reaction_box = lib.element.create("div", {
+      id: `message-${message.wa_id}-reaction-box`,
+      class: "mobile-box b1 container padding-3",
+    });
+    message_content.append(message_reaction_box);
 
     message_react.addEventListener('click', function (event) {
       event.stopPropagation();
@@ -136,49 +141,7 @@
     message_reply.addEventListener("click", () => {
       event.stopPropagation();
 
-      currentReplyMessage = message.wa_id;
-
-      let message_input_box = document.getElementById("message-input-box");
-      lib.removeCss(message_input_box, ["radius-40"]);
-      lib.addCss(message_input_box, ["radius-bottom-25"]);
-
-      let message_reply_container = document.getElementById("message-reply-container");
-      lib.display(message_reply_container, "");
-
-      message_reply_container.innerHTML = "";
-
-      let message_reply_box = null;
-
-      if (message.type == "image") {
-        message_reply_box = lib.element.create("img", {
-          src: message.content,
-          class: "height-50 wrap center",
-          style: "position: relative;background-color: #f0f0f0;",
-        });
-        message_reply_container.append(message_reply_box);
-      }
-
-      if (message.type == "text") {
-        message_reply_box = lib.element.create("div", {
-          class: "box b1 wrap radius-3 height-50 padding-5",
-          style: "position: relative;background-color: #f0f0f0;",
-        }, message.content);
-        message_reply_container.append(message_reply_box);
-      }
-
-      let message_reply_close = lib.element.create("img", {
-        class: "size-20 icon",
-        src: "/images/icon/close-small.png",
-        style: "position: absolute;right:0px;top:0px;"
-      });
-      message_reply_box && message_reply_box.append(message_reply_close);
-
-      message_reply_close.addEventListener("click", () => {
-        lib.addCss(message_input_box, ["radius-40"]);
-        lib.removeCss(message_input_box, ["radius-bottom-25"]);
-        lib.display(message_reply_container, "none");
-        currentReplyMessage = null;
-      });
+      openReply(message);
     });
 
     return message_div;
@@ -217,4 +180,67 @@
 
     return react_box;
   }
+
+  function openReply(message) {
+    currentReplyMessage = {
+      id: message.wa_id,
+      type: message.type,
+      message: message.raw
+    };
+
+    let message_input_box = document.getElementById("message-input-box");
+    lib.removeCss(message_input_box, ["radius-40"]);
+    lib.addCss(message_input_box, ["radius-bottom-35"]);
+
+    let message_reply_container = document.getElementById("message-reply-container");
+    lib.display(message_reply_container, "");
+
+    message_reply_container.innerHTML = "";
+
+    let message_reply_box = null;
+
+    if (message.type == "image") {
+      message_reply_box = lib.element.create("div", {
+        class: "box b1 container radius-3 height-50 h-center",
+        style: "position: relative;background-color: #f0f0f0;",
+      });
+      message_reply_container.append(message_reply_box);
+
+      message_replay_image = lib.element.create("img", {
+        src: message.content,
+        class: "height-50 center",
+      });
+      message_reply_box.append(message_replay_image);
+    }
+
+    if (message.type == "text") {
+      message_reply_box = lib.element.create("div", {
+        class: "box b1 wrap radius-3 height-50 padding-5",
+        style: "position: relative;background-color: #f0f0f0;",
+      }, message.content);
+      message_reply_container.append(message_reply_box);
+    }
+
+    let message_reply_close = lib.element.create("img", {
+      class: "size-20 icon",
+      src: "/images/icon/close-small.png",
+      style: "position: absolute;right:0px;top:0px;"
+    });
+    message_reply_box && message_reply_box.append(message_reply_close);
+
+    message_reply_close.addEventListener("click", () => {
+      closeReply();
+    });
+  };
+
+  function closeReply() {
+    currentReplyMessage = null;
+
+    let message_input_box = document.getElementById("message-input-box");
+    let message_reply_container = document.getElementById("message-reply-container");
+
+    lib.addCss(message_input_box, ["radius-40"]);
+    lib.removeCss(message_input_box, ["radius-bottom-35"]);
+    lib.display(message_reply_container, "none");
+  };
 </script>

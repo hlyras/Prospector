@@ -51,6 +51,7 @@
     if (!contact) { return; }
 
     currentChatContact = jid;
+    closeReply();
 
     contact.messages = await API.response(Message.filter, { jid });
     if (!contact.messages) { return; }
@@ -66,6 +67,11 @@
       style: "align-self: center;"
     });
     identity_box.append(identity_info_box);
+
+    let info_box = lib.element.create("div", {
+      class: "mobile-box container margin-left-10",
+      style: "align-self: center;"
+    });
 
     let profile_picture = lib.element.create("img", {
       class: "image-prop size-35 radius-50 v-center",
@@ -155,14 +161,17 @@
       if (!message_input.value) return;
 
       let message = {
+        type: "text",
         jid: currentChatContact,
-        content: message_input.value
+        content: message_input.value,
+        reply: currentReplyMessage ?
+          currentReplyMessage : null,
       };
 
       let response = await API.response(Message.send, message);
-      console.log(response);
 
       message_input.value = "";
+      closeReply();
     });
 
     return message_input_container;

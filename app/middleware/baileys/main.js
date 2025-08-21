@@ -69,6 +69,14 @@ class WhatsAppSession {
         for (const msg of messages) {
           if (!msg.message) continue;
 
+          // if (msg.message.imageMessage) {
+          //   await this.sock.sendMessage(
+          //     msg.key.remoteJid,
+          //     { text: "okok" },
+          //     { quoted: msg }
+          //   );
+          // }
+
           const data = msg;
           waEmitter.emit('received-message', { data });
         }

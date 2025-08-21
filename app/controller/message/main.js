@@ -3,42 +3,83 @@ const Message = require("../../model/message/main");
 
 const lib = require('jarmlib');
 
+const sharp = require("sharp");
+const axios = require("axios");
+const cheerio = require("cheerio");
+
 const wa = require('../../middleware/baileys/main');
 const activeWebSockets = require('../../middleware/websocket/connectionStore');
 const { getProfilePicWithTimeout } = require('../../middleware/baileys/controller');
 const { downloadMedia } = require('../../middleware/baileys/controller');
-
 const ChatGPTAPI = require('../../middleware/chatgpt/main');
 const prospect_flow = require('./flow/prospect');
 
 const messageController = {};
 
-messageController.send = async (req, res) => {
-  if (wa.isConnected()) {
-    let response = await wa.getSocket()
-      .sendMessage(req.body.jid, {
-        text: req.body.content
-      });
-    res.send(response);
-  } else {
-    let msg = "WhatsApp não está pronto para enviar mensagens.";
-    res.send({ msg });
+async function getOGData(url) {
+  const { data: html } = await axios.get(url);
+  const $ = cheerio.load(html);
+
+  let imageUrl = $('meta[property="og:image"]').attr("content");
+
+  let thumbBuffer = null;
+  if (imageUrl) {
+    const imgRes = await axios.get(imageUrl, { responseType: "arraybuffer" });
+    // Redimensiona mantendo proporção
+    thumbBuffer = await sharp(imgRes.data)
+      .resize(300, 300, { fit: "inside" }) // mantém proporção
+      .jpeg()
+      .toBuffer();
   }
-};
 
-messageController.reply = async (req, res) => {
-  let message = req.body.message;
+  return {
+    title: $('meta[property="og:title"]').attr("content") || $("title").text(),
+    body: $('meta[property="og:description"]').attr("content") || "",
+    thumbnail: thumbBuffer,
+    sourceUrl: url
+  };
+}
+
+messageController.send = async (req, res) => {
+  let message = {};
+  let options = {};
+
+  let reply_message = req.body.reply ? JSON.parse(req.body.reply.message) : null;
+
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const found = req.body.content.match(urlRegex);
+
+  if (found && found.length > 0) {
+    options.linkPreview = true;
+
+    const og = await getOGData(found[0]);
+
+    message.contextInfo = {
+      externalAdReply: {
+        title: og.title,
+        body: og.body,
+        thumbnail: og.thumbnail,
+        mediaType: 1,
+        renderLargerThumbnail: true,
+        sourceUrl: og.sourceUrl,
+        renderLargerThumbnail: true
+      }
+    }
+  }
+
+  if (req.body.type == "text") {
+    message.text = req.body.content;
+  }
+
+  if (reply_message) {
+    options.quoted = reply_message;
+  }
+
+  console.log(req.body.jid, message, options);
 
   if (wa.isConnected()) {
     let response = await wa.getSocket()
-      .sendMessage(req.body.jid, {
-        text: req.body.content,
-        contextInfo: {
-          stanzaId: message.wa_id,
-          participant: message.jid,
-          quotedMessage: { conversation: message.content }
-        }
-      });
+      .sendMessage(req.body.jid, message, options);
     res.send(response);
   } else {
     let msg = "WhatsApp não está pronto para enviar mensagens.";
@@ -93,9 +134,16 @@ messageController.sendByAi = async (contact) => {
     messages: prospect_flow[contact.flow_step](contact, history)
   });
 
+  wa.getSocket().sendPresenceUpdate("available", contact.jid);
+
   let gpt_response = JSON.parse(response);
 
   // console.log(gpt_response);
+
+  // console.log("Contato:", {
+  //   jid: contact.jid,
+  //   flow_step: contact.flow_step
+  // });
 
   // O contato é da empresa?
   if (contact.flow_step == 1) {
@@ -156,23 +204,14 @@ messageController.sendByAi = async (contact) => {
 
         if (ws.readyState === 1) { ws.send(JSON.stringify({ data })); }
       };
+
+      await wa.getSocket().sendMessage("120363403607809452@g.us", {
+        text: `
+Telefone: ${contact.jid.split("@")[0]}\n
+Nome: ${contact.name}\n
+Empresa: ${contact.business}`
+      });
     }
-
-    // if (gpt_response.flow_step == "advance_two") {
-    //   contact.status = "interessado";
-    //   contact.notify = 1;
-    //   contact.flow_step = parseInt(contact.flow_step) + 2;
-
-    //   for (const [sessionID, ws] of activeWebSockets.entries()) {
-    //     let data = {
-    //       jid: contact.jid,
-    //       notify_alert: true,
-    //       interested: true
-    //     };
-
-    //     if (ws.readyState === 1) { ws.send(JSON.stringify({ data })); }
-    //   };
-    // }
 
     if (gpt_response.flow_step == "exit") {
       contact.autochat = 0;
@@ -406,11 +445,17 @@ messageController.receipt = async ({ data }) => {
         contact_chat.typing = Date.now();
         await contact_chat.update();
 
+        await wa.getSocket().sendPresenceUpdate("available", contact.jid);
+
+        setTimeout(() => {
+          wa.getSocket().sendPresenceUpdate("composing", contact.jid);
+        }, 5000);
+
         setTimeout(async () => {
           const updated_contact = (await Contact.findByJid(contact.jid))[0];
           const lastMessageDelay = Date.now() - updated_contact.typing;
 
-          if (lastMessageDelay >= 10000) {
+          if (lastMessageDelay >= 15000) {
             await contact_chat.resetTyping();
             let contact_info = new Contact();
             contact_info.jid = updated_contact.jid;
@@ -421,13 +466,12 @@ messageController.receipt = async ({ data }) => {
 
             await messageController.sendByAi(contact_info);
           }
-        }, 10000);
+        }, 15000);
       }
     }
 
     for (const [sessionID, ws] of activeWebSockets.entries()) {
       if (ws.readyState === 1) {
-        // console.log(message);
         ws.send(JSON.stringify({ data, message }));
       }
     };
