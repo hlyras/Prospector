@@ -13,6 +13,19 @@ Contact.create = async (contact) => {
   return response;
 };
 
+Contact.prospect = async (contact) => {
+  let response = await fetch("/contact/prospect", {
+    method: "POST",
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(contact)
+  });
+  response = await response.json();
+
+  if (API.verifyResponse(response)) { return false; };
+
+  return response;
+};
+
 Contact.update = async (contact) => {
   let response = await fetch("/contact/update", {
     method: "POST",

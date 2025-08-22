@@ -3,6 +3,7 @@ const lib = require('jarmlib');
 const wa = require('../../middleware/baileys/main');
 const { getProfilePicWithTimeout } = require('../../middleware/baileys/controller');
 const ChatGPTAPI = require('../../middleware/chatgpt/main');
+const { scrapeMapsFromUrl } = require("../../middleware/gmaps/main");
 
 const Contact = require("../../model/contact/main");
 const Message = require("../../model/message/main");
@@ -88,6 +89,93 @@ Todas as chaves e strings devem estar entre aspas duplas e as quebras de linha d
   } catch (error) {
     console.error("Erro ao criar contact:", error);
     res.status(500).send({ msg: "Erro ao criar contact.", error });
+  }
+};
+
+contactController.prospect = async (req, res) => {
+  try {
+    let contacts = await scrapeMapsFromUrl(req.body.url, 200, async (c) => {
+      c.telefone = c.telefone?.replace(/\D/g, "");
+
+      const [wa_contact] = await wa.getSocket().onWhatsApp(`55${c.telefone}@s.whatsapp.net`);
+      if (!wa_contact?.exists) {
+        return console.log({ msg: `Esse número não existe! ${c.nome}` });
+      }
+
+      if ((await Contact.findByJid(wa_contact.jid)).length) {
+        return console.log({ msg: "Esse número já está cadastrado!" });
+      }
+
+      if (!c.nome) {
+        return console.log({ msg: "Informe o nome da empresa ou do contato" });
+      }
+
+      let contact = new Contact();
+      contact.business = c.nome;
+      contact.jid = wa_contact.jid;
+      contact.datetime = lib.date.timestamp.generate();
+      contact.participant = null;
+      contact.autochat = 1;
+      contact.created = 1;
+      contact.flow_step = 1;
+      contact.segment = req.body.segment;
+
+      let profile_picture = null;
+      profile_picture = await getProfilePicWithTimeout(wa.getSocket(), contact.jid);
+      contact.profile_picture = profile_picture;
+
+      try {
+        let contact_create_response = await contact.create();
+        if (contact_create_response.err) {
+          return res.status(500).send({
+            msg: contact_create_response.err
+          });
+        }
+
+        if (contact.autochat) {
+          if (wa.isConnected()) {
+            let response = await ChatGPTAPI({
+              model: "gpt-3.5-turbo",
+              messages: [
+                {
+                  role: "system",
+                  content: `
+Preciso identificar se o nome da empresa deve ser referido como masculino ou feminino.
+Complete .. com "da" ou "do" levando em consideração o nome da empresa.
+
+Exemplo:
+Boa noite, é da Coca-cola?
+Boa noite, é do atacadão?
+
+Frase base da resposta:
+Boa noite, é .. ${contact.business}?
+
+Atenção o JSON precisa ser formatado corretamente, sem blocos de código, sem texto explicativo, sem comentários.  
+Todas as chaves e strings devem estar entre aspas duplas e as quebras de linha devem ser representadas como \n.
+{
+  "output": "Retorne com a melhor resposta."
+}
+      `
+                }
+              ]
+            });
+
+            await wa.getSocket().sendMessage(contact.jid, {
+              text: JSON.parse(response).output
+            });
+          } else {
+            console.warn("WhatsApp não está pronto para enviar mensagens.");
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao criar contact:", error);
+      }
+    });
+
+    res.status(201).send({ done: "Concluído com sucesso!", contacts });
+  } catch (error) {
+    console.error("Erro durante a prospecção:", error);
+    res.status(500).send({ msg: "Erro durante a prospecção.", error });
   }
 };
 

@@ -1,11 +1,22 @@
 <div class="box a1 container ground padding-4">
   <div class="mobile-box lucida-grande em09 bold padding-5">Prospector</div>
-  <div id="contact-create-btn" class="mobile-box container ground right">
-    <img id="contact-icon" class='image-prop size-20 shadow-lg-st radius-5 opacity-out-09 padding-8 pointer'
-      src='/images/icon/add-contact.png'>
+
+  <div class="mobile-box container right">
+    <div id="contact-create-btn" class="mobile-box container ground margin-5">
+      <img id="contact-icon" class='image-prop size-30 shadow-lg-st radius-5 opacity-out-09 padding-8 pointer'
+        src='/images/icon/add-contact.png'>
+    </div>
+
+    <div id="contact-prospect-btn" class="mobile-box container ground margin-5">
+      <img id="prospect-icon" class='image-prop size-30 shadow-lg-st radius-5 opacity-out-09 padding-8 pointer'
+        src='/images/icon/prospect.png'>
+    </div>
   </div>
 
   <div id="contact-create-box" class="box a1 container h-center" style="display:none;">
+  </div>
+
+  <div id="contact-prospect-box" class="box a1 container h-center" style="display:none;">
   </div>
 </div>
 
@@ -46,7 +57,7 @@
       class: "box b1 lucida-grande bold rem08 margin-top-10"
     }, "Ativar conversa automática."));
     let contact_create_chat = lib.element.create("select", {
-      class: "box b1 lucida-grande rem08 disable-selected border-bottom-lg-st padding-10",
+      class: "box b1 lucida-grande rem08 hide-disabled border-bottom-lg-st padding-10",
     });
     contact_create_form.append(contact_create_chat);
 
@@ -62,7 +73,7 @@
       class: "box b1 lucida-grande bold rem08 margin-top-10"
     }, "Segmento da empresa"));
     let contact_catalog_select = lib.element.create("select", {
-      class: "box b1 lucida-grande rem08 disable-selected border-bottom-lg-st padding-10",
+      class: "box b1 lucida-grande rem08 hide-disabled border-bottom-lg-st padding-10",
     });
     contact_create_form.append(contact_catalog_select);
 
@@ -121,20 +132,123 @@
     return contact_create_form;
   }
 
+  function prospectForm() {
+    let prospect_form = lib.element.create("form", {
+      class: "box b1 container margin-top-10"
+    });
+
+    let contact_prospect_title = lib.element.create("h2", {
+      class: "box b1 underline lucida-grande bold rem10 text-shadow center",
+    }, "Prospecção automática");
+    prospect_form.append(contact_prospect_title);
+
+    prospect_form.append(lib.element.create("div", {
+      class: "box b1 lucida-grande bold rem08 margin-top-10"
+    }, "Link da busca"));
+    let prospect_url = lib.element.create("input", {
+      class: "box b1 lucida-grande rem08 border-bottom-lg-st padding-10",
+      placeholder: "URL do Maps",
+      role: "presentation",
+      autocomplete: "off"
+    });
+    prospect_form.append(prospect_url);
+
+    prospect_form.append(lib.element.create("div", {
+      class: "box b1 lucida-grande bold rem08 margin-top-10"
+    }, "Segmento da empresa"));
+    let prospect_segment = lib.element.create("select", {
+      class: "box b1 lucida-grande rem08 hide-disabled border-bottom-lg-st padding-10",
+    });
+    prospect_form.append(prospect_segment);
+
+    prospect_segment.append(lib.element.create("option", {
+      selected: true,
+      disabled: true,
+      value: "",
+    }, "Selecionar segmento"));
+
+    prospect_segment.append(lib.element.create("option", {
+      value: "suafloricultura.cotalogo.com",
+    }, "Floricultura"));
+
+    prospect_segment.append(lib.element.create("option", {
+      value: "suajoalheria.cotalogo.com",
+    }, "Joalheria"));
+
+    prospect_segment.append(lib.element.create("option", {
+      value: "seusexshop.cotalogo.com",
+    }, "Sexshop"));
+
+    let submit_button = lib.element.create("input", {
+      type: "submit",
+      class: "box b1 btn-act lucida-grande bold noborder radius-3 shadow-lg-st padding-10 margin-top-10 pointer",
+      name: "submit",
+      value: "Iniciar prospecção"
+    });
+    prospect_form.append(submit_button);
+
+    prospect_form.addEventListener("submit", async e => {
+      e.preventDefault();
+
+      if (!prospect_url.value) {
+        return lib.message("É necessário informar a url do Google Maps com a busca da cidade e segmento.");
+      }
+
+      if (!prospect_segment.value) {
+        return lib.message("É necessário informar o segmento da prospecção");
+      }
+
+      let response = await API.response(Contact.prospect, {
+        segment: prospect_segment.value,
+        url: prospect_url.value,
+      }, "none");
+
+      console.log(response);
+    });
+
+    return prospect_form;
+  };
+
   document.addEventListener('DOMContentLoaded', () => {
     let contact_create_btn = document.getElementById('contact-create-btn');
     let contact_create_box = document.getElementById('contact-create-box');
 
+    let contact_prospect_btn = document.getElementById('contact-prospect-btn');
+    let contact_prospect_box = document.getElementById('contact-prospect-box');
+
     contact_create_box.append(createForm());
+    contact_prospect_box.append(prospectForm());
 
     contact_create_btn.addEventListener('click', () => {
       let contact_icon = document.getElementById("contact-icon");
+      let prospect_icon = document.getElementById("prospect-icon");
 
       if (contact_create_box.style.display === "none") {
+        prospect_icon.src = "/images/icon/prospect.png";
         contact_icon.src = "/images/icon/close-x.png";
         contact_create_box.style.display = "";
+        contact_prospect_box.style.display = "none";
       } else {
+        prospect_icon.src = "/images/icon/prospect.png";
         contact_icon.src = "/images/icon/add-contact.png";
+        contact_create_box.style.display = "none";
+        contact_prospect_box.style.display = "none";
+      }
+    });
+
+    contact_prospect_btn.addEventListener('click', () => {
+      let prospect_icon = document.getElementById("prospect-icon");
+      let contact_icon = document.getElementById("contact-icon");
+
+      if (contact_prospect_box.style.display === "none") {
+        prospect_icon.src = "/images/icon/close-x.png";
+        contact_icon.src = "/images/icon/add-contact.png";
+        contact_prospect_box.style.display = "";
+        contact_create_box.style.display = "none";
+      } else {
+        prospect_icon.src = "/images/icon/prospect.png";
+        contact_icon.src = "/images/icon/add-contact.png";
+        contact_prospect_box.style.display = "none";
         contact_create_box.style.display = "none";
       }
     });

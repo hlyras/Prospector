@@ -1,4 +1,4 @@
-<div id="contact-filter-icon" class="container h-center">
+<div id="contact-filter-icon" class="container b1 h-center">
   <select id="contact-filter-period"
     class="box b1 center lucida-grande bold em08 border shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
     <option value="today" selected>Hoje</option>
@@ -48,7 +48,7 @@
   <input type="text" id="contact-filter-input" class="mobile-box b9-10 lucida-grande border-bottom-lg-st padding-3"
     placeholder="Nome ou número do contato">
   <div class="mobile-box container b10 v-center">
-    <img src="/images/icon/search.png" class="size-20 pointer icon">
+    <img src="/images/icon/search.png" class="size-20 pointer icon center">
   </div>
 </form>
 
@@ -60,9 +60,14 @@
     contact_period_start.value = lib.convertDate(lib.genDate());
     contact_period_end.value = lib.convertDate(lib.genDate());
 
+    contact_period_end.value
+      ? lib.dateToTimestamp(lib.convertDate(lib.genDate())) + (lib.timestampDay() - 1)
+      : null;
+
     let contact_options = {
-      period_start: contact_period_start.value,
-      period_end: contact_period_end.value
+      period_start: lib.dateToTimestamp(contact_period_start.value),
+      period_end: contact_period_end.value ?
+        lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null
     };
 
     let contacts = await API.response(Contact.filter, contact_options);

@@ -32,31 +32,30 @@
     }, message.content);
 
     message_reaction_div.addEventListener("click", event => {
+      event.stopPropagation();
+
       let reaction_box = reactionBox(event);
 
-      let emotes = ['👍', '❤️', '😂', '😯', '😢', '🙏'];
-      for (let i in emotes) {
-        let react_div = lib.element.create("div", {
-          class: "mobile-box b6 radius-50 box-hover padding-5 center pointer noselect"
-        }, emotes[i]);
-        reaction_box.append(react_div);
+      let reaction_div = lib.element.create("div", {
+        class: "mobile-box b1 radius-50 box-hover padding-5 center pointer noselect"
+      }, `${message.jid.split("@")[0]} - Remover`);
+      reaction_box.append(reaction_div);
 
-        react_div.addEventListener("click", async () => {
-          let response = await API.response(Message.react, {
-            jid: message.jid,
-            key: {
-              remoteJid: message.jid,
-              id: message.wa_id,
-              fromMe: message.from_me,
-              participant: message.participant ?
-                message.participant : null
-            },
-            content: emotes[i]
-          }, "none");
+      reaction_div.addEventListener("click", async () => {
+        let response = await API.response(Message.react, {
+          jid: message.jid,
+          key: {
+            remoteJid: message.jid,
+            id: message.target_id,
+            fromMe: message.from_me,
+            participant: message.participant ?
+              message.participant : null
+          },
+          content: ""
+        }, "none");
 
-          reaction_box.remove();
-        });
-      };
+        reaction_box.remove();
+      });
 
       document.body.appendChild(reaction_box);
     });
@@ -65,7 +64,8 @@
   };
 
   function reactionBox(e) {
-    document.querySelectorAll('.react-popup').forEach(el => el.remove());
+    document.querySelectorAll('.react-popup')
+      .forEach(el => el.remove());
 
     const rect = e.target.getBoundingClientRect();
     const screenHalfY = window.innerHeight / 2;
@@ -74,7 +74,7 @@
     const isRight = rect.left > screenHalfX;
 
     const reaction_box = lib.element.create("div", {
-      class: "react-popup container ground border radius-50 shadow scroll-x-hide scroll-y-hide"
+      class: "react-popup container ground border radius-50 shadow scroll-x-hide scroll-y-hide",
     });
     reaction_box.style.position = 'absolute';
     reaction_box.style.width = '200px';
@@ -87,11 +87,13 @@
       rect.top - 35 + 'px' : rect.top + 10 + 'px';
 
     function handleOutsideClick(event) {
+      console.log(event.target);
+      console.log(reaction_box.contains(event.target));
       if (!reaction_box.contains(event.target)) {
         reaction_box.remove();
         document.removeEventListener('click', handleOutsideClick);
       }
-    }
+    };
 
     document.addEventListener('click', handleOutsideClick);
 
