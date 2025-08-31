@@ -12,6 +12,34 @@ async function randomDelay(min = 2000, max = 5000) {
   await sleep(ms);
 }
 
+// Função para rolar até o fim da lista
+async function scrollToEnd(page, scrollContainer = "div[role='feed']") {
+  let previousHeight = await page.evaluate(
+    (sel) => document.querySelector(sel)?.scrollHeight || 0,
+    scrollContainer
+  );
+
+  while (true) {
+    await page.evaluate(
+      (sel) => {
+        const el = document.querySelector(sel);
+        if (el) el.scrollBy(0, el.scrollHeight);
+      },
+      scrollContainer
+    );
+
+    await randomDelay(2000, 4000);
+
+    const newHeight = await page.evaluate(
+      (sel) => document.querySelector(sel)?.scrollHeight || 0,
+      scrollContainer
+    );
+
+    if (newHeight === previousHeight) break;
+    previousHeight = newHeight;
+  }
+}
+
 async function scrapeMapsFromUrl(url, limit = 10, onContact = null) {
   const browser = await puppeteer.launch({
     headless: false,
@@ -24,18 +52,13 @@ async function scrapeMapsFromUrl(url, limit = 10, onContact = null) {
   await page.goto(url, { waitUntil: "networkidle2" });
   await randomDelay();
 
-  // Scroll para carregar resultados
-  for (let i = 0; i < 3; i++) {
-    await page.evaluate(() => {
-      document
-        .querySelector("div[role='feed']")
-        ?.scrollBy(0, window.innerHeight);
-    });
-    await randomDelay(3000, 6000);
-  }
+  // Scroll até o fim para carregar todos os resultados
+  await scrollToEnd(page, "div[role='feed']");
 
   // Pega links dos cards
   const links = await page.$$eval("a.hfpxzc", (as) => as.map((a) => a.href));
+
+  console.log(`🔎 Encontrados ${links.length} resultados.`);
 
   let results = [];
 
@@ -63,7 +86,7 @@ async function scrapeMapsFromUrl(url, limit = 10, onContact = null) {
 
       if (data.nome) results.push(data);
 
-      onContact(data);
+      if (onContact) onContact(data);
 
       console.log("✅ Coletado:", data.nome);
       await randomDelay(3000, 6000);
@@ -74,9 +97,9 @@ async function scrapeMapsFromUrl(url, limit = 10, onContact = null) {
 
   await browser.close();
   return results;
-};
-
-// Função exportável
-module.exports = {
-  scrapeMapsFromUrl
 }
+
+// Exporta a função
+module.exports = {
+  scrapeMapsFromUrl,
+};

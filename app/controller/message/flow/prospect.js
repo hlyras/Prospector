@@ -184,7 +184,7 @@ Valores true|false devem ser booleanos e não strings.
 
 "intention": Identificar através da resposta do cliente no histórico a intenção do cliente em relação se ele tem interesse no catálogo.
 1 - Interessado → inclui “sim”, “sim, mas…”, elogios ("Lindo", "Bonito", "Bacana").
-2 - Indireto → Inclui interesse indireto, curiosidade (“como funciona?”, "Quanto custa").
+2 - Indireto → Inclui interesse indireto, curiosidade (“como funciona?”, "Quanto custa?", "qual valor?", "Valores", "Orçamento").
 3 - Indefinido → inclui cumprimentos, respostas sociais (“boa tarde”, “posso ajudar?”, "oi").
 4 - Indefinido momentâneo → O cliente não verá o catálogo no momento ("ainda não ví", "já te retorno", "vou ver").
 5 - Desinteresse momentâneo → O cliente deixa a entender que pode ter interesse no futuro (“talvez depois”, "no momento não").
@@ -201,7 +201,7 @@ Caso 1 Interessado →
   "flow_step": "next"
 
 Caso 2 Indireto → 
-  Se houver pergunta do cliente responda de forma breve e simples e envie a próxima mensagem do fluxo;
+  Envia a próxima mensagem do fluxo com o parágrafo sobre o preço no topo;
   "reply": true
   "flow_step": "next"
 
