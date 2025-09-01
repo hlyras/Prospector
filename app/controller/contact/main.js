@@ -194,14 +194,6 @@ contactController.update = async (req, res) => {
       return res.status(500).send({ msg: contact_update_response.err });
     }
 
-    if (contact.autochat) {
-      if (wa.isConnected()) {
-        await wa.getSocket().sendMessage(contact.jid, { text: `Olá é da ${contact.business}` });
-      } else {
-        console.warn("WhatsApp não está pronto para enviar mensagens.");
-      }
-    }
-
     res.status(201).send({ done: "Contato criado com sucesso!" });
   } catch (error) {
     console.error("Erro ao criar contact:", error);

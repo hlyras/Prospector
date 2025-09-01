@@ -2,7 +2,6 @@
 // Informações básicas
 // 
 
-
 let basic_info = `
 Informações de contexto:
 Seu nome é Henrique;

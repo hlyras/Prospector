@@ -2,8 +2,8 @@
   function websocketConnect() {
     return new Promise((resolve, reject) => {
       // const socketUrl = 'ws://127.0.0.1:3005/ws';
-      // const socketUrl = 'ws://192.168.0.5:3005/ws';
-      const socketUrl = 'wss://52c48091ef4b.ngrok-free.app/ws';
+      const socketUrl = 'ws://192.168.0.3:3005/ws';
+      // const socketUrl = 'wss://prospector.loca.lt/ws';
       const socket = new WebSocket(socketUrl);
 
       socket.onopen = function () {
