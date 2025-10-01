@@ -144,11 +144,11 @@ Preciso identificar se o nome da empresa deve ser referido como masculino ou fem
 Complete .. com "da" ou "do" levando em consideração o nome da empresa.
 
 Exemplo:
-Boa noite, é da Coca-cola?
-Boa noite, é do atacadão?
+Boa tarde, é da Coca-cola?
+Boa tarde, é do atacadão?
 
 Frase base da resposta:
-Boa noite, é .. ${contact.business}?
+Boa tarde, é .. ${contact.business}?
 
 Atenção o JSON precisa ser formatado corretamente, sem blocos de código, sem texto explicativo, sem comentários.  
 Todas as chaves e strings devem estar entre aspas duplas e as quebras de linha devem ser representadas como \n.

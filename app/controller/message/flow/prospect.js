@@ -40,7 +40,7 @@ O catálogo custa R$49,90 por mês mas não exige assinatura, funciona como cré
 
 Nós daremos consultoria gratuita durante a construção do seu catálogo.\n\n
 
-${contact.name ? "Posso criar um esboço do seu catálogo, gostaria de ver como fica?" : "Qual é o seu nome?"}
+${contact.name ? 'Posso criar um esboço do seu catálogo, gostaria de ver como fica?' : 'Qual é o seu nome?'}
   `, `
 Eu posso criar um esboço do seu catálogo, gostaria de ver como fica?
   `, `

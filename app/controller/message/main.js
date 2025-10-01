@@ -456,6 +456,8 @@ messageController.receipt = async ({ data }) => {
           const lastMessageDelay = Date.now() - updated_contact.typing;
 
           if (lastMessageDelay >= 15000) {
+            const verify_autochat = (await Contact.findByJid(contact.jid))[0];
+
             await contact_chat.resetTyping();
             let contact_info = new Contact();
             contact_info.jid = updated_contact.jid;
@@ -464,7 +466,9 @@ messageController.receipt = async ({ data }) => {
             contact_info.flow_step = parseInt(updated_contact.flow_step);
             contact_info.segment = updated_contact.segment;
 
-            await messageController.sendByAi(contact_info);
+            if (verify_autochat.autochat == 1) {
+              await messageController.sendByAi(contact_info);
+            }
           }
         }, 15000);
       }

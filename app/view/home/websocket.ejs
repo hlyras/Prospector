@@ -2,8 +2,8 @@
   function websocketConnect() {
     return new Promise((resolve, reject) => {
       // const socketUrl = 'ws://127.0.0.1:3005/ws';
-      const socketUrl = 'ws://192.168.0.3:3005/ws';
-      // const socketUrl = 'wss://prospector.loca.lt/ws';
+      // const socketUrl = 'ws://192.168.0.4:3005/ws';
+      const socketUrl = 'wss://c3353e4c2d7b.ngrok-free.app/ws';
       const socket = new WebSocket(socketUrl);
 
       socket.onopen = function () {
@@ -17,6 +17,10 @@
         if (data.notify_alert) {
           if (document.getElementById(`contact-${data.jid}`)) {
             lib.display(`contact-${data.jid}-notify`, "");
+          }
+
+          if (data.interested || data.demo) {
+            beep();
           }
 
           lib.display("all-users-icon-notify", "");
