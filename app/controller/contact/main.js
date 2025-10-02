@@ -7,6 +7,7 @@ const { scrapeMapsFromUrl } = require("../../middleware/gmaps/main");
 
 const Contact = require("../../model/contact/main");
 const Message = require("../../model/message/main");
+const { enqueueMessage } = require("../../middleware/queue/main");
 
 const contactController = {};
 
@@ -77,8 +78,13 @@ Todas as chaves e strings devem estar entre aspas duplas e as quebras de linha d
 
         // console.log("Resposta do CHATGPT: ", response);
 
-        await wa.getSocket().sendMessage(contact.jid, {
-          text: JSON.parse(response).output
+        // await wa.getSocket().sendMessage(contact.jid, {
+        //   text: JSON.parse(response).output
+        // });
+
+        enqueueMessage({
+          contact_jid: contact.jid,
+          message: JSON.parse(response).output
         });
       } else {
         console.warn("WhatsApp não está pronto para enviar mensagens.");
@@ -160,8 +166,13 @@ Todas as chaves e strings devem estar entre aspas duplas e as quebras de linha d
               ]
             });
 
-            await wa.getSocket().sendMessage(contact.jid, {
-              text: JSON.parse(response).output
+            // await wa.getSocket().sendMessage(contact.jid, {
+            //   text: JSON.parse(response).output
+            // });
+
+            enqueueMessage({
+              contact_jid: contact.jid,
+              message: JSON.parse(response).output
             });
           } else {
             console.warn("WhatsApp não está pronto para enviar mensagens.");

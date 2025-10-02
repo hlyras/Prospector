@@ -89,6 +89,7 @@ async function scrapeMapsFromUrl(url, limit = 10, onContact = null) {
       if (onContact) onContact(data);
 
       console.log("✅ Coletado:", data.nome);
+      
       await randomDelay(3000, 6000);
     } catch (err) {
       console.log("⚠️ Erro ao pegar dados:", err);

@@ -1,5 +1,6 @@
 const Contact = require("../../model/contact/main");
 const Message = require("../../model/message/main");
+const { enqueueMessage } = require("../../middleware/queue/main");
 
 const lib = require('jarmlib');
 
@@ -138,14 +139,6 @@ messageController.sendByAi = async (contact) => {
 
   let gpt_response = JSON.parse(response);
 
-  // console.log(gpt_response);
-
-  // console.log("Contato:", {
-  //   jid: contact.jid,
-  //   flow_step: contact.flow_step
-  // });
-
-  // O contato é da empresa?
   if (contact.flow_step == 1) {
     if (gpt_response.name) {
       contact.name = gpt_response.name;
@@ -174,8 +167,13 @@ messageController.sendByAi = async (contact) => {
     }
 
     if (gpt_response.reply == true) {
-      await wa.getSocket().sendMessage(contact.jid, {
-        text: gpt_response.output
+      // await wa.getSocket().sendMessage(contact.jid, {
+      //   text: gpt_response.output
+      // });
+
+      enqueueMessage({
+        contact_jid: contact.jid,
+        message: gpt_response.output
       });
     }
 
@@ -218,8 +216,13 @@ Empresa: ${contact.business}`
     }
 
     if (gpt_response.reply == true) {
-      await wa.getSocket().sendMessage(contact.jid, {
-        text: gpt_response.output
+      // await wa.getSocket().sendMessage(contact.jid, {
+      //   text: gpt_response.output
+      // });
+
+      enqueueMessage({
+        contact_jid: contact.jid,
+        message: gpt_response.output
       });
     }
 
@@ -253,8 +256,13 @@ Empresa: ${contact.business}`
     }
 
     if (gpt_response.reply == true) {
-      await wa.getSocket().sendMessage(contact.jid, {
-        text: gpt_response.output
+      // await wa.getSocket().sendMessage(contact.jid, {
+      //   text: gpt_response.output
+      // });
+
+      enqueueMessage({
+        contact_jid: contact.jid,
+        message: gpt_response.output
       });
     }
 
@@ -289,8 +297,13 @@ Empresa: ${contact.business}`
     }
 
     if (gpt_response.reply == true) {
-      await wa.getSocket().sendMessage(contact.jid, {
-        text: gpt_response.output
+      // await wa.getSocket().sendMessage(contact.jid, {
+      //   text: gpt_response.output
+      // });
+
+      enqueueMessage({
+        contact_jid: contact.jid,
+        message: gpt_response.output
       });
     }
 
@@ -445,32 +458,19 @@ messageController.receipt = async ({ data }) => {
         contact_chat.typing = Date.now();
         await contact_chat.update();
 
-        await wa.getSocket().sendPresenceUpdate("available", contact.jid);
+        const updated_contact = (await Contact.findByJid(contact.jid))[0];
 
-        setTimeout(() => {
-          wa.getSocket().sendPresenceUpdate("composing", contact.jid);
-        }, 5000);
+        await contact_chat.resetTyping();
+        let contact_info = new Contact();
+        contact_info.jid = updated_contact.jid;
+        contact_info.business = updated_contact.business;
+        contact_info.name = updated_contact.name;
+        contact_info.flow_step = parseInt(updated_contact.flow_step);
+        contact_info.segment = updated_contact.segment;
 
-        setTimeout(async () => {
-          const updated_contact = (await Contact.findByJid(contact.jid))[0];
-          const lastMessageDelay = Date.now() - updated_contact.typing;
-
-          if (lastMessageDelay >= 15000) {
-            const verify_autochat = (await Contact.findByJid(contact.jid))[0];
-
-            await contact_chat.resetTyping();
-            let contact_info = new Contact();
-            contact_info.jid = updated_contact.jid;
-            contact_info.business = updated_contact.business;
-            contact_info.name = updated_contact.name;
-            contact_info.flow_step = parseInt(updated_contact.flow_step);
-            contact_info.segment = updated_contact.segment;
-
-            if (verify_autochat.autochat == 1) {
-              await messageController.sendByAi(contact_info);
-            }
-          }
-        }, 15000);
+        if (verify_autochat.autochat == 1) {
+          await messageController.sendByAi(contact_info);
+        }
       }
     }
 
