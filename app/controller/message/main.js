@@ -76,7 +76,7 @@ messageController.send = async (req, res) => {
     options.quoted = reply_message;
   }
 
-  console.log(req.body.jid, message, options);
+  // console.log(req.body.jid, message, options);
 
   if (wa.isConnected()) {
     let response = await wa.getSocket()
@@ -203,12 +203,12 @@ messageController.sendByAi = async (contact) => {
         if (ws.readyState === 1) { ws.send(JSON.stringify({ data })); }
       };
 
-      await wa.getSocket().sendMessage("120363403607809452@g.us", {
-        text: `
-Telefone: ${contact.jid.split("@")[0]}\n
-Nome: ${contact.name}\n
-Empresa: ${contact.business}`
-      });
+      //       await wa.getSocket().sendMessage("120363403607809452@g.us", {
+      //         text: `
+      // Telefone: ${contact.jid.split("@")[0]}\n
+      // Nome: ${contact.name}\n
+      // Empresa: ${contact.business}`
+      //       });
     }
 
     if (gpt_response.flow_step == "exit") {
@@ -468,9 +468,7 @@ messageController.receipt = async ({ data }) => {
         contact_info.flow_step = parseInt(updated_contact.flow_step);
         contact_info.segment = updated_contact.segment;
 
-        if (verify_autochat.autochat == 1) {
-          await messageController.sendByAi(contact_info);
-        }
+        await messageController.sendByAi(contact_info);
       }
     }
 

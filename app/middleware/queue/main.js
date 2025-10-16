@@ -35,15 +35,23 @@ async function processQueue() {
       order: [["queue.id", "asc"]]
     }))[0];
 
-    console.log(queue_message);
 
     if (!queue_message) {
       await sleep(1000);
       continue;
     }
 
-    wa.getSocket().sendPresenceUpdate("composing", queue_message.contact_jid);
-    const delay = randomDelay(3000, 12000);
+    // Marca como processando para evitar duplicações
+    let queue = new Queue();
+    queue.id = queue_message.id;
+    queue.status = "Processando";
+    await queue.update();
+
+    // wa.getSocket().sendPresenceUpdate("composing", queue_message.contact_jid);
+    const delay = randomDelay(3000, 19000);
+
+    console.log('delay: ', delay);
+    console.log('queue_message: ', queue_message);
     await sleep(delay);
 
     try {
@@ -57,7 +65,9 @@ async function processQueue() {
       queue.status = "Enviado";
       await queue.update();
 
-      await wa.getSocket().sendPresenceUpdate("available", queue_message.contact_jid);
+      console.log('queue_message: ', queue_message);
+
+      // await wa.getSocket().sendPresenceUpdate("available", queue_message.contact_jid);
     } catch (err) {
       console.error('Erro ao enviar mensagem:', err);
     }

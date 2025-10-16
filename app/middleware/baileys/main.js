@@ -2,6 +2,9 @@ const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = requi
 const { Boom } = require('@hapi/boom');
 const waEmitter = require('./emitter');
 
+const fs = require('fs');
+const path = require('path');
+
 let instance = null;
 
 class WhatsAppSession {
@@ -16,16 +19,23 @@ class WhatsAppSession {
   }
 
   async connect(/*sessionID*/) {
-    if (this.sock) {
-      console.log('⚠️ Já existe uma sessão ativa.');
-      return this.sock;
+    const authExists = fs.existsSync(path.join(this.authPath, 'creds.json'));
+    if (!authExists) {
+      console.log('⚙️ Nenhuma credencial encontrada, um novo QR será gerado.');
     }
 
     const { state, saveCreds } = await useMultiFileAuthState(this.authPath);
 
+    const { fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
+
+    const { version } = await fetchLatestBaileysVersion();
+
+    console.log('Baileys version: ', version);
+
     this.sock = makeWASocket({
+      version,                    // pega a versão mais recente do WhatsApp
       auth: state,
-      getMessage: async () => ({ conversation: 'Mensagem não encontrada localmente.' })
+      browser: ["Chrome (Windows)", "Chrome", "22.20.0"]
     });
 
     // process all events com ev.process
@@ -38,8 +48,19 @@ class WhatsAppSession {
         const { connection, lastDisconnect, qr } = events['connection.update'];
 
         if (qr) {
-          this.qrCodeString = qr;
-          console.log('📲 Escaneie o QR Code para conectar.');
+          // this.qrCodeString = qr;        // salva a string do QR
+          // console.log('📲 QR Code gerado! Use um gerador de QR ou uma biblioteca para exibir.');
+          const qrcode = require('qrcode-terminal');
+
+          // dentro do if(qr)
+          qrcode.generate(qr, { small: true });
+          console.log('📲 Escaneie este QR Code com seu WhatsApp!');
+        }
+
+        if (connection === 'open') {
+          console.log('✅ Conectado com sucesso!');
+          this.connected = true;
+          this.qrCodeString = null;
         }
 
         if (connection === 'close') {
@@ -50,17 +71,11 @@ class WhatsAppSession {
           this.sock = null;
 
           if (shouldReconnect) {
-            console.log('🔄 Reconectando...');
-            this.connect();
+            console.log('🔄 Reconectando em 5s...');
+            setTimeout(() => this.connect(), 5000);
           } else {
             console.log('📴 Sessão finalizada, necessário escanear QR novamente.');
           }
-        }
-
-        if (connection === 'open') {
-          console.log('✅ Conectado com sucesso!');
-          this.connected = true;
-          this.qrCodeString = null;
         }
       }
 
