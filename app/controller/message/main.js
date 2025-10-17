@@ -387,35 +387,41 @@ messageController.receipt = async ({ data }) => {
   message.datetime = data.messageTimestamp * 1000;
   message.raw = JSON.stringify(data);
 
-  if (data.message.extendedTextMessage) {
+  // Descompacta mensagens aninhadas (viewOnce, ephemeral, etc.)
+  let msg = data.message;
+  if (msg.ephemeralMessage) msg = msg.ephemeralMessage.message;
+  if (msg.viewOnceMessageV2) msg = msg.viewOnceMessageV2.message;
+  if (msg.documentWithCaptionMessage) msg = msg.documentWithCaptionMessage.message;
+
+  if (msg.extendedTextMessage) {
     message.type = "text";
-    message.content = data.message.extendedTextMessage.text;
+    message.content = msg.extendedTextMessage.text;
   }
 
-  if (data.message.conversation) {
+  if (msg.conversation) {
     message.type = "text";
-    message.content = data.message.conversation;
+    message.content = msg.conversation;
   }
 
-  if (data.message.imageMessage) {
+  if (msg.imageMessage) {
     message.type = "image";
-    message.content = await downloadMedia(data, wa.getSocket());
+    message.content = await downloadMedia(msg, wa.getSocket());
   }
 
-  if (data.message.audioMessage) {
+  if (msg.audioMessage) {
     message.type = "audio";
-    message.content = await downloadMedia(data, wa.getSocket());
+    message.content = await downloadMedia(msg, wa.getSocket());
   }
 
-  if (data.message.videoMessage) {
+  if (msg.videoMessage) {
     message.type = "video";
-    message.content = await downloadMedia(data, wa.getSocket());
+    message.content = await downloadMedia(msg, wa.getSocket());
   }
 
-  if (data.message.reactionMessage) {
+  if (msg.reactionMessage) {
     message.type = "reaction";
-    message.target_id = data.message.reactionMessage.key.id;
-    message.content = data.message.reactionMessage.text;
+    message.target_id = msg.reactionMessage.key.id;
+    message.content = msg.reactionMessage.text;
   }
 
   try {
@@ -458,17 +464,22 @@ messageController.receipt = async ({ data }) => {
         contact_chat.typing = Date.now();
         await contact_chat.update();
 
-        const updated_contact = (await Contact.findByJid(contact.jid))[0];
+        setTimeout(async () => {
+          const updated_contact = (await Contact.findByJid(contact.jid))[0];
+          const lastMessageDelay = Date.now() - updated_contact.typing;
 
-        await contact_chat.resetTyping();
-        let contact_info = new Contact();
-        contact_info.jid = updated_contact.jid;
-        contact_info.business = updated_contact.business;
-        contact_info.name = updated_contact.name;
-        contact_info.flow_step = parseInt(updated_contact.flow_step);
-        contact_info.segment = updated_contact.segment;
+          if (lastMessageDelay >= 15000) {
+            await contact_chat.resetTyping();
+            let contact_info = new Contact();
+            contact_info.jid = updated_contact.jid;
+            contact_info.business = updated_contact.business;
+            contact_info.name = updated_contact.name;
+            contact_info.flow_step = parseInt(updated_contact.flow_step);
+            contact_info.segment = updated_contact.segment;
 
-        await messageController.sendByAi(contact_info);
+            await messageController.sendByAi(contact_info);
+          }
+        }, 15000);
       }
     }
 
