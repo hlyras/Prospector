@@ -35,7 +35,8 @@ class WhatsAppSession {
     this.sock = makeWASocket({
       version,                    // pega a versão mais recente do WhatsApp
       auth: state,
-      browser: ["Chrome (Windows)", "Chrome", "22.20.0"]
+      browser: ["Chrome (Windows)", "Chrome", "22.20.0"],
+      syncFullHistory: true, // 👈 importante!
     });
 
     // process all events com ev.process

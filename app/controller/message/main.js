@@ -10,10 +10,11 @@ const cheerio = require("cheerio");
 
 const wa = require('../../middleware/baileys/main');
 const activeWebSockets = require('../../middleware/websocket/connectionStore');
-const { getProfilePicWithTimeout } = require('../../middleware/baileys/controller');
-const { downloadMedia } = require('../../middleware/baileys/controller');
+const { getGroupMetadataCached, downloadMedia, getProfilePicWithTimeout } = require('../../middleware/baileys/controller').default;
 const ChatGPTAPI = require('../../middleware/chatgpt/main');
 const prospect_flow = require('./flow/prospect');
+
+const { queueDownload } = require('../../middleware/baileys/media');
 
 const messageController = {};
 
@@ -326,13 +327,13 @@ messageController.receipt = async ({ data }) => {
     contact.created = 0;
     contact.notify = 1;
 
-    let profile_picture = await getProfilePicWithTimeout(wa.getSocket(), data.key.remoteJid);
-    contact.profile_picture = profile_picture;
-    data.profile_picture = profile_picture;
+    // let profile_picture = await getProfilePicWithTimeout(wa.getSocket(), data.key.remoteJid);
+    // contact.profile_picture = profile_picture;
+    // data.profile_picture = profile_picture;
 
     if (isGroup) {
-      const metadata = await wa.getSocket().groupMetadata(data.key.remoteJid);
-      contact.name = metadata.subject ? metadata.subject : null;
+      const metadata = await getGroupMetadataCached(wa.getSocket(), data.key.remoteJid);
+      contact.name = metadata?.subject || null;
     } else {
       contact.business = !data.key.fromMe && data.pushName ? data.pushName : null;
     }
@@ -356,8 +357,8 @@ messageController.receipt = async ({ data }) => {
     update_contact.notify = 1;
 
     if (isGroup) {
-      const metadata = await wa.getSocket().groupMetadata(data.key.remoteJid);
-      update_contact.name = metadata.subject ? metadata.subject : null;
+      const metadata = await getGroupMetadataCached(wa.getSocket(), data.key.remoteJid);
+      update_contact.name = metadata?.subject || null;
     } else {
       update_contact.business = !data.key.fromMe && data.pushName ? data.pushName : null;
     }
@@ -405,17 +406,17 @@ messageController.receipt = async ({ data }) => {
 
   if (msg.imageMessage) {
     message.type = "image";
-    message.content = await downloadMedia(msg, wa.getSocket());
+    message.content = await queueDownload(() => downloadMedia(msg, wa.getSocket()));
   }
 
   if (msg.audioMessage) {
     message.type = "audio";
-    message.content = await downloadMedia(msg, wa.getSocket());
+    message.content = await queueDownload(() => downloadMedia(msg, wa.getSocket()));
   }
 
   if (msg.videoMessage) {
     message.type = "video";
-    message.content = await downloadMedia(msg, wa.getSocket());
+    message.content = await queueDownload(() => downloadMedia(msg, wa.getSocket()));
   }
 
   if (msg.reactionMessage) {
@@ -426,6 +427,8 @@ messageController.receipt = async ({ data }) => {
 
   try {
     if (message.type == "reaction") {
+      console.log(contact);
+
       if (!data.message.reactionMessage.text) {
         let reaction_message = (await Message.filter({
           strict_params: {
