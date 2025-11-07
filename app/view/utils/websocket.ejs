@@ -1,9 +1,9 @@
 <script>
   function websocketConnect() {
     return new Promise((resolve, reject) => {
-      // const socketUrl = 'ws://127.0.0.1:3005/ws';
+      const socketUrl = 'ws://127.0.0.1:3005/ws';
       // const socketUrl = 'ws://192.168.132.3:3005/ws';
-      const socketUrl = 'wss://3ec94807d4e9.ngrok-free.app/ws';
+      // const socketUrl = 'wss://c3353e4c2d7b.ngrok-free.app/ws';
       const socket = new WebSocket(socketUrl);
 
       socket.onopen = function () {
@@ -15,18 +15,18 @@
         const { data, message } = JSON.parse(event.data);
 
         if (data.notify_alert) {
-          // if (document.getElementById(`contact-${data.jid}`)) {
-          //   lib.display(`contact-${data.jid}-notify`, "");
-          // }
+          if (document.getElementById(`contact-${data.jid}`)) {
+            lib.display(`contact-${data.jid}-notify`, "");
+          }
 
           if (data.interested || data.demo) {
             beep();
           }
 
-          // lib.display("all-users-icon-notify", "");
-          // data.conected && lib.display("conected-icon-notify", "");
-          // data.interested && lib.display("interested-icon-notify", "");
-          // data.demo && lib.display("demo-icon-notify", "");
+          lib.display("all-users-icon-notify", "");
+          data.conected && lib.display("conected-icon-notify", "");
+          data.interested && lib.display("interested-icon-notify", "");
+          data.demo && lib.display("demo-icon-notify", "");
           return;
         }
 
@@ -39,22 +39,10 @@
         }
 
         if (message.type == "reaction") {
-          // return messageReaction(message);
-          return;
+          return messageReaction(message);
         }
 
-        if (data.key.fromMe) {
-          let contact_list_div = document.getElementById(`contact-list-jid-${data.key.remoteJid.split("@")[0]}`);
-          if (contact_list_div && contact_list_div.style.backgroundColor != 'green') {
-            contact_list_div.style.backgroundColor = "green";
-            contact_list_div.style.color = "#fff";
-
-            let contact_list_result = document.getElementById(`contact-list-result`);
-            contact_list_result.value = parseInt(contact_list_result.value) + 1;
-          }
-        }
-
-        // receivedMessage({ data, message });
+        receivedMessage({ data, message });
       };
 
       socket.onerror = function (event) {

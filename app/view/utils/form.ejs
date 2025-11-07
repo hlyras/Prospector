@@ -1,0 +1,44 @@
+<form id="signup-form" class="box b3 container ground margin-top-15 padding-10">
+  <div class="box b1 underline lucida-grande rem10 bold margin-top-10 center noselect" style="color: #222">Crie sua
+    conta</div>
+
+  <div id="message" class="box b1 lucida-grande rem09 bold center margin-top-10 padding-5 radius-5"
+    style="background-color:#e32626;color:#fff;display: none;"><%= message %></div>
+
+  <div class="box b1 container margin-top-15">
+    <span class="box b1 lucida-grande rem08 bold" style="color: #111">Nome da empresa</span>
+    <input type="text" name="business" class="box b1 lucida-grande rem10 border-bottom-lg-st" maxlength="60"
+      placeholder="Minha Empresa" role="presentation" autocomplete="off">
+  </div>
+
+  <div class="box b1 container margin-top-15">
+    <span class="box b1 lucida-grande rem08 bold" style="color: #111">Escolha seu domínio</span>
+    <div class="mobile-box">
+      <input type="text" name="domain" class="mobile-box lucida-grande rem10 border-bottom-lg-st right" size="10"
+        oninput="this.size = this.value.length >= 10 ? this.value.length : 10" maxlength="60" placeholder="meudominio"
+        role="presentation" autocomplete="off">
+    </div>
+    <div class="mobile-box lucida-grande rem10">.cotalogo.com</div>
+  </div>
+
+  <div class="box b1 container margin-top-15">
+    <span class="box b1 lucida-grande rem08 bold" style="color: #111">E-mail</span>
+    <input type="email" name="email" class="box b1 lucida-grande rem10 border-bottom-lg-st" id="email" maxlength="60"
+      placeholder="E-mail" role="presentation" autocomplete="off">
+  </div>
+
+  <div class="box b1 container margin-top-15">
+    <span class="box b1 lucida-grande rem08 bold">Senha</span>
+    <div class="box b1 container">
+      <input type="password" name="password" class="mobile-box b9-10 lucida-grande rem10 border-bottom-lg-st"
+        maxlength="45" placeholder="Senha" role="presentation" autocomplete="off">
+      <div class="mobile-box b10 container center"><img src="/images/icon/eye-open.png"
+          class="image-prop icon size-20 center" onclick="switchPasswordView(this)">
+      </div>
+    </div>
+  </div>
+
+  <input type="submit"
+    class="box b1 btn-act lucida-grande rem10 bold radius-5 noborder shadow-lg-st padding-10 margin-top-10 margin-bottom-5 noselect pointer"
+    value="Criar minha conta">
+</form>

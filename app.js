@@ -8,7 +8,10 @@ const session = require('express-session');
 require('dotenv').config();
 
 const bodyParser = require('body-parser');
+const flash = require('connect-flash');
+const passport = require('./config/passport');
 
+app.use(flash());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -16,6 +19,17 @@ app.set('views', 'app/view');
 app.set('view engine', 'ejs');
 
 app.use(express.static('public'));
+
+app.use(session({
+  secret: 'vidyapathaisalwaysrunning',
+  resave: true,
+  saveUninitialized: true,
+  cookie: { maxAge: 24 * 60 * 60 * 1000 },
+  rolling: true
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use((req, res, next) => {
   if ((req.headers["x-forwarded-proto"] || "").endsWith("http")) {

@@ -1,0 +1,16 @@
+<form action="/user/login" method="post" class="box b3 container ground margin-top-25 padding-10 h-center">
+  <div class="box b1 lucida-grande rem09 bold underline margin-top-10 center noselect">Preencha as informações
+    de login
+  </div>
+  <% if (message.length > 0) { %>
+  <div class="box b1 lucida-grande rem09 bold center margin-top-10 padding-5 radius-5"
+    style="background-color: #e32626; color:#fff;"><%= message %></div>
+  <% } %>
+  <input type="text" name="username" class="box b1 rem11 georgia border-bottom padding-10 margin-top-5" maxlength="60"
+    role="presentation" autocomplete="off" placeholder="Usuário">
+  <input type="password" name="password" class="box b1 rem11 georgia border-bottom padding-10 margin-top-5"
+    maxlength="45" role="presentation" autocomplete="off" placeholder="Senha">
+  <input type="submit"
+    class="box b1 btn-act lucida-grande rem11 bold radius-5 noborder shadow-lg-st padding-10 margin-top-10 margin-bottom-5 noselect pointer"
+    value="Acessar minha conta">
+</form>

@@ -1,0 +1,800 @@
+<style>
+  canvas {
+    border: 1px solid #ccc;
+    cursor: crosshair;
+  }
+</style>
+
+<div id="style-container" class="container b1 h-center">
+  <div class="box b2-3 container">
+    <div class="box a2 container">
+      <input type="file" id="upload" accept="image/*, .pdf" hidden>
+      <label for="upload"
+        class="mobile-box ground lucida-grande rem09 bold border shadow-lg-st radius-3 padding-10 margin-10 pointer">
+        📁 Enviar Logomarca
+      </label>
+      <canvas id="canvas" class="box b1"></canvas>
+    </div>
+    <div class="container box b2 margin-top-3 h-center">
+      <div class="container mobile-box b2 padding-5">
+        <div class="lucida-grande">Cores de fundo</div>
+        <div id="header-color-box" class="container a1"></div>
+        <input type="color" id="header-color-picker" class="margin-top-5">
+      </div>
+
+      <div class="container mobile-box b2 padding-5">
+        <div class="lucida-grande">Cores dos ícones</div>
+        <div id="icon-color-box" class="container a1"></div>
+        <input type="color" id="icon-color-picker" class="margin-top-5">
+      </div>
+
+      <div id="style-previous-btn"
+        class="mobile-box lucida-grande rem09 bold border shadow-lg-st padding-10 padding-left-10 padding-right-10 margin-top-20 radius-5 pointer noselect">
+        ◀ Voltar
+      </div>
+
+      <div id="style-confirm-btn"
+        class="mobile-box btn-act lucida-grande rem09 bold shadow-lg-st padding-10 padding-left-10 padding-right-10 margin-top-20 radius-5 right pointer noselect">
+        Confirmar visual ▶
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const upload = document.getElementById('upload');
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  let zoom = 1;
+  let minZoom = 0.5;
+  let maxZoom = 5;
+
+  let panX = 0;
+  let panY = 0;
+  let isPanning = false;
+  let lastMouse = { x: 0, y: 0 };
+
+  let image = new Image();
+  let crop = { x: 50, y: 50, width: 50, height: 50 };
+  let dragging = false;
+  let resizing = false;
+  let offsetX, offsetY;
+  let dragCorner = null;
+  const handleSize = 10;
+
+  let dragStart = null;
+
+  upload.addEventListener('change', (e) => {
+    ajustarTamanhoCanvas();
+
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // verificação pelo tipo MIME
+    if (file.type === "application/pdf") {
+      console.log("É um PDF!");
+    }
+
+    lib.display("login-icon", "none");
+    lib.display("cart-icon", "");
+    lib.display("search-bar", "");
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      image.onload = () => {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = Math.floor(rect.width);
+        if (canvas.width <= 300) {
+          canvas.height = Math.floor(rect.width);
+        } else {
+          canvas.height = 300;
+        }
+
+        // calcular proporção e posição centralizada
+        const scale = Math.min(canvas.width / image.width, canvas.height / image.height);
+        const scaledWidth = image.width * scale;
+        const scaledHeight = image.height * scale;
+        const dx = (canvas.width - scaledWidth) / 2;
+        const dy = (canvas.height - scaledHeight) / 2;
+
+        // salvar para uso posterior no recorte
+        image._drawData = { dx, dy, scaledWidth, scaledHeight };
+
+        draw();
+
+        aplicarZoom(0.9);
+        detectarLogo();
+        recortar();
+      };
+      image.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function ajustarTamanhoCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.floor(rect.width);
+    canvas.height = Math.floor(rect.height);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const { scaledWidth, scaledHeight } = image._drawData;
+    const zoomedWidth = scaledWidth * zoom;
+    const zoomedHeight = scaledHeight * zoom;
+
+    const offsetX = (canvas.width - zoomedWidth) / 2 + panX;
+    const offsetY = (canvas.height - zoomedHeight) / 2 + panY;
+
+    image._zoomData = { offsetX, offsetY, zoomedWidth, zoomedHeight };
+
+    ctx.drawImage(image, offsetX, offsetY, zoomedWidth, zoomedHeight);
+    drawCropRect();
+  }
+
+  function drawCropRect() {
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(crop.x, crop.y, crop.width, crop.height);
+
+    // desenha alças nos cantos
+    drawHandle(crop.x, crop.y);
+    drawHandle(crop.x + crop.width, crop.y);
+    drawHandle(crop.x, crop.y + crop.height);
+    drawHandle(crop.x + crop.width, crop.y + crop.height);
+  }
+
+  function drawHandle(x, y) {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(x - handleSize / 2, y - handleSize / 2, handleSize, handleSize);
+  }
+
+  function limitarCropDentroDaImagem() {
+    const { offsetX, offsetY, zoomedWidth, zoomedHeight } = image._zoomData;
+
+    // Limitar X e largura
+    if (crop.x < offsetX) {
+      crop.width -= (offsetX - crop.x);
+      crop.x = offsetX;
+    }
+    if (crop.x + crop.width > offsetX + zoomedWidth) {
+      crop.width = offsetX + zoomedWidth - crop.x;
+    }
+
+    // Limitar Y e altura
+    if (crop.y < offsetY) {
+      crop.height -= (offsetY - crop.y);
+      crop.y = offsetY;
+    }
+    if (crop.y + crop.height > offsetY + zoomedHeight) {
+      crop.height = offsetY + zoomedHeight - crop.y;
+    }
+
+    // Garantir largura e altura mínimas positivas
+    crop.width = Math.max(1, crop.width);
+    crop.height = Math.max(1, crop.height);
+  }
+
+  function limitarPosicaoDoCropDentroDaImagem() {
+    const { offsetX, offsetY, zoomedWidth, zoomedHeight } = image._zoomData;
+
+    const maxX = offsetX + zoomedWidth - crop.width;
+    const maxY = offsetY + zoomedHeight - crop.height;
+
+    // Garante que crop.width/height nunca sejam maiores que a imagem
+    if (crop.width > zoomedWidth) crop.width = zoomedWidth;
+    if (crop.height > zoomedHeight) crop.height = zoomedHeight;
+
+    // Limita a posição (sem sair da imagem)
+    crop.x = Math.min(Math.max(crop.x, offsetX), maxX);
+    crop.y = Math.min(Math.max(crop.y, offsetY), maxY);
+  };
+
+  canvas.addEventListener('mousedown', (e) => {
+    const mouse = getMouse(e);
+
+    // 1. Tenta detectar redimensionamento
+    dragCorner = getHandleUnderMouse(mouse.x, mouse.y);
+    if (dragCorner) {
+      resizing = true;
+      return;
+    }
+
+    // 2. Se clicou dentro da área do crop, ativa movimento
+    if (
+      mouse.x >= crop.x &&
+      mouse.x <= crop.x + crop.width &&
+      mouse.y >= crop.y &&
+      mouse.y <= crop.y + crop.height
+    ) {
+      dragging = true;
+      dragStart = {
+        mouseX: mouse.x,
+        mouseY: mouse.y,
+        cropX: crop.x,
+        cropY: crop.y,
+      };
+      return;
+    }
+
+    // 3. Se clicou fora da área do crop, ativa pan
+    isPanning = true;
+    lastMouse = mouse;
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    const mouse = getMouse(e);
+
+    if (!image || !image._zoomData) return;
+
+    if (resizing && dragCorner) {
+      // Redimensionando a área de recorte
+      resizeCrop(mouse.x, mouse.y);
+      limitarCropDentroDaImagem();
+    } else if (dragging && dragStart) {
+      // Movendo a área de recorte
+      const deltaX = mouse.x - dragStart.mouseX;
+      const deltaY = mouse.y - dragStart.mouseY;
+
+      crop.x = dragStart.cropX + deltaX;
+      crop.y = dragStart.cropY + deltaY;
+
+      limitarPosicaoDoCropDentroDaImagem();
+    } else if (isPanning && lastMouse) {
+      // Arrastando a imagem (pan)
+      // panX += mouse.x - lastMouse.x;
+      // panY += mouse.y - lastMouse.y;
+      // lastMouse = mouse;
+    }
+
+    draw(); // redesenha sempre no final
+  });
+
+  canvas.addEventListener("mouseup", () => {
+    dragging = false;
+    resizing = false;
+    isPanning = false;
+    dragCorner = null;
+    dragStart = null;
+
+    if (image._zoomData) {
+      recortar();
+    }
+  });
+
+  canvas.addEventListener("mouseleave", () => {
+    if (resizing) {
+      dragging = false;
+      resizing = false;
+      isPanning = false;
+      dragCorner = null;
+      dragStart = null;
+
+      if (image._zoomData) {
+        recortar();
+      }
+    }
+  });
+
+  function getMouse(e) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  }
+
+  function isInsideCrop(x, y) {
+    return x >= crop.x && x <= crop.x + crop.width &&
+      y >= crop.y && y <= crop.y + crop.height;
+  }
+
+  function getHandleUnderMouse(x, y) {
+    const corners = [
+      { name: 'tl', x: crop.x, y: crop.y },
+      { name: 'tr', x: crop.x + crop.width, y: crop.y },
+      { name: 'bl', x: crop.x, y: crop.y + crop.height },
+      { name: 'br', x: crop.x + crop.width, y: crop.y + crop.height },
+    ];
+
+    for (const corner of corners) {
+      if (
+        x >= corner.x - handleSize && x <= corner.x + handleSize &&
+        y >= corner.y - handleSize && y <= corner.y + handleSize
+      ) {
+        return corner.name;
+      }
+    }
+    return null;
+  }
+
+  function resizeCrop(x, y) {
+    switch (dragCorner) {
+      case 'tl':
+        crop.width += crop.x - x;
+        crop.height += crop.y - y;
+        crop.x = x;
+        crop.y = y;
+        break;
+      case 'tr':
+        crop.width = x - crop.x;
+        crop.height += crop.y - y;
+        crop.y = y;
+        break;
+      case 'bl':
+        crop.width += crop.x - x;
+        crop.x = x;
+        crop.height = y - crop.y;
+        break;
+      case 'br':
+        crop.width = x - crop.x;
+        crop.height = y - crop.y;
+        break;
+    }
+
+    limitarCropDentroDaImagem();
+    // recortar();
+    draw();
+  }
+
+  function detectarLogo(folga = 20) {
+    if (!image || !image.complete) return;
+
+    const aux = document.createElement("canvas");
+    aux.width = image.width;
+    aux.height = image.height;
+    const auxCtx = aux.getContext("2d", { willReadFrequently: true });
+    auxCtx.drawImage(image, 0, 0);
+
+    const imageData = auxCtx.getImageData(0, 0, aux.width, aux.height);
+    const { data, width, height } = imageData;
+
+    function getPixelIndex(x, y) {
+      return (y * width + x) * 4;
+    }
+
+    function getColorAt(x, y) {
+      const i = getPixelIndex(x, y);
+      return { r: data[i], g: data[i + 1], b: data[i + 2] };
+    }
+
+    const samples = [
+      getColorAt(0, 0),
+      getColorAt(width - 1, 0),
+      getColorAt(0, height - 1),
+      getColorAt(width - 1, height - 1),
+    ];
+
+    const bgColor = {
+      r: samples.reduce((sum, c) => sum + c.r, 0) / 4,
+      g: samples.reduce((sum, c) => sum + c.g, 0) / 4,
+      b: samples.reduce((sum, c) => sum + c.b, 0) / 4,
+    };
+
+    function colorDistance(c1, c2) {
+      return Math.sqrt(
+        Math.pow(c1[0] - c2[0], 2) +
+        Math.pow(c1[1] - c2[1], 2) +
+        Math.pow(c1[2] - c2[2], 2)
+      );
+    }
+
+    const tolerance = 64;
+
+    // coletar cores e contar frequência
+    let top = height, bottom = 0, left = width, right = 0;
+    const freq = new Map();
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const i = getPixelIndex(x, y);
+        const color = [data[i], data[i + 1], data[i + 2]];
+
+        if (colorDistance(color, [bgColor.r, bgColor.g, bgColor.b]) > tolerance) {
+          if (y < top) top = y;
+          if (y > bottom) bottom = y;
+          if (x < left) left = x;
+          if (x > right) right = x;
+
+          const key = color.join(",");
+          freq.set(key, (freq.get(key) || 0) + 1);
+        }
+      }
+    }
+
+    // ordenar cores por frequência
+    const sortedColors = [...freq.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([key]) => key.split(",").map(Number));
+
+    // selecionar até 5 cores bem distintas
+    const suggested_colors = [];
+    const minDistancia = 80;
+
+    for (const cor of sortedColors) {
+      let distante = true;
+      for (const sel of suggested_colors) {
+        if (colorDistance(cor, sel) < minDistancia) {
+          distante = false;
+          break;
+        }
+      }
+      if (distante) {
+        suggested_colors.push(cor);
+      }
+      if (suggested_colors.length >= 5) break;
+    }
+
+    // aplicar folga no crop
+    top = Math.max(0, top - folga * 2);
+    bottom = Math.min(height, bottom + folga * 2);
+    left = Math.max(0, left - folga * 4);
+    right = Math.min(width, right + folga * 4);
+
+    const largura = right - left;
+    const altura = bottom - top;
+
+    if (largura < altura) {
+      const diff = altura - largura;
+      left = Math.max(0, left - Math.floor(diff / 2));
+      right = Math.min(width, right + Math.ceil(diff / 2));
+      if (right - left < altura) {
+        right = Math.min(width, left + altura);
+        left = Math.max(0, right - altura);
+      }
+    }
+
+    const { offsetX, offsetY, zoomedWidth, zoomedHeight } = image._zoomData;
+    const scaleX = zoomedWidth / image.width;
+    const scaleY = zoomedHeight / image.height;
+
+    crop.x = offsetX + left * scaleX;
+    crop.y = offsetY + top * scaleY;
+    crop.width = (right - left) * scaleX;
+    crop.height = (bottom - top) * scaleY;
+
+    limitarCropDentroDaImagem();
+    recortar();
+    draw();
+  };
+
+  function recortar() {
+    const { offsetX, offsetY, zoomedWidth, zoomedHeight } = image._zoomData;
+    const imgWidth = image.width;
+    const imgHeight = image.height;
+
+    const scaleX = imgWidth / zoomedWidth;
+    const scaleY = imgHeight / zoomedHeight;
+
+    // calcular coordenadas do recorte no canvas visível
+    const sx = (crop.x - offsetX) * scaleX;
+    const sy = (crop.y - offsetY) * scaleY;
+    const sw = crop.width * scaleX;
+    const sh = crop.height * scaleY;
+
+    // tamanho de saída proporcional (alta qualidade)
+    const cropCanvas = document.createElement("canvas");
+    cropCanvas.width = Math.round(sw);
+    cropCanvas.height = Math.round(sh);
+
+    const cropCtx = cropCanvas.getContext("2d");
+    cropCtx.drawImage(
+      image,
+      sx, sy, sw, sh, // área original
+      0, 0, sw, sh // destino no novo canvas
+    );
+
+    const dataURL = cropCanvas.toDataURL("image/png");
+
+    const logo_img = document.getElementById("logo-img");
+    logo_img.src = dataURL;
+
+    logo_img.onload = () => {
+      let header_colors = analisarBordas(logo_img);
+      let header_color = document.getElementById("header-bg");
+      header_color.style.backgroundColor = lib.rgbToHex(`rgb(${header_colors[0].r},${header_colors[0].g},${header_colors[0].b})`);
+      document.getElementById("header-color-picker").value = lib.rgbToHex(`rgb(${header_colors[0].r},${header_colors[0].g},${header_colors[0].b})`);
+
+      let header_color_box = document.getElementById("header-color-box");
+      header_color_box.innerHTML = "";
+
+      for (let i = 0; i < 12; i++) {
+        let c = header_colors[i];
+        if (!c) continue;
+
+        let color_div = lib.element.create("div", {
+          class: "mobile-box b6 radius-3 shadow-lg-st border height-25 margin-top-5",
+          style: `background-color: ${lib.rgbToHex(
+            `rgb(${c.r},${c.g},${c.b})`
+          )}`
+        });
+        header_color_box.append(color_div);
+
+        color_div.addEventListener("click", () => {
+          header_color.style.backgroundColor = lib.rgbToHex(`rgb(${c.r},${c.g},${c.b})`);
+          document.getElementById("header-color-picker").value = lib.rgbToHex(`rgb(${c.r},${c.g},${c.b})`);
+          setIconColor(logo_img, c);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      };
+
+      setIconColor(logo_img, header_colors[0]);
+    };
+  };
+
+  function setIconColor(logo_img, header_color) {
+    let icon_colors = getIconColor(logo_img, header_color);
+    let cart_icon = document.getElementById("cart-icon");
+    let search_icon = document.getElementById("search-icon");
+    let menu_icon = document.getElementById("menu-icon");
+    cart_icon.style.setProperty("--cart-color", lib.rgbToHex(`rgb(${icon_colors[0].r},${icon_colors[0].g},${icon_colors[0].b})`));
+    search_icon.style.setProperty("--search-color", lib.rgbToHex(`rgb(${icon_colors[0].r},${icon_colors[0].g},${icon_colors[0].b})`));
+    menu_icon.style.setProperty("--menu-color", lib.rgbToHex(`rgb(${icon_colors[0].r},${icon_colors[0].g},${icon_colors[0].b})`));
+    document.getElementById("icon-color-picker").value = lib.rgbToHex(`rgb(${icon_colors[0].r},${icon_colors[0].g},${icon_colors[0].b})`);
+
+    let icon_color_box = document.getElementById("icon-color-box");
+    icon_color_box.innerHTML = "";
+
+    for (let i = 0; i < 12; i++) {
+      let c = icon_colors[i];
+      if (!c) continue;
+
+      let color_div = lib.element.create("div", {
+        class: "mobile-box b6 radius-3 shadow-lg-st border height-25 margin-top-5",
+        style: `background-color: ${lib.rgbToHex(
+          `rgb(${c.r},${c.g},${c.b})`
+        )}`
+      });
+      icon_color_box.append(color_div);
+
+      color_div.addEventListener("click", () => {
+        cart_icon.style.setProperty("--cart-color", lib.rgbToHex(`rgb(${c.r},${c.g},${c.b})`));
+        search_icon.style.setProperty("--search-color", lib.rgbToHex(`rgb(${c.r},${c.g},${c.b})`));
+        menu_icon.style.setProperty("--menu-color", lib.rgbToHex(`rgb(${c.r},${c.g},${c.b})`));
+        document.getElementById("icon-color-picker").value = lib.rgbToHex(`rgb(${c.r},${c.g},${c.b})`);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    };
+  }
+
+  function analisarBordas(img, maxCores = 5, minDistancia = 40) {
+    if (!img.complete || img.naturalWidth === 0) {
+      console.warn("Imagem ainda não carregada.");
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    ctx.drawImage(img, 0, 0);
+
+    const width = canvas.width;
+    const height = canvas.height;
+    const imageData = ctx.getImageData(0, 0, width, height).data;
+
+    const cores = {};
+
+    // Coleta as cores das 3 primeiras fileiras
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < 3; y++) {
+        const i = (y * width + x) * 4;
+        const r = imageData[i];
+        const g = imageData[i + 1];
+        const b = imageData[i + 2];
+        const key = `${r},${g},${b}`;
+        cores[key] = (cores[key] || 0) + 1;
+      }
+    }
+
+    // Converte em array de objetos RGB + quantidade e ordena pela frequência
+    const relatorio = Object.entries(cores)
+      .sort((a, b) => b[1] - a[1])
+      .map(([rgbStr, quantidade]) => {
+        const [r, g, b] = rgbStr.split(',').map(Number);
+        return { r, g, b, quantidade };
+      });
+
+    // Função para calcular distância euclidiana entre duas cores
+    function colorDistance(c1, c2) {
+      return Math.sqrt(
+        Math.pow(c1.r - c2.r, 2) +
+        Math.pow(c1.g - c2.g, 2) +
+        Math.pow(c1.b - c2.b, 2)
+      );
+    }
+
+    // Seleciona até 5 cores distintas
+    const suggestedColors = [];
+    for (const cor of relatorio) {
+      if (suggestedColors.length === 0) {
+        suggestedColors.push({ r: cor.r, g: cor.g, b: cor.b });
+        continue;
+      }
+
+      let distante = true;
+      for (const sel of suggestedColors) {
+        if (colorDistance(cor, sel) < minDistancia) {
+          distante = false;
+          break;
+        }
+      }
+
+      if (distante) {
+        suggestedColors.push({ r: cor.r, g: cor.g, b: cor.b });
+      }
+
+      if (suggestedColors.length >= maxCores) break;
+    }
+
+    return suggestedColors;
+  }
+
+  function agruparCores(relatorio, maxCores = 5, minDistancia = 40) {
+    function hexToRgb(hex) {
+      const bigint = parseInt(hex, 16);
+      return [
+        (bigint >> 16) & 255,
+        (bigint >> 8) & 255,
+        bigint & 255
+      ];
+    }
+
+    function colorDistance(c1, c2) {
+      return Math.sqrt(
+        Math.pow(c1[0] - c2[0], 2) +
+        Math.pow(c1[1] - c2[1], 2) +
+        Math.pow(c1[2] - c2[2], 2)
+      );
+    }
+
+    const coresSelecionadas = [];
+
+    for (const { cor } of relatorio) {
+      const rgb = hexToRgb(cor);
+
+      if (coresSelecionadas.length === 0) {
+        coresSelecionadas.push({ cor, rgb });
+        continue;
+      }
+
+      let distante = true;
+      for (const sel of coresSelecionadas) {
+        if (colorDistance(rgb, sel.rgb) < minDistancia) {
+          distante = false;
+          break;
+        }
+      }
+
+      if (distante) {
+        coresSelecionadas.push({ cor, rgb });
+      }
+
+      if (coresSelecionadas.length >= maxCores) break;
+    }
+
+    // retorna só os hex
+    return coresSelecionadas.map(c => c.cor);
+  };
+
+  function aplicarZoom(fator) {
+    const novoZoom = zoom * fator;
+    if (novoZoom < minZoom || novoZoom > maxZoom) return;
+    zoom = novoZoom;
+    draw();
+  };
+
+  function hexToRgb(hex) {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) {
+      hex = hex.split('').map(c => c + c).join('');
+    }
+    const bigint = parseInt(hex, 16);
+    return {
+      r: (bigint >> 16) & 255,
+      g: (bigint >> 8) & 255,
+      b: bigint & 255
+    };
+  }
+
+  function getIconColor(img, bgColor) {
+    if (!img.complete || img.naturalWidth === 0) {
+      console.warn("Imagem ainda não carregada.");
+      return [];
+    }
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    ctx.drawImage(img, 0, 0);
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const colorMap = new Map();
+    const bgTolerance = 40;
+    const quantizeStep = 16; // reduz a granularidade de cores para agrupar cores similares
+
+    function quantize(v) {
+      return Math.floor(v / quantizeStep) * quantizeStep;
+    }
+
+    function rgbKey(r, g, b) {
+      return `${r},${g},${b}`;
+    }
+
+    function isCloseToBg(r, g, b) {
+      return (
+        Math.abs(r - bgColor.r) < bgTolerance &&
+        Math.abs(g - bgColor.g) < bgTolerance &&
+        Math.abs(b - bgColor.b) < bgTolerance
+      );
+    }
+
+    for (let i = 0; i < imageData.length; i += 4) {
+      const a = imageData[i + 3];
+      if (a < 100) continue;
+
+      const r = quantize(imageData[i]);
+      const g = quantize(imageData[i + 1]);
+      const b = quantize(imageData[i + 2]);
+
+      if (isCloseToBg(r, g, b)) continue;
+
+      const key = rgbKey(r, g, b);
+      colorMap.set(key, (colorMap.get(key) || 0) + 1);
+    }
+
+    const topColors = Array.from(colorMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 30)
+      .map(([key, count]) => {
+        const [r, g, b] = key.split(",").map(Number);
+        return { r, g, b, count };
+      });
+
+    function getContrast(c1, c2) {
+      const luminance = c => 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+      return Math.abs(luminance(c1) - luminance(c2));
+    }
+
+    let highestContrast = -1;
+    let principalIndex = -1;
+
+    topColors.forEach((color, index) => {
+      const contrast = getContrast(color, bgColor);
+      if (contrast > highestContrast) {
+        highestContrast = contrast;
+        principalIndex = index;
+      }
+    });
+
+    return topColors.map((color, index) => ({
+      r: color.r,
+      g: color.g,
+      b: color.b,
+      principal: index === principalIndex
+    }));
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("header-color-picker").addEventListener("change", e => {
+      document.getElementById("header-bg").style.backgroundColor = e.target.value;
+      setIconColor(document.getElementById("logo-img"), hexToRgb(e.target.value));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    document.getElementById("icon-color-picker").addEventListener("change", e => {
+      let cart_icon = document.getElementById("cart-icon");
+      let search_icon = document.getElementById("search-icon");
+      let menu_icon = document.getElementById("menu-icon");
+      cart_icon.style.setProperty("--cart-color", e.target.value);
+      search_icon.style.setProperty("--search-color", e.target.value);
+      menu_icon.style.setProperty("--menu-color", e.target.value);
+      document.getElementById("icon-color-picker").value = e.target.value;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+</script>

@@ -1,46 +1,14 @@
 const Contact = require("../../model/contact/main");
+const ContactList = require("../../model/contact/list");
 const Message = require("../../model/message/main");
 const { enqueueMessage } = require("../../middleware/queue/main");
 
 const lib = require('jarmlib');
 
-const sharp = require("sharp");
-const axios = require("axios");
-const cheerio = require("cheerio");
-
 const wa = require('../../middleware/baileys/main');
 const activeWebSockets = require('../../middleware/websocket/connectionStore');
-const { getGroupMetadataCached, downloadMedia, getProfilePicWithTimeout } = require('../../middleware/baileys/controller').default;
-const ChatGPTAPI = require('../../middleware/chatgpt/main');
-const prospect_flow = require('./flow/prospect');
-
-const { queueDownload } = require('../../middleware/baileys/media');
 
 const messageController = {};
-
-async function getOGData(url) {
-  const { data: html } = await axios.get(url);
-  const $ = cheerio.load(html);
-
-  let imageUrl = $('meta[property="og:image"]').attr("content");
-
-  let thumbBuffer = null;
-  if (imageUrl) {
-    const imgRes = await axios.get(imageUrl, { responseType: "arraybuffer" });
-    // Redimensiona mantendo proporção
-    thumbBuffer = await sharp(imgRes.data)
-      .resize(300, 300, { fit: "inside" }) // mantém proporção
-      .jpeg()
-      .toBuffer();
-  }
-
-  return {
-    title: $('meta[property="og:title"]').attr("content") || $("title").text(),
-    body: $('meta[property="og:description"]').attr("content") || "",
-    thumbnail: thumbBuffer,
-    sourceUrl: url
-  };
-}
 
 messageController.send = async (req, res) => {
   let message = {};
@@ -48,26 +16,26 @@ messageController.send = async (req, res) => {
 
   let reply_message = req.body.reply ? JSON.parse(req.body.reply.message) : null;
 
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const found = req.body.content.match(urlRegex);
+  // const urlRegex = /(https?:\/\/[^\s]+)/g;
+  // const found = req.body.content.match(urlRegex);
 
-  if (found && found.length > 0) {
-    options.linkPreview = true;
+  // if (found && found.length > 0) {
+  //   options.linkPreview = true;
 
-    const og = await getOGData(found[0]);
+  //   const og = await getOGData(found[0]);
 
-    message.contextInfo = {
-      externalAdReply: {
-        title: og.title,
-        body: og.body,
-        thumbnail: og.thumbnail,
-        mediaType: 1,
-        renderLargerThumbnail: true,
-        sourceUrl: og.sourceUrl,
-        renderLargerThumbnail: true
-      }
-    }
-  }
+  //   message.contextInfo = {
+  //     externalAdReply: {
+  //       title: og.title,
+  //       body: og.body,
+  //       thumbnail: og.thumbnail,
+  //       mediaType: 1,
+  //       renderLargerThumbnail: true,
+  //       sourceUrl: og.sourceUrl,
+  //       renderLargerThumbnail: true
+  //     }
+  //   }
+  // }
 
   if (req.body.type == "text") {
     message.text = req.body.content;
@@ -108,234 +76,54 @@ messageController.react = async (req, res) => {
   }
 };
 
-messageController.sendByAi = async (contact) => {
-  let message_options = {
-    props: [
-      "message.type",
-      "message.datetime",
-      "message.content",
-      "message.from_me",
-    ],
-    strict_params: { keys: [], values: [] },
-    order_params: [["message.datetime", "desc"]],
-    limit: 20
-  };
-
-  lib.Query.fillParam("message.jid", contact.jid, message_options.strict_params);
-  let message_history = await Message.filter(message_options);
-
-  let history = "";
-  for (let i = parseInt(message_history.length) - 1; i >= 0; i--) {
-    let sender = message_history[i].from_me ? "Bot" : "Cliente";
-    let content = message_history[i].content || "";
-    history += `[${sender}]: ${content}\n`;
-  };
-
-  let response = await ChatGPTAPI({
-    model: "gpt-4o-mini",
-    messages: prospect_flow[contact.flow_step](contact, history)
-  });
-
-  wa.getSocket().sendPresenceUpdate("available", contact.jid);
-
-  let gpt_response = JSON.parse(response);
-
-  if (contact.flow_step == 1) {
-    if (gpt_response.name) {
-      contact.name = gpt_response.name;
-    }
-
-    if (gpt_response.flow_step == "next") {
-      contact.status = "conectado";
-      contact.notify = 1;
-      contact.flow_step = parseInt(contact.flow_step) + 1;
-
-      for (const [sessionID, ws] of activeWebSockets.entries()) {
-        let data = {
-          jid: contact.jid,
-          notify_alert: true,
-          conected: true
-        };
-
-        if (ws.readyState === 1) {
-          ws.send(JSON.stringify({ data }));
-        }
-      };
-    }
-
-    if (gpt_response.flow_step == "exit") {
-      contact.autochat = 0;
-    }
-
-    if (gpt_response.reply == true) {
-      // await wa.getSocket().sendMessage(contact.jid, {
-      //   text: gpt_response.output
-      // });
-
-      enqueueMessage({
-        contact_jid: contact.jid,
-        message: gpt_response.output
-      });
-    }
-
-    contact.update();
-  }
-
-  // O cliente tem interesse no catálogo?
-  else if (contact.flow_step == 2) {
-    if (gpt_response.name) {
-      contact.name = gpt_response.name;
-    }
-
-    if (gpt_response.flow_step == "next") {
-      contact.status = "interessado";
-      contact.notify = 1;
-
-      if (contact.name) { contact.flow_step = parseInt(contact.flow_step) + 2; }
-      else { contact.flow_step = parseInt(contact.flow_step) + 1; }
-
-      for (const [sessionID, ws] of activeWebSockets.entries()) {
-        let data = {
-          jid: contact.jid,
-          notify_alert: true,
-          interested: true
-        };
-
-        if (ws.readyState === 1) { ws.send(JSON.stringify({ data })); }
-      };
-
-      //       await wa.getSocket().sendMessage("120363403607809452@g.us", {
-      //         text: `
-      // Telefone: ${contact.jid.split("@")[0]}\n
-      // Nome: ${contact.name}\n
-      // Empresa: ${contact.business}`
-      //       });
-    }
-
-    if (gpt_response.flow_step == "exit") {
-      contact.autochat = 0;
-    }
-
-    if (gpt_response.reply == true) {
-      // await wa.getSocket().sendMessage(contact.jid, {
-      //   text: gpt_response.output
-      // });
-
-      enqueueMessage({
-        contact_jid: contact.jid,
-        message: gpt_response.output
-      });
-    }
-
-    contact.update();
-  }
-
-  // Informações / Perguntar o nome ou Oferecer esboço
-  else if (contact.flow_step == 3) {
-    if (gpt_response.name) {
-      contact.name = gpt_response.name;
-    }
-
-    if (gpt_response.flow_step == "next") {
-      contact.status = "interessado";
-      contact.notify = 1;
-      contact.flow_step = parseInt(contact.flow_step) + 1;
-
-      for (const [sessionID, ws] of activeWebSockets.entries()) {
-        let data = {
-          jid: contact.jid,
-          notify_alert: true,
-          interested: true
-        };
-
-        if (ws.readyState === 1) { ws.send(JSON.stringify({ data })); }
-      };
-    }
-
-    if (gpt_response.flow_step == "exit") {
-      contact.autochat = 0;
-    }
-
-    if (gpt_response.reply == true) {
-      // await wa.getSocket().sendMessage(contact.jid, {
-      //   text: gpt_response.output
-      // });
-
-      enqueueMessage({
-        contact_jid: contact.jid,
-        message: gpt_response.output
-      });
-    }
-
-    contact.update();
-  }
-
-  // O cliente tem interesse no esboço?
-  else if (contact.flow_step == 4) {
-    if (gpt_response.name) {
-      contact.name = gpt_response.name;
-    }
-
-    if (gpt_response.flow_step == "next") {
-      contact.status = "demonstração";
-      contact.notify = 1;
-      contact.flow_step = parseInt(contact.flow_step) + 1;
-      contact.autochat = 0;
-
-      for (const [sessionID, ws] of activeWebSockets.entries()) {
-        let data = {
-          jid: contact.jid,
-          notify_alert: true,
-          interested: true
-        };
-
-        if (ws.readyState === 1) { ws.send(JSON.stringify({ data })); }
-      };
-    }
-
-    if (gpt_response.flow_step == "exit") {
-      contact.autochat = 0;
-    }
-
-    if (gpt_response.reply == true) {
-      // await wa.getSocket().sendMessage(contact.jid, {
-      //   text: gpt_response.output
-      // });
-
-      enqueueMessage({
-        contact_jid: contact.jid,
-        message: gpt_response.output
-      });
-    }
-
-    contact.update();
-  }
-};
-
 messageController.receipt = async ({ data }) => {
+  if (!data.key.fromMe) { return; }
+
   let sender = data.key.remoteJid.split("@")[0];
   if (sender == "status") return;
 
   const isGroup = data.key.remoteJid.split("@")[1] == "g.us" ? true : false;
+  if (isGroup) { return; }
 
   let contact = (await Contact.findByJid(data.key.remoteJid))[0] || null;
 
   if (!contact) {
-    let contact = new Contact();
+    contact = new Contact();
     contact.jid = data.key.remoteJid;
-    contact.autochat = 0;
-    contact.created = 0;
+    contact.datetime = lib.date.timestamp.generate();
+    contact.autochat = data.key.fromMe ? 1 : 0;
+    contact.flow_step = data.key.fromMe ? 1 : 0;
+    contact.created = data.key.fromMe ? 1 : 0;
     contact.notify = 1;
 
-    // let profile_picture = await getProfilePicWithTimeout(wa.getSocket(), data.key.remoteJid);
-    // contact.profile_picture = profile_picture;
-    // data.profile_picture = profile_picture;
+    if (data.key.fromMe) {
+      let contact_list = (await ContactList.filter({
+        strict_params: {
+          keys: ["jid"],
+          values: [contact.jid]
+        },
+        limit: 1
+      }))[0];
+
+      if (contact_list?.segment) {
+        contact.segment = contact_list.segment;
+        contact.business = contact_list.business;
+
+        let cl = new ContactList();
+        cl.jid = contact.jid;
+        cl.sent_datetime = lib.date.timestamp.generate();
+        cl.status = "Concluído";
+        await cl.update();
+        // enviar socket aqui
+      }
+    }
 
     if (isGroup) {
-      const metadata = await getGroupMetadataCached(wa.getSocket(), data.key.remoteJid);
-      contact.name = metadata?.subject || null;
+      // const metadata = await getGroupMetadataCached(wa.getSocket(), data.key.remoteJid);
+      // contact.name = metadata?.subject || null;
     } else {
-      contact.business = !data.key.fromMe && data.pushName ? data.pushName : null;
+      // contact.business = !data.key.fromMe && data.pushName
+      //   ? data.pushName : null;
     }
 
     for (const [sessionID, ws] of activeWebSockets.entries()) {
@@ -357,8 +145,8 @@ messageController.receipt = async ({ data }) => {
     update_contact.notify = 1;
 
     if (isGroup) {
-      const metadata = await getGroupMetadataCached(wa.getSocket(), data.key.remoteJid);
-      update_contact.name = metadata?.subject || null;
+      // const metadata = await getGroupMetadataCached(wa.getSocket(), data.key.remoteJid);
+      // update_contact.name = metadata?.subject || null;
     } else {
       update_contact.business = !data.key.fromMe && data.pushName ? data.pushName : null;
     }
@@ -406,17 +194,20 @@ messageController.receipt = async ({ data }) => {
 
   if (msg.imageMessage) {
     message.type = "image";
-    message.content = await queueDownload(() => downloadMedia(msg, wa.getSocket()));
+    message.content = "image";
+    // message.content = await queueDownload(() => downloadMedia(msg, wa.getSocket()));
   }
 
   if (msg.audioMessage) {
     message.type = "audio";
-    message.content = await queueDownload(() => downloadMedia(msg, wa.getSocket()));
+    message.content = "audio";
+    // message.content = await queueDownload(() => downloadMedia(msg, wa.getSocket()));
   }
 
   if (msg.videoMessage) {
     message.type = "video";
-    message.content = await queueDownload(() => downloadMedia(msg, wa.getSocket()));
+    message.content = "video";
+    // message.content = await queueDownload(() => downloadMedia(msg, wa.getSocket()));
   }
 
   if (msg.reactionMessage) {
@@ -427,8 +218,6 @@ messageController.receipt = async ({ data }) => {
 
   try {
     if (message.type == "reaction") {
-      console.log(contact);
-
       if (!data.message.reactionMessage.text) {
         let reaction_message = (await Message.filter({
           strict_params: {
@@ -462,27 +251,21 @@ messageController.receipt = async ({ data }) => {
       message.id = message_create.insertId;
 
       if (contact?.autochat == 1 && !data.key.fromMe && message.type == "text") {
+        return;
+
+        if (contact.typing) { return; }
+
         let contact_chat = new Contact();
         contact_chat.jid = data.key.remoteJid;
-        contact_chat.typing = Date.now();
+        contact_chat.typing = "waiting";
         await contact_chat.update();
 
-        setTimeout(async () => {
-          const updated_contact = (await Contact.findByJid(contact.jid))[0];
-          const lastMessageDelay = Date.now() - updated_contact.typing;
+        enqueueMessage({
+          contact_jid: contact.jid,
+          priority: parseInt(contact.flow_step) + 1
+        });
 
-          if (lastMessageDelay >= 15000) {
-            await contact_chat.resetTyping();
-            let contact_info = new Contact();
-            contact_info.jid = updated_contact.jid;
-            contact_info.business = updated_contact.business;
-            contact_info.name = updated_contact.name;
-            contact_info.flow_step = parseInt(updated_contact.flow_step);
-            contact_info.segment = updated_contact.segment;
-
-            await messageController.sendByAi(contact_info);
-          }
-        }, 15000);
+        // await messageController.sendByAi(contact_info);
       }
     }
 

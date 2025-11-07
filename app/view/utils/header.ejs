@@ -1,0 +1,85 @@
+<style>
+  .menu-icon {
+    cursor: pointer;
+  }
+
+  .bar {
+    width: 100%;
+    height: 5px;
+    width: 35px;
+    transition: all 0.3s ease;
+  }
+
+  .menu-icon.open .bar:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .menu-icon.open .bar:nth-child(2) {
+    opacity: 0;
+  }
+
+  .menu-icon.open .bar:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+</style>
+
+<section id="header-bg" class="container padding-5" style="background-color: #fac39f">
+  <div class="box b1 container">
+    <div class="mobile-box a2-3 container padding-5 padding-left-10 noselect v-center" style="overflow: hidden;">
+      <img id="logo-img" src="/images/logo/logo-vetorized.png"
+        class="image-prop max-height-100 radius-5 opacity-out-09 transition-04-04 pointer" alt="Catálogo digital">
+    </div>
+    <!-- <img id="logo-img" src="/images/logo/logo-vetorized.png"
+      class="mobile-box max-height-100 radius-5 margin-top-5 margin-left-5 margin-bottom-5 pointer"
+      onclick="window.location.href='/'" alt="Catálogo digital"> -->
+    <!-- 
+    <div class="mobile-box em20 bold lucida-grande padding-3 center noselect pointer"></div>
+    <div class=" mobile-box b5 container">
+      <div class="mobile-box container right padding-5">
+        <div id="icon-color"
+          class="mobile-box lucida-grande rem10 text-shadow-nn-lg bold radius-5 padding-10 noselect pointer"
+          style="color:#001b34;" onclick="window.location.href = '/user/login'">Acesse</div>
+      </div>
+    </div> -->
+
+    <div class="mobile-box b3 container v-center">
+      <div class="mobile-box container nowrap center">
+        <div id="login-icon"
+          class="mobile-box lucida-grande rem10 text-shadow-nn-lg bold radius-5 padding-10 noselect pointer"
+          style="color:#001b34;" onclick="window.location.href = '/user/login'">Já sou cliente</div>
+
+        <div id="cart-icon" class="cart-icon opacity-out-09 pointer" style="--cart-color: transparent;display: none;">
+          <div class="cart-basket"></div>
+          <div class="cart-line"></div>
+          <div class="cart-strap"></div>
+          <div class="cart-wheel-left"></div>
+          <div class="cart-wheel-right"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="search-bar" class="box a1 container h-center" style="top: 0;z-index: 10;display:none;">
+    <div class="box b2 container">
+      <input type="text" name="name"
+        class="mobile-box b3-4 ground lucida-grande rem09 border radius-5 padding-5 padding-left-10 nofocus v-center"
+        placeholder="Digite o que procura..." role="presentation" autocomplete="off">
+      <button class="mobile-box b8 container noborder transparent">
+        <div id="search-icon" class="mobile-box search-icon opacity-out-09 center pointer"
+          style="--search-color: transparent;">
+          <div class="search-circle"></div>
+          <div class="search-detail"></div>
+          <div class="search-line"></div>
+        </div>
+      </button>
+
+      <div class="mobile-box b8 container">
+        <div id="menu-icon" class="mobile-box menu-icon open-btn padding-5" style="--menu-color: transparent;">
+          <div class="bar radius-2" style="background-color: var(--menu-color)"></div>
+          <div class="bar radius-2 margin-top-5" style="background-color: var(--menu-color)"></div>
+          <div class="bar radius-2 margin-top-5" style="background-color: var(--menu-color)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

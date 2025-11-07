@@ -3,19 +3,43 @@
 
 <head>
   <%- include('./../partials/head.ejs') %>
-  <title>WA Messager</title>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <title>Lista de contatos</title>
 </head>
 
 <body>
-  <%- include('./header/main.ejs') %>
+  <section id="prospector-container" class="container h-center" style="height:100%;">
+    <% if (isConnected) { %>
 
-  <div id="qrcode" class="padding-10"></div>
+    <div class="box b1 container padding-10">
+      <div class="mobile-box container right margin-right-10">
+        <img id="customer-icon"
+          class='image-prop ground size-40 border shadow-lg-st radius-5 opacity-out-08 padding-5 margin-right-5 pointer'
+          src='/images/icon/add-customer.png'>
+        <img id="customer-filter-icon"
+          class='image-prop ground size-40 border shadow-lg-st radius-5 opacity-out-08 padding-5 margin-right-5 pointer'
+          src='/images/icon/customer-list.png'>
+        <img id="pdf-to-png-icon"
+          class='image-prop ground size-40 border shadow-lg-st radius-5 opacity-out-08 padding-5 margin-right-5 pointer'
+          src='/images/icon/pdf-to-png.png'>
+        <a><img class="image-prop size-40 opacity-out-08 padding-5 margin-right-5 center pointer"
+            onclick="lib.confirm('Deseja sair?', (r) => { if(r==true){ window.location.href='/user/logout' } })"
+            src="/images/icon/logout.png"></a>
+      </div>
+    </div>
 
-  <section id="prospector-container" class="container" style="height:100%;">
-    <%- include('./contact/main.ejs') %>
-    <%- include('./chat/main.ejs') %>
+    <section class="container h-center">
+      <div id="alert-messages" class="box b1 container margin-bottom-10 h-center"></div>
+    </section>
+    <%- include('./customer/main.ejs') %>
+    <%- include('./customer/filter.ejs') %>
+    <%- include('./list/main.ejs') %>
+
+    <% } else if(qrCode) { %>
+    <p>📲 Escaneie o QR Code abaixo:</p>
+    <img src="<%= qrCode %>" alt="QR Code">
+    <% } else { %>
+    <div class="box b1">Impossível conectar</div>
+    <% } %>
   </section>
 </body>
 
@@ -24,37 +48,17 @@
 
   <script src="/js/messenger.js"></script>
   <script src="/js/contact/main.js"></script>
+  <script src="/js/customer/main.js"></script>
+  <script src="/js/customer/payment.js"></script>
+  <script src="/js/customer/image.js"></script>
+  <script src="/js/contact/map.js"></script>
+  <script src="/js/contact/list.js"></script>
   <script src="/js/message/main.js"></script>
-
-  <%- include('./message/main.ejs') %>
 
   <%- include('./websocket.ejs') %>
 
   <script>
-    function generateQRCode({ qrcode, isConnected }) {
-      const qrcodeElement = document.getElementById('qrcode');
-      if (isConnected) {
-        return lib.display(qrcodeElement, "none");
-      }
-
-      if (qrcode && qrcodeElement) {
-        new QRCode(qrcodeElement, qrcode);
-      }
-
-      if (!qrcode && qrcodeElement) {
-        qrcodeElement.innerHTML = '<p>❌ QR Code ainda não disponível.</p>';
-        // console.error('QR Code is not available.');
-      }
-
-      if (!qrcodeElement) {
-        console.error('QR Code element not found in the DOM.');
-      }
-    }
-
     document.addEventListener('DOMContentLoaded', async () => {
-      let response = await API.response(Messenger.qrcode, {});
-      generateQRCode(response);
-
       websocketConnect();
     });
   </script>

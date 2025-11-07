@@ -1,0 +1,103 @@
+<div id="contact_map_box" class="box b2-3 container" style="display: none;"></div>
+<form id="contact_list_form" class="box b2-3 container">
+  <select name="status" class="mobile-box b4 lucida-grande bold border radius-3 padding-8 margin-top-5">
+    <!-- <option value="">Todos os status</option> -->
+    <option value="Pendente">Pendente</option>
+    <option value="Concluído">Concluído</option>
+  </select>
+
+  <input type="date" name="period_start"
+    class="mobile-box b4 lucida-grande bold border radius-3 padding-8 margin-top-5">
+  <input type="date" name="period_end" class="mobile-box b4 lucida-grande bold border radius-3 padding-8 margin-top-5">
+
+  <input type="submit" name="submit"
+    class="mobile-box b4 btn-act lucida-grande bold noborder radius-3 padding-10 margin-top-5" value="Buscar">
+</form>
+<div id="contact_list_box" class="box b2-3 container"></div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    contact_list_form.period_start.value = lib.convertDate(lib.timestampToDate(lib.genTimestamp()));
+    contact_list_form.period_end.value = lib.convertDate(lib.timestampToDate(lib.genTimestamp()));
+
+    let contact_maps = await API.response(ContactMap.filter, {});
+
+    contact_list_form.addEventListener("submit", async e => {
+      e.preventDefault();
+      contactListFilter();
+    });
+
+    contactListFilter();
+  });
+
+  async function contactListFilter() {
+    contact_list_box.innerHTML = "";
+
+    console.log(contact_list_form.status.value == "Concluído");
+    console.log(contact_list_form.status.value);
+
+    let contact_lists = await API.response(ContactList.filter, {
+      status: contact_list_form.status.value,
+      period_start: contact_list_form.status.value == "Concluído" ? lib.dateToTimestamp(contact_list_form.period_start.value) : null,
+      period_end: contact_list_form.status.value == "Concluído" ? lib.dateToTimestamp(contact_list_form.period_end.value) + lib.timestampDay() - 1 : null
+    });
+
+    contact_list_box.append(lib.element.create("input", {
+      type: "number",
+      id: "contact-list-result",
+      disabled: true,
+      value: contact_lists.filter(cl => cl.status == "Concluído").length,
+      class: "mobile-box b2 noborder rem20 lucida-grande bold padding-10 center transparent"
+    }));
+
+    contact_list_box.append(lib.element.create("input", {
+      type: "number",
+      id: "contact-list-result",
+      disabled: true,
+      value: contact_lists.length,
+      class: "mobile-box b2 noborder rem20 lucida-grande bold padding-10 center transparent"
+    }));
+
+    contact_lists.forEach(contact_list => {
+      let contact_list_div = lib.element.create("div", {
+        id: `contact-list-jid-${contact_list.jid.split("@")[0]}`,
+        class: "box b1 container border radius-5 padding-5 margin-top-5",
+        style: `${contact_list.status == "Concluído"
+          ? 'background-color:green;color: #fff;'
+          : 'background-color:#fff;color: #000;'}`
+      });
+      contact_list_box.append(contact_list_div);
+
+      let contact_phone = lib.element.create("div", {
+        class: "mobile-box b3 text-shadow-nn-lg padding-5 center pointer"
+      }, contact_list.jid.split("@")[0]);
+      contact_list_div.append(contact_phone);
+
+      let contact_business = lib.element.create("div", {
+        class: "mobile-box b2-3 text-shadow-nn-lg padding-5 center pointer"
+      }, contact_list.business);
+      contact_list_div.append(contact_business);
+
+      // events
+      contact_phone.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(contact_list.jid.split("@")[0]);
+          console.log("Copiado:", contact_list.jid.split("@")[0]);
+          alert("Copiado:", contact_list.jid.split("@")[0]);
+        } catch (err) {
+          console.error("Erro ao copiar:", err);
+        }
+      });
+
+      contact_business.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(contact_list.business);
+          console.log("Copiado:", contact_list.business);
+          alert("Copiado:", contact_list.jid.split("@")[0]);
+        } catch (err) {
+          console.error("Erro ao copiar:", err);
+        }
+      });
+    });
+  };
+</script>

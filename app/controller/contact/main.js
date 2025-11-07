@@ -2,10 +2,11 @@ const lib = require('jarmlib');
 
 const wa = require('../../middleware/baileys/main');
 const { getProfilePicWithTimeout } = require('../../middleware/baileys/controller');
-const ChatGPTAPI = require('../../middleware/chatgpt/main');
+const { ChatGPTAPI } = require('../../middleware/chatgpt/main');
 const { scrapeMapsFromUrl } = require("../../middleware/gmaps/main");
 
 const Contact = require("../../model/contact/main");
+const ContactList = require("../../model/contact/list");
 const Message = require("../../model/message/main");
 const { enqueueMessage } = require("../../middleware/queue/main");
 
@@ -36,9 +37,9 @@ contactController.create = async (req, res) => {
   contact.flow_step = 1;
   contact.segment = req.body.segment;
 
-  let profile_picture = null;
-  profile_picture = await getProfilePicWithTimeout(wa.getSocket(), contact.jid);
-  contact.profile_picture = profile_picture;
+  // let profile_picture = null;
+  // profile_picture = await getProfilePicWithTimeout(wa.getSocket(), contact.jid);
+  // contact.profile_picture = profile_picture;
 
   try {
     let contact_create_response = await contact.create();
@@ -109,26 +110,22 @@ contactController.prospect = async (req, res) => {
       }
 
       if ((await Contact.findByJid(wa_contact.jid)).length) {
-        return console.log({ msg: "Esse número já está cadastrado!" });
+        return console.log({ msg: `Esse número já está cadastrado! ${c.nome}` });
       }
 
       if (!c.nome) {
         return console.log({ msg: "Informe o nome da empresa ou do contato" });
       }
 
-      let contact = new Contact();
-      contact.business = c.nome;
-      contact.jid = wa_contact.jid;
-      contact.datetime = lib.date.timestamp.generate();
-      contact.participant = null;
-      contact.autochat = 1;
-      contact.created = 1;
-      contact.flow_step = 1;
-      contact.segment = req.body.segment;
-
-      let profile_picture = null;
-      profile_picture = await getProfilePicWithTimeout(wa.getSocket(), contact.jid);
-      contact.profile_picture = profile_picture;
+      let contact_list = new ContactList();
+      contact_list.business = c.nome;
+      contact_list.jid = wa_contact.jid;
+      contact_list.datetime = lib.date.timestamp.generate();
+      contact_list.participant = null;
+      contact_list.autochat = 1;
+      contact_list.created = 1;
+      contact_list.flow_step = 1;
+      contact_list.segment = req.body.segment;
 
       try {
         let contact_create_response = await contact.create();

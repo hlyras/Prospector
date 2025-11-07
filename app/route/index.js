@@ -1,43 +1,77 @@
 const router = require("express").Router();
 
-const wa = require('./../middleware/baileys/main');
+const User = require("./../model/user/main");
+
+const qrcode = require('qrcode');
+const { createOrGetSession, getSession } = require('../middleware/baileys/main');
+
 const websocketHandler = require('./../middleware/websocket/handler');
 
-wa.connect(); // só vai conectar se não estiver conectado
+router.get("/admin", async (req, res) => {
+  if (!req.user?.id || req.user?.id != 1) {
+    return res.redirect("/user/login");
+  }
 
-router.get("/", async (req, res) => {
-  res.render("home/index", {
+  let users = await User.filter({});
+
+  let session = getSession(req.user.id);
+
+  if (!session) {
+    session = await createOrGetSession(req.user.id);
+  }
+
+  res.render("admin/index", {
     title: "WA Messager",
-    isConnected: wa.isConnected()
+    isConnected: true,
+    users
+  });
+});
+
+// 🏠 Página inicial
+router.get('/', async (req, res) => {
+  if (!req.user) return res.redirect('/user/login');
+
+  let session = getSession(req.user.id);
+
+  if (!session) {
+    session = await createOrGetSession(req.user.id);
+  }
+
+  if (session.connected) {
+    return res.render('home/index', {
+      title: 'WA Messager',
+      isConnected: true,
+      qrCode: null
+    });
+  }
+
+  // Se ainda não conectado, gerar QR
+  if (session.qr) {
+    const qrImage = await qrcode.toDataURL(session.qr);
+
+    console.log(qrImage);
+
+    return res.render('home/index', {
+      title: 'WA Messager',
+      isConnected: false,
+      qrCode: qrImage
+    });
+  }
+
+  // Caso o QR ainda não tenha chegado
+  res.render('home/index', {
+    title: 'WA Messager',
+    isConnected: false,
+    qrCode: null,
+    message: 'Aguardando geração do QR Code...'
   });
 });
 
 router.ws('/ws', websocketHandler);
 
-router.get('/qrcode', (req, res) => {
-  return res.send({
-    qrcode: !wa.isConnected() ? wa.getQRCode() : null,
-    isConnected: wa.isConnected()
-  });
-});
-
-// Envia mensagem para um número
-router.post('/send', async (req, res) => {
-  const { number, message } = req.body;
-  if (!wa.isConnected() || !wa.getSocket()) return res.status(500).send('❌ WhatsApp não conectado.');
-  if (!number || !message) return res.status(400).send('⚠️ Envie number e message no body.');
-
-  const jid = number + '@s.whatsapp.net';
-  try {
-    await wa.getSocket().sendMessage(jid, { text: message });
-    res.send('📤 Mensagem enviada!');
-  } catch (err) {
-    console.error('Erro ao enviar:', err);
-    res.status(500).send('❌ Erro ao enviar mensagem.');
-  }
-});
-
+router.use("/user", require("./user"));
 router.use("/contact", require("./contact"));
 router.use("/message", require("./message"));
+router.use("/customer", require("./customer"));
 
 module.exports = router;

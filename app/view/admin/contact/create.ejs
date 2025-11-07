@@ -142,6 +142,55 @@
     }, "Prospecção automática");
     prospect_form.append(contact_prospect_title);
 
+    let estados_array = [
+      "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO",
+      "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI",
+      "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+    ];
+
+    prospect_form.append(lib.element.create("div", {
+      class: "box b1 lucida-grande bold rem08 margin-top-10"
+    }, "Estado / UF"));
+    let uf_select = lib.element.create("select", {
+      class: "box b1 lucida-grande hide-disabled rem08 border-bottom-lg-st padding-10"
+    });
+    prospect_form.append(uf_select);
+
+    uf_select.append(lib.element.create("option", {
+      value: "",
+      disabled: true,
+      selected: true
+    }, "Estado / UF"));
+
+    for (let i in estados_array) {
+      let uf = estados_array[i];
+      uf_select.append(lib.element.create("option", {
+        value: uf,
+      }, uf));
+    };
+
+    prospect_form.append(lib.element.create("div", {
+      class: "box b1 lucida-grande bold rem08 margin-top-10"
+    }, "Cidade"));
+    let cidade_input = lib.element.create("input", {
+      class: "box b1 lucida-grande rem08 border-bottom-lg-st padding-10",
+      placeholder: "Cidade",
+      role: "presentation",
+      autocomplete: "off"
+    });
+    prospect_form.append(cidade_input);
+
+    prospect_form.append(lib.element.create("div", {
+      class: "box b1 lucida-grande bold rem08 margin-top-10"
+    }, "Bairro"));
+    let bairro_input = lib.element.create("input", {
+      class: "box b1 lucida-grande rem08 border-bottom-lg-st padding-10",
+      placeholder: "Bairro",
+      role: "presentation",
+      autocomplete: "off"
+    });
+    prospect_form.append(bairro_input);
+
     prospect_form.append(lib.element.create("div", {
       class: "box b1 lucida-grande bold rem08 margin-top-10"
     }, "Link da busca"));
@@ -179,6 +228,13 @@
       value: "seusexshop.cotalogo.com",
     }, "Sexshop"));
 
+    const users = JSON.parse('<%- JSON.stringify(users) %>');
+    console.log(users);
+
+    // let seller_select = lib.element.create("div", {
+
+    // });
+
     let submit_button = lib.element.create("input", {
       type: "submit",
       class: "box b1 btn-act lucida-grande bold noborder radius-3 shadow-lg-st padding-10 margin-top-10 pointer",
@@ -198,7 +254,10 @@
         return lib.message("É necessário informar o segmento da prospecção");
       }
 
-      let response = await API.response(Contact.prospect, {
+      let response = await API.response(ContactList.create, {
+        uf: uf_select.value,
+        cidade: cidade_input.value,
+        bairro: bairro_input.value,
         segment: prospect_segment.value,
         url: prospect_url.value,
       }, "none");

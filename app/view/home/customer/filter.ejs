@@ -1,0 +1,182 @@
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    let customer_filter_icon = document.getElementById("customer-filter-icon");
+
+    customer_filter_icon.addEventListener("click", async () => {
+      let customer_filter_interface = await customerFilterInterface();
+
+      lib.popup(customer_filter_interface, null, true);
+    });
+  });
+
+  async function customerFilterInterface() {
+    let customer_filter_interface = lib.element.create("div", {
+      class: "box b1 container h-center"
+    });
+
+    let customer_filter_form = lib.element.create("form", {
+      class: "box b1 container"
+    });
+    customer_filter_interface.append(customer_filter_form);
+
+    let seller_status_select = lib.element.create("select", {
+      name: "seller_status",
+      class: "mobile-box b2 lucida-grande bold padding-10 margin-top-5"
+    });
+    customer_filter_form.append(seller_status_select);
+
+    seller_status_select.append(lib.element.create("option", {
+      value: "Demonstração"
+    }, "Demonstração"));
+
+    seller_status_select.append(lib.element.create("option", {
+      value: "Pendente"
+    }, "Pendente"));
+
+    seller_status_select.append(lib.element.create("option", {
+      value: "Pago"
+    }, "Pago"));
+
+    let customer_filter_box = lib.element.create("div", {
+      class: "box b1 container"
+    });
+    customer_filter_interface.append(customer_filter_box);
+
+    customer_filter_box.append(await customerFilter({
+      seller_status: seller_status_select.value
+    }));
+
+    seller_status_select.addEventListener("change", async () => {
+      customer_filter_box.innerHTML = "";
+      customer_filter_box.append(await customerFilter({
+        seller_status: seller_status_select.value
+      }));
+    });
+
+    return customer_filter_interface;
+  };
+
+  async function customerFilter(customer_options = {}) {
+    let customer_filter_box = lib.element.create("div", {
+      class: "box b1 container"
+    });
+
+    let customers = await API.response(Customer.filter, customer_options);
+
+    if (!customers.length) {
+      customer_filter_box.append(lib.element.create("div", {
+        class: "box b1 lucida-grande bold padding-10 margin-top-10 center"
+      }, "Nenhum cliente encontrado."));
+      return customer_filter_box;
+    }
+
+    for (let i in customers) {
+      let customer = customers[i];
+
+      let customer_div = lib.element.create("div", {
+        class: "mobile-box b1 container border shadow radius-5 padding-10 margin-top-5"
+      });
+      customer_filter_box.append(customer_div);
+
+      customer_div.append(lib.element.icon("b6", "50", customer.logo_url));
+
+      customer_div.append(lib.element.create("div", {
+        class: "mobile-box b3 lucida-grande rem09 bold padding-5"
+      }, customer.phone));
+
+      customer_div.append(lib.element.create("div", {
+        class: "mobile-box b3 lucida-grande rem09 bold padding-5"
+      }, customer.business));
+
+      customer_div.append(lib.element.create("div", {
+        class: "mobile-box b2 lucida-grande rem09 bold padding-5"
+      }, customer.email));
+
+      customer_div.append(lib.element.create("div", {
+        class: "mobile-box b2 lucida-grande rem09 bold padding-5"
+      }, `${customer.domain}.cotalogo.com`));
+
+      customer_div.append(lib.element.create("div", {
+        class: "mobile-box b2 lucida-grande rem09 bold padding-5"
+      }, `${lib.timestampToFulldate(customer.datetime)}`));
+
+      customer_div.append(lib.element.create("div", {
+        class: "mobile-box b3 lucida-grande rem09 bold padding-5"
+      }, customer.status));
+
+      let confirm_icon = lib.element.icon("b6 icon", "30", "images/icon/done.png");
+      if (customer.seller_status == "Demonstração") {
+        customer_div.append(confirm_icon);
+      }
+
+      if (customer.seller_status == "Pago") {
+        let payment = (await API.response(CustomerPayment.filter, {
+          id: customer.id
+        }))[0];
+
+        let payment_div = lib.element.create("div", {
+          class: "mobile-box b1"
+        }, `Data do pagamento: ${lib.timestampToFulldate(payment.payment_datetime)} | Valor do pagamento: R$${payment.value}`);
+
+        customer_div.append(payment_div);
+      }
+
+      confirm_icon.addEventListener("click", async () => {
+        let user_confirm_form = await userConfirmForm();
+        lib.popup(user_confirm_form);
+
+        user_confirm_form.addEventListener("submit", async e => {
+          e.preventDefault();
+
+          let response = await API.response(Customer.update, {
+            id: customer.id,
+            email: user_confirm_form.email.value
+          });
+          if (!response) { return }
+
+          lib.message(`Plataforma de acesso: <br>\
+          app.cotalogo.com/user/login<br><br>\
+          Usuário:<br>\
+          ${user_confirm_form.email.value}<br><br>\
+          Senha:<br>\
+          ?`, () => {
+            lib.popout(customer_filter_box);
+            lib.popout(user_confirm_form);
+          });
+        });
+      });
+    };
+
+    return customer_filter_box;
+  };
+
+  async function userConfirmForm() {
+    let user_confirm_form = lib.element.create("form", {
+      class: "box b1 container h-center padding-10"
+    });
+
+    user_confirm_form.append(lib.element.create("div", {
+      class: "box b2-3 underline lucida-grande bold center padding-15"
+    }, "Gerar dados de acesso"));
+
+    user_confirm_form.append(lib.element.create("div", {
+      class: "box b2-3 margin-top-10"
+    }, "E-mail"));
+    user_confirm_form.append(lib.element.create("input", {
+      name: "email",
+      class: "box b2-3 lucida-grande padding-10 border-bottom-lg-st",
+      placeholder: "E-mail",
+      autocomplete: "off",
+      role: "presentation"
+    }));
+
+    user_confirm_form.append(lib.element.create("input", {
+      type: "submit",
+      name: "submit",
+      class: "box b2-3 btn-act lucida-grande noborder padding-10 margin-top-10",
+      value: "Gerar dados de acesso"
+    }));
+
+    return user_confirm_form;
+  };
+</script>
