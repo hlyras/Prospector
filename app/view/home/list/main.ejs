@@ -13,6 +13,7 @@
   <input type="submit" name="submit"
     class="mobile-box b4 btn-act lucida-grande bold noborder radius-3 padding-10 margin-top-5" value="Buscar">
 </form>
+
 <div id="contact_list_box" class="box b2-3 container"></div>
 
 <script>
@@ -32,9 +33,6 @@
 
   async function contactListFilter() {
     contact_list_box.innerHTML = "";
-
-    console.log(contact_list_form.status.value == "Concluído");
-    console.log(contact_list_form.status.value);
 
     let contact_lists = await API.response(ContactList.filter, {
       status: contact_list_form.status.value,

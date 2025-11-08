@@ -1,3 +1,9 @@
+<style>
+  canvas {
+    touch-action: none;
+  }
+</style>
+
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     let customer_icon = document.getElementById("customer-icon");
@@ -241,6 +247,58 @@
         }
       });
 
+      // ====== SUPORTE TOUCH (apenas redimensionar e arrastar crop) ======
+      canvas.addEventListener("touchstart", (e) => {
+        if (!image || !image._zoomData) return;
+        const touch = e.touches[0];
+        const mouse = getMouse(touch);
+
+        dragCorner = getHandleUnderMouse(mouse.x, mouse.y);
+        if (dragCorner) {
+          resizing = true;
+          return;
+        }
+
+        if (isInsideCrop(mouse.x, mouse.y)) {
+          dragging = true;
+          dragStart = {
+            mouseX: mouse.x,
+            mouseY: mouse.y,
+            cropX: crop.x,
+            cropY: crop.y,
+          };
+        }
+      });
+
+      canvas.addEventListener("touchmove", (e) => {
+        if (!image || !image._zoomData) return;
+        e.preventDefault(); // evita rolagem na tela
+
+        const touch = e.touches[0];
+        const mouse = getMouse(touch);
+
+        if (resizing && dragCorner) {
+          resizeCrop(mouse.x, mouse.y);
+          limitarCropDentroDaImagem();
+        } else if (dragging && dragStart) {
+          crop.x = dragStart.cropX + (mouse.x - dragStart.mouseX);
+          crop.y = dragStart.cropY + (mouse.y - dragStart.mouseY);
+          limitarPosicaoDoCropDentroDaImagem();
+        }
+
+        draw();
+      });
+
+      canvas.addEventListener("touchend", () => {
+        if (!image || !image._zoomData) return;
+        resizing = false;
+        dragging = false;
+        dragCorner = null;
+        dragStart = null;
+
+        recortar();
+      });
+
       function getMouse(e) {
         const rect = canvas.getBoundingClientRect();
         return {
@@ -302,7 +360,7 @@
         draw();
       }
 
-      function detectarLogo(folga = 40) {
+      function detectarLogo(folga = 20) {
         if (!image || !image.complete) return;
 
         const aux = document.createElement("canvas");
