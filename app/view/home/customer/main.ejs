@@ -52,29 +52,56 @@
         const reader = new FileReader();
         reader.onload = function (event) {
           image.onload = () => {
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = Math.floor(rect.width);
-            if (canvas.width <= 300) {
-              canvas.height = Math.floor(rect.width);
+            // 🔹 Etapa 1: redimensionar imagem mantendo proporção
+            let width = image.width;
+            let height = image.height;
+
+            if (width < height) {
+              const scale = 500 / width;
+              width = 500;
+              height = height * scale;
             } else {
-              canvas.height = 300;
+              const scale = 500 / height;
+              height = 500;
+              width = width * scale;
             }
 
-            // calcular proporção e posição centralizada
-            const scale = Math.min(canvas.width / image.width, canvas.height / image.height);
-            const scaledWidth = image.width * scale;
-            const scaledHeight = image.height * scale;
-            const dx = (canvas.width - scaledWidth) / 2;
-            const dy = (canvas.height - scaledHeight) / 2;
+            // Criar um canvas temporário para gerar a imagem redimensionada
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = width;
+            tempCanvas.height = height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(image, 0, 0, width, height);
 
-            // salvar para uso posterior no recorte
-            image._drawData = { dx, dy, scaledWidth, scaledHeight };
+            // Substitui a imagem original pela versão redimensionada
+            const resizedImage = new Image();
+            resizedImage.onload = () => {
+              // 🔹 Etapa 2: prossegue com o seu fluxo atual
+              const rect = canvas.getBoundingClientRect();
+              canvas.width = Math.floor(rect.width);
+              if (canvas.width <= 300) {
+                canvas.height = Math.floor(rect.width);
+              } else {
+                canvas.height = 300;
+              }
 
-            draw();
+              // calcular proporção e posição centralizada
+              const scale = Math.min(canvas.width / resizedImage.width, canvas.height / resizedImage.height);
+              const scaledWidth = resizedImage.width * scale;
+              const scaledHeight = resizedImage.height * scale;
+              const dx = (canvas.width - scaledWidth) / 2;
+              const dy = (canvas.height - scaledHeight) / 2;
 
-            aplicarZoom(0.9);
-            detectarLogo();
-            recortar();
+              // salvar para uso posterior no recorte
+              resizedImage._drawData = { dx, dy, scaledWidth, scaledHeight };
+              image = resizedImage;
+
+              draw();
+              aplicarZoom(0.9);
+              detectarLogo();
+              recortar();
+            };
+            resizedImage.src = tempCanvas.toDataURL();
           };
           image.src = event.target.result;
         };

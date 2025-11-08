@@ -28,7 +28,7 @@ async function scrollToEnd(page, scrollContainer = "div[role='feed']") {
       scrollContainer
     );
 
-    await randomDelay(2000, 4000);
+    await randomDelay(6000, 10000);
 
     const newHeight = await page.evaluate(
       (sel) => document.querySelector(sel)?.scrollHeight || 0,

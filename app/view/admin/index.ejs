@@ -11,7 +11,7 @@
 <body>
   <%- include('./header/main.ejs') %>
 
-  <div id="qrcode" class="padding-10"></div>
+  <!-- <div id="qrcode" class="padding-10"></div> -->
 
   <section id="prospector-container" class="container" style="height:100%;">
     <%- include('./contact/main.ejs') %>
@@ -33,29 +33,29 @@
   <%- include('./websocket.ejs') %>
 
   <script>
-    function generateQRCode({ qrcode, isConnected }) {
-      const qrcodeElement = document.getElementById('qrcode');
-      if (isConnected) {
-        return lib.display(qrcodeElement, "none");
-      }
+    // function generateQRCode({ qrcode, isConnected }) {
+    //   const qrcodeElement = document.getElementById('qrcode');
+    //   if (isConnected) {
+    //     return lib.display(qrcodeElement, "none");
+    //   }
 
-      if (qrcode && qrcodeElement) {
-        new QRCode(qrcodeElement, qrcode);
-      }
+    //   if (qrcode && qrcodeElement) {
+    //     new QRCode(qrcodeElement, qrcode);
+    //   }
 
-      if (!qrcode && qrcodeElement) {
-        qrcodeElement.innerHTML = '<p>❌ QR Code ainda não disponível.</p>';
-        // console.error('QR Code is not available.');
-      }
+    //   if (!qrcode && qrcodeElement) {
+    //     qrcodeElement.innerHTML = '<p>❌ QR Code ainda não disponível.</p>';
+    //     // console.error('QR Code is not available.');
+    //   }
 
-      if (!qrcodeElement) {
-        console.error('QR Code element not found in the DOM.');
-      }
-    }
+    //   if (!qrcodeElement) {
+    //     console.error('QR Code element not found in the DOM.');
+    //   }
+    // }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      let response = await API.response(Messenger.qrcode, {});
-      generateQRCode(response);
+      // let response = await API.response(Messenger.qrcode, {});
+      // generateQRCode(response);
 
       websocketConnect();
     });

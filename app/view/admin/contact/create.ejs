@@ -231,9 +231,27 @@
     const users = JSON.parse('<%- JSON.stringify(users) %>');
     console.log(users);
 
-    // let seller_select = lib.element.create("div", {
+    prospect_form.append(lib.element.create("div", {
+      class: "box b1 lucida-grande bold rem08 margin-top-10"
+    }, "Vendedor"));
+    let seller_select = lib.element.create("select", {
+      class: "box b1 lucida-grande rem08 hide-disabled border-bottom-lg-st padding-10"
+    });
+    prospect_form.append(seller_select);
 
-    // });
+    seller_select.append(lib.element.create("option", {
+      selected: true,
+      disabled: true,
+      value: "",
+    }, "Selecionar vendedor"));
+
+    for (let i in users) {
+      let user = users[i];
+
+      seller_select.append(lib.element.create("option", {
+        value: user.id,
+      }, user.name));
+    };
 
     let submit_button = lib.element.create("input", {
       type: "submit",
@@ -260,6 +278,7 @@
         bairro: bairro_input.value,
         segment: prospect_segment.value,
         url: prospect_url.value,
+        seller_id: seller_select.value,
       }, "none");
 
       console.log(response);

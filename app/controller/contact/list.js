@@ -1,6 +1,7 @@
 const lib = require('jarmlib');
 
-const wa = require('../../middleware/baileys/main');
+// const wa = require('../../middleware/baileys/main');
+const { getSession } = require('../../middleware/baileys/main');
 const { scrapeMapsFromUrl } = require("../../middleware/gmaps/main");
 
 const Contact = require("../../model/contact/main");
@@ -16,6 +17,11 @@ contactListController.create = async (req, res) => {
   contact_map.bairro = req.body.bairro;
   contact_map.uf = req.body.uf;
 
+  const session = getSession(req.user.id);
+  if (!session || !session.sock || !session.connected) {
+    return res.send({ msg: "Sessão WhatsApp não conectada!" });
+  }
+
   try {
     let contact_map_create = await contact_map.create();
     if (contact_map_create.err) {
@@ -25,7 +31,7 @@ contactListController.create = async (req, res) => {
     let contacts = await scrapeMapsFromUrl(req.body.url, 200, async (c) => {
       c.telefone = c.telefone?.replace(/\D/g, "");
 
-      const [wa_contact] = await wa.getSocket().onWhatsApp(`55${c.telefone}@s.whatsapp.net`);
+      const [wa_contact] = await session.sock.onWhatsApp(`55${c.telefone}@s.whatsapp.net`);
       if (!wa_contact?.exists) {
         return console.log({ msg: `Esse número não existe! ${c.nome}` });
       }
@@ -51,7 +57,7 @@ contactListController.create = async (req, res) => {
       contact_list.bairro = req.body.bairro;
       contact_list.uf = req.body.uf;
       contact_list.segment = req.body.segment;
-      contact_list.seller_id = 1;
+      contact_list.seller_id = req.body.seller_id;
 
       let contact_create_response = await contact_list.create();
       if (contact_create_response.err) {
