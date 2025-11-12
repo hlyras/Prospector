@@ -27,7 +27,7 @@
     "openai": "^4.104.0",
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
-    "puppeteer": "^24.17.0",
+    "puppeteer": "^24.29.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "qrcode": "^1.5.4",

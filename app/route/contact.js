@@ -13,6 +13,7 @@ router.delete('/delete/:id', lib.route.toHttps, Contact.delete);
 
 router.post('/list/create', lib.route.toHttps, ContactList.create);
 router.post('/list/filter', lib.route.toHttps, ContactList.filter);
+router.post('/list/check', lib.route.toHttps, ContactList.check);
 
 router.post('/map/filter', lib.route.toHttps, ContactMap.filter);
 

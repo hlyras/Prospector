@@ -1,0 +1,102 @@
+<div id="user-filter-form" class="box">
+
+</div>
+
+<div id="user_filter_box" class="box b2-3 container">
+
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    userFilter();
+  });
+
+  async function userFilter() {
+    let users = await API.response(User.filter, {});
+
+    for (let i in users) {
+      let user = users[i];
+
+      let user_div = lib.element.create("div", {
+        class: "mobile-box b2 container border radius-25 padding-20"
+      });
+      user_filter_box.append(user_div);
+
+      let user_name = lib.element.create("div", {
+        class: "mobile-box b5-6 center padding-10"
+      }, user.name);
+      user_div.append(user_name);
+
+      let session_btn = lib.element.icon("b6", "20", "images/icon/refresh.png");
+      user_div.append(session_btn);
+
+      let status = lib.element.create("div", {
+        class: "box b1 center padding-10"
+      });
+      user_div.append(status);
+
+      let qrcode = lib.element.create("img", {
+        class: "image-prop b1 center",
+        src: ""
+      });
+      user_div.append(qrcode);
+
+      let connect_btn = lib.element.create("div", {
+        class: "box b1 btn-act padding-5 radius-5 center"
+      }, "Conectar");
+      user_div.append(connect_btn);
+
+      let disconnect_btn = lib.element.create("div", {
+        class: "box b1 btn-cancel padding-5 radius-5 center",
+        style: "display: none;"
+      }, "Disconectar");
+      user_div.append(disconnect_btn);
+
+      session_btn.addEventListener("click", async () => {
+        let user_session_response = await API.response(User.session, { user_id: user.id });
+        console.log(user_session_response);
+
+        if (user_session_response.connected) {
+          status.innerHTML = "Online";
+          qrcode.src = "";
+          lib.display(connect_btn, "none");
+          lib.display(disconnect_btn, "");
+        } else {
+          status.innerHTML = "Offline";
+          return lib.display(connect_btn, "");
+        }
+      });
+
+      connect_btn.addEventListener("click", async () => {
+        let user_connect_response = await API.response(User.connect, { user_id: user.id });
+        console.log(user_connect_response);
+
+        if (user_connect_response.connected) {
+          status.innerHTML = "Online";
+          qrcode.src = "";
+          lib.display(connect_btn, "none");
+          lib.display(disconnect_btn, "");
+        } else {
+          status.innerHTML = "Offline";
+          if (user_connect_response.qrCode) {
+            qrcode.src = user_connect_response.qrCode;
+            lib.display(disconnect_btn, "");
+            return lib.display(connect_btn, "none");
+          }
+          return lib.display(connect_btn, "");
+        }
+      });
+
+      disconnect_btn.addEventListener("click", async () => {
+        let user_disconnect_response = await API.response(User.disconnect, { user_id: user.id });
+        console.log(user_disconnect_response);
+
+        if (!user_disconnect_response.connected) {
+          status.innerHTML = "Offline";
+          lib.display(connect_btn, "");
+          lib.display(disconnect_btn, "none");
+        }
+      });
+    };
+  };
+</script>

@@ -96,12 +96,18 @@ async function createOrGetSession(userId) {
 
         sessionData.connected = false;
 
-        // 🔒 Evita loop infinito de conflito
         const isConflict = reason.includes('conflict') || reason.includes('Replaced');
         const shouldReconnect =
           code !== DisconnectReason.loggedOut &&
           !reason.includes('Connection Failure') &&
           !isConflict;
+
+        // ✅ se o fechamento foi manual, não reconectar
+        if (sessionData.manualClose) {
+          console.log(`🧩 [${userId}] Desconexão manual — reconexão automática desativada.`);
+          sessionData.manualClose = false; // limpa flag (caso reconecte depois manualmente)
+          return;
+        }
 
         if (sessionData.sock?.ws) {
           try { sessionData.sock.ws.close(); } catch { }
@@ -109,29 +115,11 @@ async function createOrGetSession(userId) {
 
         if (isConflict) {
           console.log(`⚠️ [${userId}] Conexão encerrada por conflito — outra instância está ativa. Sessão pausada.`);
-          return; // 🔒 não reconecta automaticamente
+          return;
         }
 
         if (shouldReconnect) {
-          if (sessionData.reconnecting) return;
-          sessionData.reconnecting = true;
-
-          const delay = reason.includes('Stream Errored') ? 8000 : 4000;
-          console.log(`🔄 [${userId}] Tentando reconectar em ${delay / 1000}s...`);
-
-          setTimeout(async () => {
-            try {
-              console.log(`♻️ [${userId}] Recriando sessão...`);
-              bailey_sessions.delete(userId);
-              sessionData.reconnecting = false;
-              const newSession = await createOrGetSession(userId);
-              bailey_sessions.set(userId, newSession);
-              console.log(`✅ [${userId}] Sessão recriada com sucesso`);
-            } catch (err) {
-              console.error(`💥 [${userId}] Erro ao tentar reconectar:`, err);
-              sessionData.reconnecting = false;
-            }
-          }, delay);
+          // ... resto do seu código de reconexão
         } else {
           console.log(`📴 [${userId}] Sessão encerrada permanentemente.`);
           bailey_sessions.delete(userId);
@@ -154,6 +142,101 @@ async function createOrGetSession(userId) {
 
 function getSession(userId) {
   return bailey_sessions.get(userId);
+};
+
+function isSocketAlive(session) {
+  try {
+    return (
+      session?.sock?.ws &&
+      session.sock.ws.readyState === session.sock.ws.OPEN
+    );
+  } catch {
+    return false;
+  }
 }
 
-module.exports = { createOrGetSession, getSession };
+function isBaileysConnected(session) {
+  try {
+    const wsAlive = session?.sock?.ws?.readyState === session.sock.ws.OPEN;
+    const stateAlive = session?.sock?.state === 'open';
+    return wsAlive && stateAlive;
+  } catch {
+    return false;
+  }
+}
+
+async function waitForSessionState(session, timeoutMs = 15000, intervalMs = 200) {
+  return new Promise(resolve => {
+    let elapsed = 0;
+
+    const interval = setInterval(() => {
+      // se já conectou ou gerou QR, retorna imediatamente
+      if (session.connected || session.qr) {
+        cleanup();
+        return resolve({
+          connected: session.connected || false,
+          qr: session.qr || null
+        });
+      }
+
+      elapsed += intervalMs;
+      if (elapsed >= timeoutMs) {
+        cleanup();
+        return resolve({
+          connected: session.connected || false,
+          qr: session.qr || null
+        });
+      }
+    }, intervalMs);
+
+    // opcional: ainda escuta eventos se quiser resposta mais imediata
+    function onUpdate() {
+      if (session.connected || session.qr) {
+        cleanup();
+        resolve({
+          connected: session.connected || false,
+          qr: session.qr || null
+        });
+      }
+    }
+
+    session.ev?.on("connection.update", onUpdate);
+
+    function cleanup() {
+      clearInterval(interval);
+      session.ev?.off("connection.update", onUpdate);
+    }
+  });
+};
+
+function removeSession(userId, options = { permanent: false }) {
+  const session = bailey_sessions.get(userId);
+  if (!session) return;
+
+  console.log(`🚪 [${userId}] Encerrando sessão manualmente...`);
+  session.manualClose = true;
+
+  try {
+    // encerra o socket WebSocket
+    session.sock?.ws?.close();
+
+    // opcional: encerra o loop interno do baileys
+    session.sock?.end?.();
+  } catch (err) {
+    console.warn(`⚠️ [${userId}] Erro ao encerrar socket:`, err.message);
+  }
+
+  // remove da memória (socket some)
+  bailey_sessions.delete(userId);
+
+  // se for logout total, apaga também o auth
+  if (options.permanent) {
+    const authPath = `./app/middleware/baileys/auth/${userId}`;
+    try {
+      fs.rmSync(authPath, { recursive: true, force: true });
+      console.log(`🧹 [${userId}] Auth removido permanentemente.`);
+    } catch { }
+  }
+}
+
+module.exports = { createOrGetSession, getSession, isSocketAlive, isBaileysConnected, waitForSessionState, removeSession };

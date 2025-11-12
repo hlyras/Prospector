@@ -78,18 +78,22 @@ messageController.react = async (req, res) => {
 
 messageController.receipt = async ({ data }) => {
   if (!data.key.fromMe) { return; }
+  console.log(data);
 
-  let sender = data.key.remoteJid.split("@")[0];
+  let sender = data.key.remoteJidAlt?.split("@")[0];
+  if (!sender) {
+    return console.log(`!! sender com problema !!`);
+  };
   if (sender == "status") return;
 
-  const isGroup = data.key.remoteJid.split("@")[1] == "g.us" ? true : false;
+  const isGroup = data.key.remoteJidAlt.split("@")[1] == "g.us" ? true : false;
   if (isGroup) { return; }
 
-  let contact = (await Contact.findByJid(data.key.remoteJid))[0] || null;
+  let contact = (await Contact.findByJid(data.key.remoteJidAlt))[0] || null;
 
   if (!contact) {
     contact = new Contact();
-    contact.jid = data.key.remoteJid;
+    contact.jid = data.key.remoteJidAlt;
     contact.datetime = lib.date.timestamp.generate();
     contact.autochat = data.key.fromMe ? 1 : 0;
     contact.flow_step = data.key.fromMe ? 1 : 0;
@@ -119,7 +123,7 @@ messageController.receipt = async ({ data }) => {
     }
 
     if (isGroup) {
-      // const metadata = await getGroupMetadataCached(wa.getSocket(), data.key.remoteJid);
+      // const metadata = await getGroupMetadataCached(wa.getSocket(), data.key.remoteJidAlt);
       // contact.name = metadata?.subject || null;
     } else {
       // contact.business = !data.key.fromMe && data.pushName
@@ -127,10 +131,8 @@ messageController.receipt = async ({ data }) => {
     }
 
     for (const [sessionID, ws] of activeWebSockets.entries()) {
-      let data = {
-        jid: contact.jid,
-        notify_alert: true
-      };
+      data.jid = contact.jid;
+      data.notify_alert = true;
 
       if (ws.readyState === 1) { ws.send(JSON.stringify({ data })); }
     };
@@ -141,21 +143,19 @@ messageController.receipt = async ({ data }) => {
 
   if (contact && !data.key.fromMe) {
     let update_contact = new Contact();
-    update_contact.jid = data.key.remoteJid;
+    update_contact.jid = data.key.remoteJidAlt;
     update_contact.notify = 1;
 
     if (isGroup) {
-      // const metadata = await getGroupMetadataCached(wa.getSocket(), data.key.remoteJid);
+      // const metadata = await getGroupMetadataCached(wa.getSocket(), data.key.remoteJidAlt);
       // update_contact.name = metadata?.subject || null;
     } else {
       update_contact.business = !data.key.fromMe && data.pushName ? data.pushName : null;
     }
 
     for (const [sessionID, ws] of activeWebSockets.entries()) {
-      let data = {
-        jid: contact.jid,
-        notify_alert: true
-      };
+      data.jid = contact.jid;
+      data.notify_alert = true;
 
       if (contact.status == "conectado") { data.conected = true; }
       if (contact.status == "interessado") { data.interested = true; }
@@ -170,7 +170,7 @@ messageController.receipt = async ({ data }) => {
 
   let message = new Message();
   message.wa_id = data.key.id;
-  message.jid = data.key.remoteJid;
+  message.jid = data.key.remoteJidAlt;
   message.participant = isGroup ? data.key.participant : null;
   message.from_me = data.key.fromMe ? 1 : 0;
   message.datetime = data.messageTimestamp * 1000;
@@ -250,23 +250,25 @@ messageController.receipt = async ({ data }) => {
       if (message_create.err) { console.log(message_create.err); }
       message.id = message_create.insertId;
 
-      if (contact?.autochat == 1 && !data.key.fromMe && message.type == "text") {
-        return;
+      console.log('message_create');
 
-        if (contact.typing) { return; }
+      // if (contact?.autochat == 1 && !data.key.fromMe && message.type == "text") {
+      //   return;
 
-        let contact_chat = new Contact();
-        contact_chat.jid = data.key.remoteJid;
-        contact_chat.typing = "waiting";
-        await contact_chat.update();
+      //   if (contact.typing) { return; }
 
-        enqueueMessage({
-          contact_jid: contact.jid,
-          priority: parseInt(contact.flow_step) + 1
-        });
+      //   let contact_chat = new Contact();
+      //   contact_chat.jid = data.key.remoteJidAlt;
+      //   contact_chat.typing = "waiting";
+      //   await contact_chat.update();
 
-        // await messageController.sendByAi(contact_info);
-      }
+      //   enqueueMessage({
+      //     contact_jid: contact.jid,
+      //     priority: parseInt(contact.flow_step) + 1
+      //   });
+
+      //   // await messageController.sendByAi(contact_info);
+      // }
     }
 
     for (const [sessionID, ws] of activeWebSockets.entries()) {

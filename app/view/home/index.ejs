@@ -8,8 +8,6 @@
 
 <body>
   <section id="prospector-container" class="container h-center" style="height:100%;">
-    <% if (isConnected) { %>
-
     <div class="box b1 container padding-10">
       <div class="mobile-box container right margin-right-10">
         <img id="customer-icon"
@@ -30,16 +28,10 @@
     <section class="container h-center">
       <div id="alert-messages" class="box b1 container margin-bottom-10 h-center"></div>
     </section>
+
     <%- include('./customer/main.ejs') %>
     <%- include('./customer/filter.ejs') %>
     <%- include('./list/main.ejs') %>
-
-    <% } else if(qrCode) { %>
-    <p>📲 Escaneie o QR Code abaixo:</p>
-    <img src="<%= qrCode %>" alt="QR Code">
-    <% } else { %>
-    <div class="box b1">Impossível conectar</div>
-    <% } %>
   </section>
 </body>
 
@@ -60,6 +52,11 @@
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       websocketConnect();
+
+      // check_contact_list.addEventListener("click", async e => {
+      //   let validated_contact_list = await API.response(ContactList.check, {});
+      //   console.log(validated_contact_list);
+      // });
     });
   </script>
 </footer>

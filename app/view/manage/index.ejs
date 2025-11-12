@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html style="height:100%;">
+
+<head>
+  <%- include('./../partials/head.ejs') %>
+  <title>Lista de contatos</title>
+</head>
+
+<body>
+  <section id="users-container" class="container h-center" style="height:100%;">
+    <%- include('./users/main.ejs') %>
+  </section>
+</body>
+
+<footer>
+  <%- include('./../partials/footer.ejs') %>
+
+  <script src="/js/messenger.js"></script>
+  <script src="/js/user/main.js"></script>
+  <script src="/js/contact/main.js"></script>
+  <script src="/js/customer/main.js"></script>
+  <script src="/js/customer/payment.js"></script>
+  <script src="/js/customer/image.js"></script>
+  <script src="/js/contact/map.js"></script>
+  <script src="/js/contact/list.js"></script>
+  <script src="/js/message/main.js"></script>
+
+  <%- include('./websocket.ejs') %>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      websocketConnect();
+
+      // check_contact_list.addEventListener("click", async e => {
+      //   let validated_contact_list = await API.response(ContactList.check, {});
+      //   console.log(validated_contact_list);
+      // });
+    });
+  </script>
+</footer>
+
+</html>

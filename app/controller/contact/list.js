@@ -109,4 +109,40 @@ contactListController.filter = async (req, res) => {
   }
 };
 
+contactListController.check = async (req, res) => {
+  try {
+    const session = getSession(req.user.id);
+    if (!session || !session.sock) {
+      return res.status(400).send({ msg: "Sessão WhatsApp não conectada!" });
+    }
+
+    const sock = session.sock;
+
+    const chats = await sock.chats?.all?.() || [];
+    if (!chats.length) {
+      console.log("⚠️ Nenhum chat encontrado.");
+      return res.send({ msg: "Nenhum chat encontrado." });
+    }
+
+    // pega só 1 chat pra inspecionar
+    const chat = chats[0];
+    const jid = chat.id || chat.jid || chat.key?.remoteJid;
+    console.log("🧩 Testando chat:", jid);
+
+    const messages = await sock.loadMessages(jid, 20);
+    console.log(`💬 Mensagens carregadas (${messages.length})`);
+
+    // Mostra o conteúdo bruto das mensagens
+    for (let i = 0; i < messages.length; i++) {
+      console.log(`Mensagem ${i + 1}:`);
+      console.dir(messages[i], { depth: 3 });
+    }
+
+    return res.send({ count: messages.length });
+  } catch (err) {
+    console.error("Erro em check:", err);
+    return res.status(500).send({ msg: err.message });
+  }
+};
+
 module.exports = contactListController;
