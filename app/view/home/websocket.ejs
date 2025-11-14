@@ -1,9 +1,9 @@
 <script>
   function websocketConnect() {
     return new Promise((resolve, reject) => {
-      const socketUrl = 'ws://127.0.0.1:3005/ws';
+      // const socketUrl = 'ws://127.0.0.1:3005/ws';
       // const socketUrl = 'ws://192.168.132.3:3005/ws';
-      // const socketUrl = 'wss://55e14f97fe96.ngrok-free.app/ws';
+      const socketUrl = 'wss://ec348e326adc.ngrok-free.app/ws';
       const socket = new WebSocket(socketUrl);
 
       socket.onopen = function () {
@@ -49,16 +49,29 @@
 
         if (data.key.fromMe) {
           let contact_list_div = document.getElementById(`contact-list-jid-${data.key.remoteJidAlt.split("@")[0]}`);
-          if (contact_list_div && contact_list_div.style.backgroundColor != 'green') {
-            contact_list_div.style.backgroundColor = "green";
-            contact_list_div.style.color = "#fff";
 
-            let contact_list_result = document.getElementById(`contact-list-result`);
-            contact_list_result.value = parseInt(contact_list_result.value) + 1;
+          if (contact_list_div) {
+            if (contact_list_div.style.backgroundColor != 'green') {
+              contact_list_div.style.backgroundColor = "green";
+              contact_list_div.style.color = "#fff";
+
+              let contact_list_result = document.getElementById(`contact-list-result`);
+              contact_list_result.value = parseInt(contact_list_result.value) + 1;
+            }
+          } else {
+            contact_list_div = document.getElementById(`contact-list-jid-${data.key.remoteJid.split("@")[0]}`);
+
+            if (contact_list_div) {
+              if (contact_list_div.style.backgroundColor != 'green') {
+                contact_list_div.style.backgroundColor = "green";
+                contact_list_div.style.color = "#fff";
+
+                let contact_list_result = document.getElementById(`contact-list-result`);
+                contact_list_result.value = parseInt(contact_list_result.value) + 1;
+              }
+            }
           }
         }
-
-        // receivedMessage({ data, message });
       };
 
       socket.onerror = function (event) {

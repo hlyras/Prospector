@@ -12,6 +12,7 @@ router.post('/filter', lib.route.toHttps, Contact.filter);
 router.delete('/delete/:id', lib.route.toHttps, Contact.delete);
 
 router.post('/list/create', lib.route.toHttps, ContactList.create);
+router.post('/list/send', lib.route.toHttps, ContactList.send);
 router.post('/list/filter', lib.route.toHttps, ContactList.filter);
 router.post('/list/check', lib.route.toHttps, ContactList.check);
 

@@ -3,6 +3,7 @@ const lib = require('jarmlib');
 // const wa = require('../../middleware/baileys/main');
 const { getSession } = require('../../middleware/baileys/main');
 const { scrapeMapsFromUrl } = require("../../middleware/gmaps/main");
+const { enqueueMessage } = require("../../middleware/queue/main");
 
 const Contact = require("../../model/contact/main");
 const ContactList = require("../../model/contact/list");
@@ -11,6 +12,10 @@ const ContactMap = require("../../model/contact/map");
 const contactListController = {};
 
 contactListController.create = async (req, res) => {
+  if (req.user?.id != 1) {
+    return res.send({ msg: "Você não tem permissão para executar essa ação." });
+  }
+
   let contact_map = new ContactMap();
   contact_map.datetime = lib.date.timestamp.generate();
   contact_map.cidade = req.body.cidade;
@@ -71,6 +76,68 @@ contactListController.create = async (req, res) => {
   } catch (error) {
     console.error("Erro durante a prospecção:", error);
     res.status(500).send({ msg: "Erro durante a prospecção.", error });
+  }
+};
+
+contactListController.send = async (req, res) => {
+  try {
+    const session = getSession(req.user.id);
+    if (!session || !session.sock) {
+      return res.status(400).send({ msg: "Sessão WhatsApp não conectada!" });
+    }
+
+    let contact_list_verify = (await ContactList.filter({
+      strict_params: {
+        keys: ['id'],
+        values: [req.body.id]
+      }
+    }))[0];
+
+    if (contact_list_verify.seller_id != req.user.id) {
+      return res.send({ msg: "Você não tem autorização para realizar essa ação" });
+    }
+
+    let contact_verify = (await Contact.filter({
+      strict_params: {
+        keys: ['jid'],
+        values: [contact_list_verify.jid]
+      }
+    }))[0];
+
+    if (contact_verify) {
+      return res.send({ msg: "Esse contato já foi contatado." });
+    }
+
+    let contact_list = new ContactList();
+    contact_list.id = req.body.id;
+    contact_list.status = "Concluído";
+    contact_list.sent_datetime = lib.date.timestamp.generate();
+    await contact_list.update();
+
+    let contact = new Contact();
+    contact.business = contact_list_verify.business;
+    contact.jid = contact_list_verify.jid;
+    contact.datetime = lib.date.timestamp.generate();
+    contact.participant = null;
+    contact.autochat = 1;
+    contact.created = 1;
+    contact.flow_step = 0;
+    contact.segment = contact_list_verify.segment;
+    contact.seller_id = req.user.id;
+
+    let contact_create_response = await contact.create();
+    if (contact_create_response.err) { return res.send({ msg: contact_create_response.err }); }
+
+    enqueueMessage({
+      contact_jid: contact.jid,
+      priority: parseInt(contact.flow_step),
+      user_id: req.user.id
+    });
+
+    return res.send({ done: "Mensagem incluída na fila" });
+  } catch (err) {
+    console.error("Erro em check:", err);
+    return res.status(500).send({ msg: err.message });
   }
 };
 

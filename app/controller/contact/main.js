@@ -61,8 +61,8 @@ Preciso identificar se o nome da empresa deve ser referido como masculino ou fem
 Complete .. com "da" ou "do" levando em consideração o nome da empresa.
 
 Exemplo:
-Boa tarde, é da Coca-cola?
-Boa tarde, é do atacadão?
+Boa tarde, é da Apple?
+Boa tarde, é do Google?
 
 Frase base da resposta:
 Boa tarde, é .. ${contact.business}?

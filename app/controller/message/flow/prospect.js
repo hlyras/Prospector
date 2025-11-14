@@ -21,6 +21,7 @@ Você receberá como informação base:
 `;
 
 function flowSteps(contact) {
+  console.log('flowSteps', contact);
   return [`
 Bom dia é da empresa ${contact.business}?
   `, `
@@ -49,16 +50,30 @@ Me envia por favor a foto da sua logomarca e de 2 produtos com nome e preço.
 };
 
 const flow = [
-  function step0() {
+  function step0(contact) {
     // Perguntar se é o contato da empresa
-    return [`
-      Bom dia é d? ${contact.business}?
-
-      Retorne esse JSON com o artigo correto (a ou o) de acordo com o nome da empresa:
+    return [
       {
-        "output": "Bom dia é d? ${contact.business}?"
+        role: "system",
+        content: `
+Preciso identificar se o nome da empresa deve ser referido como masculino ou feminino.
+Complete .. com "da" ou "do" levando em consideração o nome da empresa.
+
+Exemplo:
+Boa tarde, é da Apple?
+Boa tarde, é do Google?
+
+Frase base da resposta:
+Boa tarde, é .. ${contact.business}?
+
+Atenção o JSON precisa ser formatado corretamente, sem blocos de código, sem texto explicativo, sem comentários.  
+Todas as chaves e strings devem estar entre aspas duplas e as quebras de linha devem ser representadas como \n.
+{
+  "output": "Retorne com a melhor resposta.",
+}
+`
       }
-      `]
+    ]
   },
   function step1(contact, history) {
     // Saber se é o contato da empresa

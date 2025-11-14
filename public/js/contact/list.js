@@ -26,6 +26,19 @@ ContactList.update = async (contact) => {
   return response;
 };
 
+ContactList.send = async (contact) => {
+  let response = await fetch("/contact/list/send", {
+    method: "POST",
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(contact)
+  });
+  response = await response.json();
+
+  if (API.verifyResponse(response)) { return false; };
+
+  return response;
+};
+
 ContactList.filter = async (contact) => {
   let response = await fetch("/contact/list/filter", {
     method: "POST",

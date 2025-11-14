@@ -72,16 +72,19 @@
       contact_list_div.append(contact_phone);
 
       let contact_business = lib.element.create("div", {
-        class: "mobile-box b2-3 text-shadow-nn-lg padding-5 center pointer"
+        class: "mobile-box b2 text-shadow-nn-lg padding-5 center pointer"
       }, contact_list.business);
       contact_list_div.append(contact_business);
+
+      let send_icon = lib.element.icon("b6", 30, "/images/icon/send.png")
+      contact_list_div.append(send_icon);
 
       // events
       contact_phone.addEventListener("click", async () => {
         try {
           await navigator.clipboard.writeText(contact_list.jid.split("@")[0]);
           console.log("Copiado:", contact_list.jid.split("@")[0]);
-          alert("Copiado:", contact_list.jid.split("@")[0]);
+          // alert("Copiado:", contact_list.jid.split("@")[0]);
         } catch (err) {
           console.error("Erro ao copiar:", err);
         }
@@ -91,10 +94,20 @@
         try {
           await navigator.clipboard.writeText(contact_list.business);
           console.log("Copiado:", contact_list.business);
-          alert("Copiado:", contact_list.jid.split("@")[0]);
+          // alert("Copiado:", contact_list.jid.split("@")[0]);
         } catch (err) {
           console.error("Erro ao copiar:", err);
         }
+      });
+
+      send_icon.addEventListener("click", async () => {
+        console.log('enviado');
+
+        let response = await API.response(ContactList.send, {
+          id: contact_list.id
+        });
+
+        console.log(response);
       });
     });
   };

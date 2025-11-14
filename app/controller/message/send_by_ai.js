@@ -1,8 +1,18 @@
 const Message = require("../../model/message/main");
 
+const { getSession } = require('../../middleware/baileys/main');
+const activeWebSockets = require('../../middleware/websocket/connectionStore');
+const prospect_flow = require('../../controller/message/flow/prospect');
 const { ChatGPTAPI } = require('../../middleware/chatgpt/main');
+const lib = require('jarmlib');
 
 async function sendByAi(contact) {
+  let session = getSession(contact.seller_id);
+  if (!session || !session.sock || !session.connected) {
+    console.log({ msg: "Sessão WhatsApp não conectada!" });
+    return false;
+  }
+
   let message_options = {
     props: [
       "message.type",
@@ -30,11 +40,37 @@ async function sendByAi(contact) {
     messages: prospect_flow[contact.flow_step](contact, history)
   });
 
-  wa.getSocket().sendPresenceUpdate("available", contact.jid);
-
+  console.log(response);
   let gpt_response = JSON.parse(response);
 
-  if (contact.flow_step == 1) {
+  // session.sock.sendPresenceUpdate("available", contact.jid);
+
+  if (contact.flow_step == 0) {
+    contact.flow_step = parseInt(contact.flow_step) + 1;
+
+    for (const [sessionID, ws] of activeWebSockets.entries()) {
+      let data = {
+        jid: contact.jid,
+        notify_alert: true,
+        conected: true
+      };
+
+      if (ws.readyState === 1) {
+        ws.send(JSON.stringify({ data }));
+      }
+    };
+
+    await getSession(contact.seller_id).sock.sendMessage(contact.jid, {
+      text: gpt_response.output
+    });
+
+    contact.update();
+
+    return true;
+  }
+
+  // O cliente tem interesse no catálogo?
+  else if (contact.flow_step == 1) {
     if (gpt_response.name) {
       contact.name = gpt_response.name;
     }
@@ -62,12 +98,18 @@ async function sendByAi(contact) {
     }
 
     if (gpt_response.reply == true) {
-      await wa.getSocket().sendMessage(contact.jid, {
+      await getSession(contact.seller_id).sock.sendMessage(contact.jid, {
         text: gpt_response.output
       });
+
+      contact.update();
+
+      return true;
     }
 
     contact.update();
+
+    return false;
   }
 
   // O cliente tem interesse no catálogo?
@@ -93,12 +135,6 @@ async function sendByAi(contact) {
         if (ws.readyState === 1) { ws.send(JSON.stringify({ data })); }
       };
 
-      // await wa.getSocket().sendMessage("120363403607809452@g.us", {
-      //   text: `
-      // Telefone: ${contact.jid.split("@")[0]}\n
-      // Nome: ${contact.name}\n
-      // Empresa: ${contact.business}`
-      // });
     }
 
     if (gpt_response.flow_step == "exit") {
@@ -106,12 +142,18 @@ async function sendByAi(contact) {
     }
 
     if (gpt_response.reply == true) {
-      await wa.getSocket().sendMessage(contact.jid, {
+      await getSession(contact.seller_id).sock.sendMessage(contact.jid, {
         text: gpt_response.output
       });
+
+      contact.update();
+
+      return true;
     }
 
     contact.update();
+
+    return false;
   }
 
   // Informações / Perguntar o nome ou Oferecer esboço
@@ -141,12 +183,18 @@ async function sendByAi(contact) {
     }
 
     if (gpt_response.reply == true) {
-      await wa.getSocket().sendMessage(contact.jid, {
+      await getSession(contact.seller_id).sock.sendMessage(contact.jid, {
         text: gpt_response.output
       });
+
+      contact.update();
+
+      return true;
     }
 
     contact.update();
+
+    return false;
   }
 
   // O cliente tem interesse no esboço?
@@ -177,12 +225,18 @@ async function sendByAi(contact) {
     }
 
     if (gpt_response.reply == true) {
-      await wa.getSocket().sendMessage(contact.jid, {
+      await getSession(contact.seller_id).sock.sendMessage(contact.jid, {
         text: gpt_response.output
       });
+
+      contact.update();
+
+      return true;
     }
 
     contact.update();
+
+    return false;
   }
 };
 
