@@ -1,6 +1,8 @@
 const Contact = require("../../model/contact/main");
 const ContactList = require("../../model/contact/list");
 const Message = require("../../model/message/main");
+const Queue = require("../../model/queue/main");
+const { enqueueMessage } = require("../../middleware/queue/main");
 
 const lib = require('jarmlib');
 
@@ -78,23 +80,18 @@ messageController.receipt = async ({ data }) => {
   // if (!data.key.fromMe) { return; }
   if (!data.message.extendedTextMessage && !data.message.conversation) { return; }
 
-  console.log('is text');
-
   const isGroup =
     data.key.remoteJid?.endsWith("@g.us") ||
     data.key.remoteJidAlt?.endsWith("@g.us");
   if (isGroup) { return console.log('group message'); }
-  console.log('is not group');
 
   const correctJid =
     (data.key.remoteJid?.endsWith("s.whatsapp.net") && data.key.remoteJid) ||
     (data.key.remoteJidAlt?.endsWith("s.whatsapp.net") && data.key.remoteJidAlt) ||
     null;
   if (!correctJid) { return console.log('correctJid inválid'); }
-  console.log('is correctJid', correctJid);
 
   let contact = (await Contact.findByJid(correctJid))[0] || null;
-  console.log('contact not found');
 
   if (!contact) {
     contact = new Contact();
@@ -107,7 +104,6 @@ messageController.receipt = async ({ data }) => {
   }
 
   if (data.key.fromMe) {
-    console.log('Message from me');
     let contact_list = (await ContactList.filter({
       strict_params: {
         keys: ["jid"],
@@ -116,7 +112,7 @@ messageController.receipt = async ({ data }) => {
       limit: 1
     }))[0];
 
-    if (contact_list?.segment) {
+    if (contact_list?.segment && contact_list?.status != 'Concluído') {
       contact.segment = contact_list.segment;
       contact.business = contact_list.business;
 
@@ -135,9 +131,7 @@ messageController.receipt = async ({ data }) => {
   message.datetime = data.messageTimestamp * 1000;
   message.raw = JSON.stringify(data);
 
-  // Descompacta mensagens aninhadas (viewOnce, ephemeral, etc.)
   let msg = data.message;
-  console.log('Receipt message', msg);
 
   if (msg.extendedTextMessage) {
     message.type = "text";
@@ -153,7 +147,6 @@ messageController.receipt = async ({ data }) => {
     let message_create = await message.create();
     if (message_create.err) { console.log(message_create.err); }
     message.id = message_create.insertId;
-    console.log('Message created', message);
 
     if (contact?.autochat == 1 && !data.key.fromMe && message.type == "text") {
       let queue_contact = (await Queue.filter({
@@ -166,16 +159,14 @@ messageController.receipt = async ({ data }) => {
       if (!queue_contact) {
         enqueueMessage({
           contact_jid: contact.jid,
-          priority: parseInt(contact.flow_step),
+          priority: parseInt(contact.flow_step) + 1,
           user_id: contact.seller_id
         });
       }
     }
 
     for (const [sessionID, ws] of activeWebSockets.entries()) {
-      console.log('Encontrou ws');
       if (ws.readyState === 1) {
-        console.log('ready state:', data);
         ws.send(JSON.stringify({ data, message }));
       }
     };

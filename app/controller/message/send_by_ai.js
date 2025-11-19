@@ -6,7 +6,43 @@ const prospect_flow = require('../../controller/message/flow/prospect');
 const { ChatGPTAPI } = require('../../middleware/chatgpt/main');
 const lib = require('jarmlib');
 
+function randomizeMessage(message) {
+  return [
+    {
+      role: "system",
+      content: `
+Reescreva a mensagem abaixo de formas diferentes para evitar filtros antispam. 
+ATENÇÃO!!! -> A única regra é que as palavras 'apresentação', 'divulgação' e 'atendimento' não podem ser alteradas por sinônimos.
+Também não quero que utilize a palavra: 'Otimizar'
+
+Frase para ser reescrita:
+${message}
+
+Tarefa:
+Você deverá popular o output do JSON com a nova mensagem:
+Atenção o JSON precisa ser formatado corretamente e válido, sem blocos de código, sem texto explicativo, sem comentários.
+Todas as chaves e strings devem estar entre aspas duplas. 
+Devem ser incluídas duas quebras de linha antes de enviar o link.
+{
+"output": "Melhor resposta possível para o cliente"
+}
+      `
+    }
+  ]
+};
+
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+};
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
 async function sendByAi(contact) {
+  console.log('send by ai');
+  console.log(contact.jid);
+
   let session = getSession(contact.seller_id);
   if (!session || !session.sock || !session.connected) {
     console.log({ msg: "Sessão WhatsApp não conectada!" });
@@ -40,10 +76,7 @@ async function sendByAi(contact) {
     messages: prospect_flow[contact.flow_step](contact, history)
   });
 
-  console.log(response);
   let gpt_response = JSON.parse(response);
-
-  // session.sock.sendPresenceUpdate("available", contact.jid);
 
   if (contact.flow_step == 0) {
     contact.flow_step = parseInt(contact.flow_step) + 1;
@@ -65,7 +98,6 @@ async function sendByAi(contact) {
     });
 
     contact.update();
-
     return true;
   }
 
@@ -98,17 +130,27 @@ async function sendByAi(contact) {
     }
 
     if (gpt_response.reply == true) {
+      let randomMessage = JSON.parse(await ChatGPTAPI({
+        model: "gpt-4o-mini",
+        messages: randomizeMessage(gpt_response.output)
+      })).output
+
       await getSession(contact.seller_id).sock.sendMessage(contact.jid, {
-        text: gpt_response.output
+        text: randomMessage
       });
 
-      contact.update();
+      if (gpt_response.flow_step == "next") {
+        await sleep(randInt(3127, 7489));
+        await getSession(contact.seller_id).sock.sendMessage(contact.jid, {
+          text: "Gostaria de ter um personalizado para sua empresa?"
+        });
+      }
 
+      contact.update();
       return true;
     }
 
     contact.update();
-
     return false;
   }
 

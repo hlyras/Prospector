@@ -9,6 +9,8 @@ const { createOrGetSession, getSession, waitForSessionState, removeSession } = r
 
 const userController = {};
 
+/* ========================= LOGIN ========================= */
+
 userController.login = (req, res) => {
   if (req.user) { return res.redirect("/"); }
 
@@ -24,6 +26,8 @@ userController.logout = (req, res) => {
   });
 };
 
+/* ========================= SESSÃO ========================= */
+
 userController.session = async (req, res) => {
   if (!req.user?.id) {
     return res.status(401).send({ msg: "Não autorizado!" });
@@ -38,33 +42,46 @@ userController.session = async (req, res) => {
       return res.send({ connected: false, qrCode: null });
     }
 
-    // 🔍 Verificação direta da conexão com o WhatsApp
+    /* 🔍 Verificação direta do estado atual */
     const wsAlive = session?.sock?.ws?.readyState === session?.sock?.ws?.OPEN;
     const baileysAlive = session?.sock?.state === "open";
     const isConnected = wsAlive && baileysAlive;
 
     if (isConnected) {
-      console.log(`✅ [${user_id}] Sessão conectada (via WebSocket Baileys).`);
+      console.log(`✅ [${user_id}] Sessão conectada.`);
       return res.send({ connected: true, qrCode: null });
     }
 
-    // Se não estiver conectado, aguarda brevemente por uma mudança (QR ou reconexão)
-    const result = await waitForSessionState(session, 15000);
+    /* 🔄 Aguardar evento de mudança (QR ou reconexão) */
+    let result = null;
 
+    if (typeof waitForSessionState === "function") {
+      result = await waitForSessionState(session, 15000);
+    } else {
+      console.warn("⚠ waitForSessionState NÃO existe. QR pode falhar.");
+      result = { connected: false, qr: session.qr || null };
+    }
+
+    /* 🔄 Reavaliar após aguardar */
     const wsNowAlive = session?.sock?.ws?.readyState === session?.sock?.ws?.OPEN;
     const baileysNowAlive = session?.sock?.state === "open";
     const nowConnected = wsNowAlive && baileysNowAlive;
 
-    if (nowConnected || result.connected) {
+    if (nowConnected || result?.connected) {
       console.log(`✅ [${user_id}] Sessão conectada após espera.`);
-      return res.send({ connected: true, qrCode: result.qr || null });
+      return res.send({ connected: true, qrCode: null });
     }
 
+    /* 📡 Se QR aparecer */
+    if (result?.qr) {
+      const qrImage = await qrcode.toDataURL(result.qr);
+      console.log(`🔄 [${user_id}] QR gerado.`);
+      return res.send({ connected: false, qrCode: qrImage });
+    }
+
+    /* 🚫 Continua desconectado */
     console.log(`😴 [${user_id}] Sessão offline.`);
-    return res.send({
-      connected: false,
-      qrCode: result.qr || null,
-    });
+    return res.send({ connected: false, qrCode: null });
 
   } catch (error) {
     console.error("💥 Erro em userController.session:", error);
@@ -72,12 +89,15 @@ userController.session = async (req, res) => {
   }
 };
 
+/* ========================= CONECTAR ========================= */
+
 userController.connect = async (req, res) => {
   if (!req.user?.id || req.user.id !== 1) {
     return res.status(401).send({ unauthorized: true });
   }
 
   const { user_id } = req.body;
+
   if (!user_id) {
     return res.status(400).send({ success: false, msg: "user_id ausente" });
   }
@@ -91,58 +111,52 @@ userController.connect = async (req, res) => {
 
     if (session.connected) {
       console.log('session.connected');
-      return res.send({
-        connected: true,
-        qrCode: null,
-      });
+      return res.send({ connected: true, qrCode: null });
     }
 
     if (session.qr) {
-      console.log('session.qr');
       const qrImage = await qrcode.toDataURL(session.qr);
-      return res.send({
-        connected: false,
-        qrCode: qrImage,
-      });
+      console.log('session.qr');
+      return res.send({ connected: false, qrCode: qrImage });
     }
 
-    const result = await waitForSessionState(session, 15000);
+    let result = null;
+
+    if (typeof waitForSessionState === "function") {
+      result = await waitForSessionState(session, 15000);
+    } else {
+      result = { connected: false, qr: session.qr || null };
+    }
 
     if (result.connected) {
       console.log('session.connected');
-      return res.send({
-        connected: true,
-        qrCode: null,
-      });
+      return res.send({ connected: true, qrCode: null });
     }
 
     if (result.qr) {
-      console.log('session.qr');
       const qrImage = await qrcode.toDataURL(result.qr);
-      return res.send({
-        connected: false,
-        qrCode: qrImage,
-      });
+      console.log('session.qr');
+      return res.send({ connected: false, qrCode: qrImage });
     }
 
     console.log('Sem conexão...');
-    return res.send({
-      connected: false,
-      qrCode: null,
-    });
+    return res.send({ connected: false, qrCode: null });
+
   } catch (err) {
     console.error("Erro /admin/socket/connect:", err);
 
     return res.status(500).send({
       success: false,
-      // msg: "Erro ao criar/obter sessão",
       error: err.message
     });
   }
 };
 
+/* ========================= DESCONECTAR ========================= */
+
 userController.disconnect = async (req, res) => {
   const { user_id } = req.body;
+
   if (!user_id) {
     return res.status(400).send({ success: false, msg: "user_id ausente" });
   }
@@ -157,14 +171,14 @@ userController.disconnect = async (req, res) => {
   }
 };
 
+/* ========================= LISTA USUÁRIOS ========================= */
+
 userController.filter = async (req, res) => {
   try {
-    let users = await User.filter({});
-
+    const users = await User.filter({});
     res.send(users);
   } catch (error) {
     console.log(error);
-    // res.send({ msg: "Ocorreu um erro ao filtrar os contatos" });
   }
 };
 

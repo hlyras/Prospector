@@ -81,9 +81,9 @@
     });
     identity_info_box.append(identity_contact_box);
 
-    identity_contact_box.append(lib.element.create("div", {
-      class: "mobile-box lucida-grande em09 text-shadow",
-    }, contact.business || contact.name || ""));
+    // identity_contact_box.append(lib.element.create("div", {
+    //   class: "mobile-box lucida-grande em09 text-shadow",
+    // }, contact.business || contact.name || ""));
 
     lib.splitTextBy(contact.jid, "@")[1] != "g.us" && identity_contact_box.append(lib.element.create("div", {
       class: "mobile-box b1 em08 text-shadow v-center"

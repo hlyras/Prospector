@@ -1,9 +1,9 @@
 <script>
   function websocketConnect() {
     return new Promise((resolve, reject) => {
-      const socketUrl = 'ws://127.0.0.1:3005/ws';
-      // const socketUrl = 'ws://192.168.132.3:3005/ws';
-      // const socketUrl = 'wss://c3353e4c2d7b.ngrok-free.app/ws';
+      let protocol = window.location.protocol == "https:" ? "wss:" : "ws:";
+      const socketUrl = `${protocol}//${window.location.host}/ws`
+
       const socket = new WebSocket(socketUrl);
 
       socket.onopen = function () {

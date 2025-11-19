@@ -24,6 +24,7 @@ contactListController.create = async (req, res) => {
 
   const session = getSession(req.user.id);
   if (!session || !session.sock || !session.connected) {
+    console.log('create');
     return res.send({ msg: "Sessão WhatsApp não conectada!" });
   }
 
@@ -83,6 +84,7 @@ contactListController.send = async (req, res) => {
   try {
     const session = getSession(req.user.id);
     if (!session || !session.sock) {
+      console.log('send');
       return res.status(400).send({ msg: "Sessão WhatsApp não conectada!" });
     }
 
@@ -109,10 +111,10 @@ contactListController.send = async (req, res) => {
     }
 
     let contact_list = new ContactList();
-    contact_list.id = req.body.id;
-    contact_list.status = "Concluído";
+    contact_list.jid = contact_list_verify.jid;
     contact_list.sent_datetime = lib.date.timestamp.generate();
-    await contact_list.update();
+    let contact_list_update_response = await contact_list.update();
+    if (contact_list_update_response.err) { console.log(); }
 
     let contact = new Contact();
     contact.business = contact_list_verify.business;
@@ -146,22 +148,13 @@ contactListController.filter = async (req, res) => {
     let contact_list_options = {
       props: [
         "contact_list.*",
-        // "last_message.type last_message_type",
-        // "last_message.content last_message_content",
-        // "last_message.wa_id last_message_wa_id",
-        // "last_message.participant last_message_participant",
-        // "last_message.from_me last_message_from_me",
-        // "last_message.datetime last_message_datetime",
+        "contact.flow_step"
       ],
       lefts: [
-        // ["cms_prospector.message last_message",
-        //   "last_message.jid", "contact.jid",
-        //   "last_message.datetime", "(SELECT MAX(datetime) FROM cms_prospector.message WHERE jid = contact.jid)"
-        // ]
+        ["cms_prospector.contact", "contact_list.jid", "contact.jid"]
       ],
       period: { key: "contact_list.sent_datetime", start: req.body.period_start, end: req.body.period_end },
       strict_params: { keys: [], values: [] },
-      // order_params: [["last_message.datetime", "desc"]]
     };
 
     lib.Query.fillParam("contact_list.jid", req.body.jid, contact_list_options.strict_params);
@@ -180,6 +173,7 @@ contactListController.check = async (req, res) => {
   try {
     const session = getSession(req.user.id);
     if (!session || !session.sock) {
+      console.log('check');
       return res.status(400).send({ msg: "Sessão WhatsApp não conectada!" });
     }
 

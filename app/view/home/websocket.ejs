@@ -1,9 +1,9 @@
 <script>
   function websocketConnect() {
     return new Promise((resolve, reject) => {
-      // const socketUrl = 'ws://127.0.0.1:3005/ws';
-      // const socketUrl = 'ws://192.168.132.3:3005/ws';
-      const socketUrl = 'wss://ec348e326adc.ngrok-free.app/ws';
+      let protocol = window.location.protocol == "https:" ? "wss:" : "ws:";
+      const socketUrl = `${protocol}//${window.location.host}/ws`
+
       const socket = new WebSocket(socketUrl);
 
       socket.onopen = function () {
@@ -14,41 +14,16 @@
       socket.onmessage = (event) => {
         const { data, message } = JSON.parse(event.data);
 
-        console.log(data);
-
-        // if (data.notify_alert) {
-        //   // if (document.getElementById(`contact-${data.jid}`)) {
-        //   //   lib.display(`contact-${data.jid}-notify`, "");
-        //   // }
-
-        //   if (data.interested || data.demo) {
-        //     beep();
-        //   }
-
-        //   // lib.display("all-users-icon-notify", "");
-        //   // data.conected && lib.display("conected-icon-notify", "");
-        //   // data.interested && lib.display("interested-icon-notify", "");
-        //   // data.demo && lib.display("demo-icon-notify", "");
-        //   return;
-        // }
-
-        // if (!data.key.remoteJidAlt) {
-        //   return;
-        // }
-
-        // if (lib.splitTextBy(data.key.remoteJidAlt)[0] == "status") {
-        //   return;
-        // }
-
-        // if (message.type == "reaction") {
-        //   // return messageReaction(message);
-        //   return;
-        // }
-
-        console.log('data.key.fromMe', data.key.fromMe);
+        if (!data.key) { return; }
 
         if (data.key.fromMe) {
-          let contact_list_div = document.getElementById(`contact-list-jid-${data.key.remoteJidAlt.split("@")[0]}`);
+          const correctJid =
+            (data.key.remoteJid?.endsWith("s.whatsapp.net") && data.key.remoteJid) ||
+            (data.key.remoteJidAlt?.endsWith("s.whatsapp.net") && data.key.remoteJidAlt) ||
+            null;
+          if (!correctJid) { return; }
+
+          let contact_list_div = document.getElementById(`contact-list-jid-${correctJid.split("@")[0]}`);
 
           if (contact_list_div) {
             if (contact_list_div.style.backgroundColor != 'green') {
@@ -59,7 +34,7 @@
               contact_list_result.value = parseInt(contact_list_result.value) + 1;
             }
           } else {
-            contact_list_div = document.getElementById(`contact-list-jid-${data.key.remoteJid.split("@")[0]}`);
+            contact_list_div = document.getElementById(`contact-list-jid-${correctJid.split("@")[0]}`);
 
             if (contact_list_div) {
               if (contact_list_div.style.backgroundColor != 'green') {

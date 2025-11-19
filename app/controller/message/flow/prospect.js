@@ -20,16 +20,26 @@ Você receberá como informação base:
 3. A próxima mensagem do fluxo;
 `;
 
+function saudacaoPorHorario() {
+  const agora = new Date();
+  const hora = agora.getHours();
+
+  if (hora < 12) {
+    return "Bom dia";
+  } else if (hora < 18) {
+    return "Boa tarde";
+  } else {
+    return "Boa noite";
+  }
+};
+
 function flowSteps(contact) {
-  console.log('flowSteps', contact);
   return [`
-Bom dia é da empresa ${contact.business}?
+${saudacaoPorHorario()} é da empresa ${contact.business}?
   `, `
 Oi, meu nome é Henrique, represento a Cotálogo e nossa proposta é aprimorar a apresentação, divulgação e atendimento das empresas através de um catálogo digital como esse:\n\n
 
-${contact.segment}\n\n
-
-Gostaria de ter um personalizado para sua empresa?
+${contact.segment}
   `, `
 Esse catálogo é criado através de nossa plataforma que pode ser acessada pelo celular ou computador.\n\n
 
@@ -60,11 +70,11 @@ Preciso identificar se o nome da empresa deve ser referido como masculino ou fem
 Complete .. com "da" ou "do" levando em consideração o nome da empresa.
 
 Exemplo:
-Boa tarde, é da Apple?
-Boa tarde, é do Google?
+${saudacaoPorHorario()}, é da Apple?
+${saudacaoPorHorario()}, é do Google?
 
 Frase base da resposta:
-Boa tarde, é .. ${contact.business}?
+${saudacaoPorHorario()}, é .. ${contact.business}?
 
 Atenção o JSON precisa ser formatado corretamente, sem blocos de código, sem texto explicativo, sem comentários.  
 Todas as chaves e strings devem estar entre aspas duplas e as quebras de linha devem ser representadas como \n.

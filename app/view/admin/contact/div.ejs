@@ -48,7 +48,7 @@
 
     let name = lib.element.create("div", {
       class: "mobile-box b1 lucida-grande em08 text-shadow"
-    }, contact.business || contact.name || lib.splitTextBy(contact.jid, "@")[0]);
+    }, lib.splitTextBy(contact.jid, "@")[0]);
     name_box.append(name);
 
     if (contact.last_message_type == "text") { lib.string.cut(contact.last_message_content, 30); }

@@ -217,6 +217,7 @@ async function processQueue() {
 
       const msg = results?.[0];
       if (!msg) {
+        // console.log('!msg', msg);
         await sleep(randInt(800, 3000));
         continue;
       }
@@ -228,10 +229,9 @@ async function processQueue() {
         continue;
       }
 
-      let queue_delay = randInt(9000, 24000);
-      await sleep(queue_delay);
-
+      let queue_delay = randInt(9000, 47000);
       console.log(`Próxima mensagem em ${queue_delay}`, msg);
+      await sleep(queue_delay);
 
       const qProc = new Queue();
       qProc.id = msg.id;
@@ -244,7 +244,6 @@ async function processQueue() {
       await simulateTypingHuman(session.sock, msg.contact_jid, msg.message, profile);
 
       const updated_contact = (await Contact.findByJid(msg.contact_jid))[0];
-      console.log(updated_contact);
 
       let contact_info = new Contact();
       contact_info.jid = msg.contact_jid;
@@ -257,10 +256,6 @@ async function processQueue() {
       // enviar mensagem
       let send_response = await SendByAi(contact_info);
       if (!send_response) { return }
-
-      let contact = new Contact();
-      contact.jid = msg.contact_jid;
-      await contact.resetTyping();
 
       const qSent = new Queue();
       qSent.id = msg.id;

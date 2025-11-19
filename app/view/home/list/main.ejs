@@ -77,7 +77,36 @@
       contact_list_div.append(contact_business);
 
       let send_icon = lib.element.icon("b6", 30, "/images/icon/send.png")
-      contact_list_div.append(send_icon);
+      if (!contact_list.sent_datetime) {
+        contact_list_div.append(send_icon);
+      }
+
+      if (contact_list.status == "Concluído") {
+        if (contact_list.flow_step == 0) {
+          let step_icon = lib.element.icon("b6", 30, "/images/icon/all-users.png")
+          contact_list_div.append(step_icon);
+        }
+
+        if (contact_list.flow_step == 1) {
+          let step_icon = lib.element.icon("b6", 30, "/images/icon/all-users.jpg")
+          contact_list_div.append(step_icon);
+        }
+
+        if (contact_list.flow_step == 2) {
+          let step_icon = lib.element.icon("b6", 25, "/images/icon/conected.png")
+          contact_list_div.append(step_icon);
+        }
+
+        if (contact_list.flow_step == 3) {
+          let step_icon = lib.element.icon("b6", 25, "/images/icon/interested.png")
+          contact_list_div.append(step_icon);
+        }
+
+        if (contact_list.flow_step == 4) {
+          let step_icon = lib.element.icon("b6", 25, "/images/icon/demo.png")
+          contact_list_div.append(step_icon);
+        }
+      }
 
       // events
       contact_phone.addEventListener("click", async () => {
@@ -101,13 +130,13 @@
       });
 
       send_icon.addEventListener("click", async () => {
-        console.log('enviado');
-
         let response = await API.response(ContactList.send, {
           id: contact_list.id
         });
+        if (!response) { return; }
 
-        console.log(response);
+        send_icon.remove();
+        // lib.message(response.done);
       });
     });
   };
