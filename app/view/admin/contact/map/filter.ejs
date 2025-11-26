@@ -1,0 +1,38 @@
+<script>
+  async function contactMapFilter(contact_map_options) {
+    let contact_maps = await API.response(ContactMap.filter, {
+      uf: contact_map_options.uf,
+      cidade: contact_map_options.cidade,
+      bairro: contact_map_options.bairro,
+      segment: contact_map_options.segment
+    });
+    console.log(contact_maps);
+
+    contact_maps.forEach(cm => {
+      let contact_map_div = lib.element.create("div", {
+        class: "box a2-3 container border-lg-st shadow padding-10 margin-top-5"
+      });
+      contact_map_container.append(contact_map_div);
+
+      contact_map_div.append(lib.element.create("div", {
+        class: "mobile-box a5 container"
+      }, lib.timestampToFulldate(cm.datetime)));
+
+      contact_map_div.append(lib.element.create("div", {
+        class: "mobile-box a10 center"
+      }, cm.uf));
+
+      contact_map_div.append(lib.element.create("div", {
+        class: "mobile-box a5 center"
+      }, cm.cidade));
+
+      contact_map_div.append(lib.element.create("div", {
+        class: "mobile-box a3-10 center"
+      }, cm.bairro));
+
+      contact_map_div.append(lib.element.create("div", {
+        class: "mobile-box a5 center"
+      }, cm.segment));
+    });
+  };
+</script>

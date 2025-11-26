@@ -33,7 +33,7 @@ const Contact = function () {
   };
 };
 
-Contact.filter = ({ props, inners, lefts, period, params, strict_params, order_params }) => {
+Contact.filter = ({ props, inners, lefts, period, params, strict_params, order_params, limit }) => {
   let { query, values } = new lib.Query().select()
     .props(props)
     .table("cms_prospector.contact")
@@ -42,7 +42,8 @@ Contact.filter = ({ props, inners, lefts, period, params, strict_params, order_p
     .period(period)
     .params(params)
     .strictParams(strict_params)
-    .order(order_params).build();
+    .order(order_params)
+    .limit(limit).build()
   return db(query, values);
 };
 

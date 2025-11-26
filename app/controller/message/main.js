@@ -16,45 +16,9 @@ messageController.send = async (req, res) => {
 
   let reply_message = req.body.reply ? JSON.parse(req.body.reply.message) : null;
 
-  // const urlRegex = /(https?:\/\/[^\s]+)/g;
-  // const found = req.body.content.match(urlRegex);
+  console.log(reply_message);
 
-  // if (found && found.length > 0) {
-  //   options.linkPreview = true;
-
-  //   const og = await getOGData(found[0]);
-
-  //   message.contextInfo = {
-  //     externalAdReply: {
-  //       title: og.title,
-  //       body: og.body,
-  //       thumbnail: og.thumbnail,
-  //       mediaType: 1,
-  //       renderLargerThumbnail: true,
-  //       sourceUrl: og.sourceUrl,
-  //       renderLargerThumbnail: true
-  //     }
-  //   }
-  // }
-
-  if (req.body.type == "text") {
-    message.text = req.body.content;
-  }
-
-  if (reply_message) {
-    options.quoted = reply_message;
-  }
-
-  // console.log(req.body.jid, message, options);
-
-  // if (wa.isConnected()) {
-  //   let response = await wa.getSocket()
-  //     .sendMessage(req.body.jid, message, options);
-  //   res.send(response);
-  // } else {
-  //   let msg = "WhatsApp não está pronto para enviar mensagens.";
-  //   res.send({ msg });
-  // }
+  res.send({ done: "Mensagem enviada" });
 };
 
 messageController.react = async (req, res) => {

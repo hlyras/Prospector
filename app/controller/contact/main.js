@@ -222,14 +222,20 @@ contactController.filter = async (req, res) => {
         "last_message.datetime last_message_datetime",
       ],
       lefts: [
-        ["cms_prospector.message last_message",
-          "last_message.jid", "contact.jid",
-          "last_message.datetime", "(SELECT MAX(datetime) FROM cms_prospector.message WHERE jid = contact.jid)"
+        [
+          "(SELECT jid, MAX(datetime) as max_dt FROM cms_prospector.message GROUP BY jid) msg_max",
+          "msg_max.jid", "contact.jid"
+        ],
+        [
+          "cms_prospector.message last_message",
+          "last_message.jid", "msg_max.jid",
+          "last_message.datetime", "msg_max.max_dt"
         ]
       ],
       period: { key: "contact.datetime", start: req.body.period_start, end: req.body.period_end },
       strict_params: { keys: [], values: [] },
-      order_params: [["last_message.datetime", "desc"]]
+      order_params: [["last_message.datetime", "desc"]],
+      // limit: 300
     };
 
     lib.Query.fillParam("contact.jid", req.body.jid, contact_options.strict_params);

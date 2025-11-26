@@ -56,15 +56,15 @@
             let width = image.width;
             let height = image.height;
 
-            if (width < height) {
-              const scale = 500 / width;
-              width = 500;
-              height = height * scale;
-            } else {
-              const scale = 500 / height;
-              height = 500;
-              width = width * scale;
-            }
+            // if (width < height) {
+            //   const scale = 500 / width;
+            //   width = 500;
+            //   height = height * scale;
+            // } else {
+            //   const scale = 500 / height;
+            //   height = 500;
+            //   width = width * scale;
+            // }
 
             // Criar um canvas temporário para gerar a imagem redimensionada
             const tempCanvas = document.createElement('canvas');

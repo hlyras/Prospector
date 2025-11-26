@@ -59,11 +59,27 @@ router.get("/admin", async (req, res) => {
   });
 });
 
+router.get("/", async (req, res) => {
+  console.log(req.user);
+  if (!req.user) return res.redirect('/user/login');
+  if (req.user.id == 1) return res.redirect('/admin');
+
+  res.redirect('/queue');
+});
+
 // 🏠 Página inicial
-router.get('/', async (req, res) => {
+router.get('/queue', async (req, res) => {
   if (!req.user) return res.redirect('/user/login');
 
-  return res.render('home/index', { title: 'WA Messager' });
+  let user = (await User.filter({
+    props: ["user.name", "user.phone"],
+    strict_params: {
+      keys: ['id'],
+      values: [req.user.id]
+    }
+  }))[0];
+
+  return res.render('home/index', { title: 'WA Messager', user });
 
   // let session = getSession(req.user.id);
 

@@ -47,7 +47,7 @@ Através da plataforma você tem total controle do catálogo, podendo adicionar 
 
 Ao finalizar o pedido no catálogo o cliente é redirecionado para o seu Whatsapp apenas para fazer o pagamento com você.\n\n
 
-O catálogo custa R$49,90 por mês mas não exige assinatura, funciona como créditos de celular, você recarrega e utiliza por 30 dias.\n\n
+O catálogo custa R$49,90 por mês mas não exige assinatura, você recarrega e utiliza por 30 dias.\n\n
 
 Nós daremos consultoria gratuita durante a construção do seu catálogo.\n\n
 

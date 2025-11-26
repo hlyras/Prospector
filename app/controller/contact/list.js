@@ -1,7 +1,7 @@
 const lib = require('jarmlib');
 
 // const wa = require('../../middleware/baileys/main');
-const { getSession } = require('../../middleware/baileys/main');
+const { createOrGetSession, getSession } = require('../../middleware/baileys/main');
 const { scrapeMapsFromUrl } = require("../../middleware/gmaps/main");
 const { enqueueMessage } = require("../../middleware/queue/main");
 
@@ -21,6 +21,7 @@ contactListController.create = async (req, res) => {
   contact_map.cidade = req.body.cidade;
   contact_map.bairro = req.body.bairro;
   contact_map.uf = req.body.uf;
+  contact_map.segment = req.body.segment;
 
   const session = getSession(req.user.id);
   if (!session || !session.sock || !session.connected) {
@@ -34,8 +35,36 @@ contactListController.create = async (req, res) => {
       return res.send({ msg: contact_map_create.err });
     }
 
+    contact_map.id = contact_map_create.insertId;
+
     let contacts = await scrapeMapsFromUrl(req.body.url, 200, async (c) => {
       c.telefone = c.telefone?.replace(/\D/g, "");
+
+      let session = getSession(req.user.id);
+
+      // -------------------------------
+      // 1. Verificar se a sessão caiu
+      // -------------------------------
+      if (!session || !session.sock || !session.connected) {
+        console.log("Sessão caiu, tentando reconectar...");
+
+        // Tentar recriar/recuperar sessão
+        session = await createOrGetSession(req.user.id);
+
+        // Aguardar reconexão usando a mesma lógica do seu controller
+        let status = { connected: false };
+
+        if (typeof waitForSessionState === "function") {
+          status = await waitForSessionState(session, 15000);
+        }
+
+        if (!status.connected) {
+          console.log("Falha ao reconectar. Ignorando número:", c.telefone);
+          return;
+        }
+
+        console.log("Sessão reconectada com sucesso!");
+      }
 
       const [wa_contact] = await session.sock.onWhatsApp(`55${c.telefone}@s.whatsapp.net`);
       if (!wa_contact?.exists) {
@@ -55,6 +84,7 @@ contactListController.create = async (req, res) => {
       }
 
       let contact_list = new ContactList();
+      contact_list.map_id = contact_map.id;
       contact_list.business = c.nome;
       contact_list.jid = wa_contact.jid;
       contact_list.datetime = lib.date.timestamp.generate();
@@ -151,13 +181,15 @@ contactListController.filter = async (req, res) => {
         "contact.flow_step"
       ],
       lefts: [
-        ["cms_prospector.contact", "contact_list.jid", "contact.jid"]
+        ["cms_prospector.contact", "contact_list.jid", "contact.jid"],
+        ["cms_prospector.contact_map", "contact_map.id", "contact_list.map_id"]
       ],
       period: { key: "contact_list.sent_datetime", start: req.body.period_start, end: req.body.period_end },
       strict_params: { keys: [], values: [] },
     };
 
     lib.Query.fillParam("contact_list.jid", req.body.jid, contact_list_options.strict_params);
+    lib.Query.fillParam("contact_list.map_id", req.body.map_id, contact_list_options.strict_params);
     lib.Query.fillParam("contact_list.status", req.body.status, contact_list_options.strict_params);
     lib.Query.fillParam("contact_list.seller_id", req.user.id, contact_list_options.strict_params);
     let contact_lists = await ContactList.filter(contact_list_options);
