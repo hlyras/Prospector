@@ -38,7 +38,7 @@
 
       let reaction_div = lib.element.create("div", {
         class: "mobile-box b1 radius-50 box-hover padding-5 center pointer noselect"
-      }, `${message.jid.split("@")[0]} - Remover`);
+      }, `Remover`);
       reaction_box.append(reaction_div);
 
       reaction_div.addEventListener("click", async () => {
@@ -54,6 +54,7 @@
           content: ""
         }, "none");
 
+        console.log('reaction_box', reaction_box);
         reaction_box.remove();
       });
 

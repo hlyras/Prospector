@@ -5,6 +5,7 @@ const Queue = require("../../model/queue/main");
 const { enqueueMessage } = require("../../middleware/queue/main");
 const { getSession } = require('../../middleware/baileys/main');
 const { getDownloadPath, getPublicPath } = require("../../middleware/baileys/download");
+const downloadProfilePicture = require("../../middleware/baileys/profile");
 const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 const { ChatGPTTranscription } = require('../../middleware/chatgpt/main');
 
@@ -99,22 +100,30 @@ messageController.send = async (req, res) => {
 };
 
 messageController.react = async (req, res) => {
-  if (wa.isConnected()) {
-    let response = await wa.getSocket()
-      .sendMessage(req.body.jid, {
-        react: {
-          text: req.body.content,
-          key: req.body.key,
-          participant: req.body.participant ?
-            req.body.participant : null
-        }
-      });
+  // Verifica contato
+  const contact = (await Contact.filter({
+    strict_params: { keys: ['jid'], values: [req.body.jid] }
+  }))[0];
 
-    res.send(response);
-  } else {
-    let msg = "WhatsApp não está pronto para enviar mensagens.";
-    res.send({ msg });
+  if (!contact) return res.send({ msg: "Contato não encontrado!" });
+  if (contact.jid != req.body.jid) return res.send({ msg: "Contato diferente do enviado!" });
+  if (!contact.seller_id) return res.send({ msg: "Contato não está sendo atendido!" });
+
+  const session = getSession(contact.seller_id);
+
+  if (!session?.sock || !session.connected) {
+    return res.send({ msg: "Sessão do usuário não conectada!" });
   }
+
+  let response = await session.sock.sendMessage(contact.jid, {
+    react: {
+      text: req.body.content,
+      key: req.body.key,
+      participant: req.body.participant ?
+        req.body.participant : null
+    }
+  });
+  res.send(response);
 };
 
 messageController.receipt = async ({ data }) => {
@@ -302,9 +311,47 @@ messageController.receipt = async ({ data }) => {
   }
 
   try {
-    let created = await message.create();
-    if (created.err) console.log(created.err);
-    message.id = created.insertId;
+    if (msg.reactionMessage) {
+      message.type = "reaction";
+      message.target_id = msg.reactionMessage.key?.id || null;
+      message.content = msg.reactionMessage.text;
+
+      if (!data.message.reactionMessage.text) {
+        let reaction_message = (await Message.filter({
+          strict_params: {
+            keys: ["jid", "type", "target_id", "from_me"],
+            values: [contact.jid, "reaction", message.target_id, data.key.fromMe ? 1 : 0]
+          }
+        }))[0];
+
+        // ----------
+        // Erro ao encontrar reaction_message.wa_id porque o filter pode estar errado.
+        // ----------
+
+        Message.delete(reaction_message.wa_id);
+      } else {
+        let reaction_message = (await Message.filter({
+          strict_params: {
+            keys: ["jid", "type", "target_id", "from_me"],
+            values: [contact.jid, "reaction", message.target_id, data.key.fromMe ? 1 : 0]
+          }
+        }))[0];
+
+        let message_create = await message.create();
+        if (message_create.err) { console.log(message_create.err); }
+        message.id = message_create.insertId;
+
+        if (reaction_message) {
+          Message.delete(reaction_message.wa_id);
+        }
+      }
+    }
+
+    if (!msg.reactionMessage) {
+      let created = await message.create();
+      if (created.err) console.log(created.err);
+      message.id = created.insertId;
+    }
 
     if (contact?.autochat == 1 && !data.key.fromMe && message.type === "text") {
       let queue_contact = (await Queue.filter({

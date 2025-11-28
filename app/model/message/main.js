@@ -18,10 +18,10 @@ const Message = function () {
   };
 
   this.update = () => {
-    if (!this.phone) { return { err: "O id da tarefa é inválido" }; }
+    if (!this.id) { return { err: "O id da tarefa é inválido" }; }
 
     let obj = lib.convertTo.object(this);
-    let { query, values } = lib.Query.update(obj, 'cms_prospector.message', 'phone');
+    let { query, values } = lib.Query.update(obj, 'cms_prospector.message', 'id');
 
     return db(query, values);
   };
