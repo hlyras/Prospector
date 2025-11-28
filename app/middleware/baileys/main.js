@@ -3,7 +3,8 @@ const {
   default: makeWASocket,
   useMultiFileAuthState,
   DisconnectReason,
-  fetchLatestBaileysVersion
+  fetchLatestBaileysVersion,
+  proto
 } = require('@whiskeysockets/baileys');
 
 const { Boom } = require('@hapi/boom');
@@ -148,9 +149,14 @@ async function startSocket(userId, state, saveCreds, version) {
 
     if (events['messages.upsert']) {
       const { messages } = events['messages.upsert'];
+
       for (const msg of messages) {
         if (!msg.message) continue;
-        waEmitter.emit('received-message', { userId, data: msg });
+
+        waEmitter.emit('received-message', {
+          userId,
+          data: proto.WebMessageInfo.toObject(msg)
+        });
       }
     }
   });

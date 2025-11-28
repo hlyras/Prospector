@@ -3,6 +3,13 @@ const ContactList = require("../../model/contact/list");
 const Message = require("../../model/message/main");
 const Queue = require("../../model/queue/main");
 const { enqueueMessage } = require("../../middleware/queue/main");
+const { getSession } = require('../../middleware/baileys/main');
+const { getDownloadPath, getPublicPath } = require("../../middleware/baileys/download");
+const { downloadMediaMessage } = require('@whiskeysockets/baileys');
+const { ChatGPTTranscription } = require('../../middleware/chatgpt/main');
+
+const fs = require("fs");
+const path = require("path");
 
 const lib = require('jarmlib');
 
@@ -11,14 +18,84 @@ const activeWebSockets = require('../../middleware/websocket/connectionStore');
 const messageController = {};
 
 messageController.send = async (req, res) => {
-  let message = {};
-  let options = {};
+  if (!req.user || req.user.id != 1) {
+    return res.send({ unauthorized: "Você não tem permissão para realizar essa ação!" });
+  }
 
-  let reply_message = req.body.reply ? JSON.parse(req.body.reply.message) : null;
+  const message = {};
+  const options = {};
+  const { type, content, jid, reply } = req.body;
 
-  console.log(reply_message);
+  // Verifica contato
+  const contact = (await Contact.filter({
+    strict_params: { keys: ['jid'], values: [jid] }
+  }))[0];
 
-  res.send({ done: "Mensagem enviada" });
+  if (!contact) return res.send({ msg: "Contato não encontrado!" });
+  if (!contact.seller_id) return res.send({ msg: "Contato não está sendo atendido!" });
+
+  const session = getSession(contact.seller_id);
+
+  if (!session?.sock || !session.connected) {
+    return res.send({ msg: "Sessão do usuário não conectada!" });
+  }
+
+  // Tratamento de reply
+  if (reply) {
+    const r = JSON.parse(reply.message);
+
+    options.quoted = {
+      key: {
+        id: r.key.id,
+        remoteJid: r.key.remoteJid,
+        fromMe: r.key.fromMe
+      },
+      message: r.message
+    };
+  }
+
+  // Tratamento por tipo
+  switch (type) {
+    case "text":
+      message.text = content;
+      break;
+
+    case "image":
+      if (!content?.buffer) return res.status(400).send({ msg: "Imagem inválida" });
+      message.image = content.buffer;
+      message.caption = content.caption || "";
+      break;
+
+    case "audio":
+      if (!content?.buffer) return res.status(400).send({ msg: "Áudio inválido" });
+      message.audio = content.buffer;
+      message.ptt = content.ptt ?? true;
+      break;
+
+    case "video":
+      if (!content?.buffer) return res.status(400).send({ msg: "Vídeo inválido" });
+      message.video = content.buffer;
+      message.caption = content.caption || "";
+      break;
+
+    case "document":
+      if (!content?.buffer) return res.status(400).send({ msg: "Documento inválido" });
+      message.document = content.buffer;
+      message.mimetype = content.mimetype;
+      message.fileName = content.filename;
+      break;
+
+    default:
+      return res.status(400).send({ msg: "Tipo inválido" });
+  }
+
+  try {
+    await session.sock.sendMessage(jid, message, options);
+    return res.send({ success: true });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({ msg: "Erro ao enviar mensagem" });
+  }
 };
 
 messageController.react = async (req, res) => {
@@ -41,19 +118,20 @@ messageController.react = async (req, res) => {
 };
 
 messageController.receipt = async ({ data }) => {
-  // if (!data.key.fromMe) { return; }
-  if (!data.message.extendedTextMessage && !data.message.conversation) { return; }
+  // REMOVIDO: impedía receber imagem/áudio
+  // if (!data.message.extendedTextMessage && !data.message.conversation) { return; }
 
   const isGroup =
     data.key.remoteJid?.endsWith("@g.us") ||
     data.key.remoteJidAlt?.endsWith("@g.us");
-  if (isGroup) { return console.log('group message'); }
+  if (isGroup) return;
 
   const correctJid =
     (data.key.remoteJid?.endsWith("s.whatsapp.net") && data.key.remoteJid) ||
     (data.key.remoteJidAlt?.endsWith("s.whatsapp.net") && data.key.remoteJidAlt) ||
     null;
-  if (!correctJid) { return console.log('correctJid inválid'); }
+
+  if (!correctJid) return;
 
   let contact = (await Contact.findByJid(correctJid))[0] || null;
 
@@ -95,28 +173,148 @@ messageController.receipt = async ({ data }) => {
   message.datetime = data.messageTimestamp * 1000;
   message.raw = JSON.stringify(data);
 
-  let msg = data.message;
+  const msg = data.message;
+
+  //
+  // -------------------------
+  // 🟩 1. TEXTO
+  // -------------------------
+  if (msg.conversation) {
+    message.type = "text";
+    message.content = msg.conversation;
+  }
 
   if (msg.extendedTextMessage) {
     message.type = "text";
     message.content = msg.extendedTextMessage.text;
   }
 
-  if (msg.conversation) {
-    message.type = "text";
-    message.content = msg.conversation;
+  //
+  // -------------------------
+  // 🟩 2. IMAGEM
+  // -------------------------
+  if (msg.imageMessage) {
+    message.type = "image";
+
+    const filename = `image_${Date.now()}.jpg`;
+
+    // Caminho real no disco (para fs)
+    const absolutePath = getDownloadPath("image", filename);
+
+    // Baixar arquivo
+    const buffer = await downloadMediaMessage(
+      { message: data.message },
+      "buffer",
+      {}
+    );
+
+    // Salvar fisicamente
+    fs.writeFileSync(absolutePath, buffer);
+
+    // Caminho salvo no banco (usado pelo front)
+    message.content = getPublicPath("image", filename);
+    message.caption = msg.imageMessage.caption || null;
+  }
+
+  //
+  // -------------------------
+  // 🟩 3. ÁUDIO
+  // -------------------------
+  if (msg.audioMessage) {
+    message.type = "audio";
+
+    const ext = "ogg";
+    const filename = `audio_${Date.now()}.${ext}`;
+
+    const absolutePath = getDownloadPath("audio", filename);
+
+    const buffer = await downloadMediaMessage(
+      { message: data.message },
+      "buffer",
+      {}
+    );
+
+    fs.writeFileSync(absolutePath, buffer);
+
+    // 🔥 TRANSCRIÇÃO AUTOMÁTICA
+    try {
+      const transcript = await ChatGPTTranscription(absolutePath);
+
+      if (transcript) {
+        message.type = "text";
+        message.content = transcript;
+      } else {
+        message.type = "audio";
+        message.content = getPublicPath("audio", filename);
+      }
+
+    } catch (err) {
+      console.error("Erro ao transcrever:", err);
+    }
+  }
+
+  //
+  // -------------------------
+  // 🟩 4. VÍDEO
+  // -------------------------
+  if (msg.videoMessage) {
+    message.type = "video";
+
+    const filename = `video_${Date.now()}.mp4`;
+    const absolutePath = getDownloadPath("video", filename);
+
+    const buffer = await downloadMediaMessage(
+      { message: data.message },
+      "buffer",
+      {}
+    );
+
+    fs.writeFileSync(absolutePath, buffer);
+
+    message.content = getPublicPath("video", filename);
+    message.caption = msg.videoMessage.caption || null;
+  }
+
+  //
+  // -------------------------
+  // 🟩 5. DOCUMENTO (PDF, DOCX, XLSX, etc.)
+  // -------------------------
+  if (msg.documentMessage) {
+    message.type = "document";
+
+    // Pega o nome real do arquivo ou gera um
+    const original = msg.documentMessage.fileName || `file_${Date.now()}`;
+    const ext = path.extname(original) || ".bin";
+
+    const filename = `document_${Date.now()}${ext}`;
+    const absolutePath = getDownloadPath("document", filename);
+
+    const buffer = await downloadMediaMessage(
+      { message: data.message },
+      "buffer",
+      {}
+    );
+
+    fs.writeFileSync(absolutePath, buffer);
+
+    message.content = getPublicPath("document", filename);
+    message.filename = original;
   }
 
   try {
-    let message_create = await message.create();
-    if (message_create.err) { console.log(message_create.err); }
-    message.id = message_create.insertId;
+    let created = await message.create();
+    if (created.err) console.log(created.err);
+    message.id = created.insertId;
 
-    if (contact?.autochat == 1 && !data.key.fromMe && message.type == "text") {
+    if (contact?.autochat == 1 && !data.key.fromMe && message.type === "text") {
       let queue_contact = (await Queue.filter({
         strict_params: {
-          keys: ['contact_jid', 'status'],
-          values: [contact.jid, 'Pendente']
+          keys: ['contact_jid'],
+          values: [contact.jid]
+        },
+        in_params: {
+          keys: ['status'],
+          values: [[['Pendente', 'Processando']]]
         }
       }))[0];
 
@@ -133,7 +331,8 @@ messageController.receipt = async ({ data }) => {
       if (ws.readyState === 1) {
         ws.send(JSON.stringify({ data, message }));
       }
-    };
+    }
+
   } catch (error) {
     console.log(error);
   }

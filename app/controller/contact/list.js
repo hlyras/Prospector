@@ -4,6 +4,7 @@ const lib = require('jarmlib');
 const { createOrGetSession, getSession } = require('../../middleware/baileys/main');
 const { scrapeMapsFromUrl } = require("../../middleware/gmaps/main");
 const { enqueueMessage } = require("../../middleware/queue/main");
+const downloadProfilePicture = require("../../middleware/baileys/profile");
 
 const Contact = require("../../model/contact/main");
 const ContactList = require("../../model/contact/list");
@@ -156,6 +157,15 @@ contactListController.send = async (req, res) => {
     contact.flow_step = 0;
     contact.segment = contact_list_verify.segment;
     contact.seller_id = req.user.id;
+
+    const profilePicPath = await downloadProfilePicture(
+      session.sock,
+      contact_list_verify.jid
+    );
+
+    if (profilePicPath) {
+      contact.profile_picture = profilePicPath;
+    }
 
     let contact_create_response = await contact.create();
     if (contact_create_response.err) { return res.send({ msg: contact_create_response.err }); }

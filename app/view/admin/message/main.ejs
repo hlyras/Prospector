@@ -3,12 +3,18 @@
 
 <script>
   async function receivedMessage({ data, message }) {
+    const correctJid =
+      (data.key.remoteJid?.endsWith("s.whatsapp.net") && data.key.remoteJid) ||
+      (data.key.remoteJidAlt?.endsWith("s.whatsapp.net") && data.key.remoteJidAlt) ||
+      null;
+    if (!correctJid) { return; }
+
     let contact_box = document.getElementById("contact-box");
-    let contact_div = document.getElementById(`contact-${data.key.remoteJid}`);
+    let contact_div = document.getElementById(`contact-${correctJid}`);
 
     if (!contact_div) {
       let contact = (await API.response(Contact.filter, {
-        jid: data.key.remoteJid
+        jid: correctJid
       }))[0];
       if (!contact) return;
 
@@ -16,18 +22,18 @@
       contact_box.prepend(contact_div);
     }
 
-    if (currentChatContact == data.key.remoteJid) {
+    if (currentChatContact == correctJid) {
       let message_div = messageDiv(message);
       document.getElementById("message-box").append(message_div);
     }
 
     contact_box.prepend(contact_div);
 
-    let profile_picture = document.getElementById(`profile-picture-${data.key.remoteJid}`);
+    let profile_picture = document.getElementById(`profile-picture-${correctJid}`);
 
     if (data.profile_picture && profile_picture?.dataset.empty) {
       let response = await API.response(Contact.update, {
-        jid: data.key.remoteJid,
+        jid: correctJid,
         profile_picture: data.profile_picture
       }, profile_picture);
 
@@ -35,17 +41,17 @@
     } else {
       if ((data.profile_picture && profile_picture.src) && profile_picture.src != data.profile_picture) {
         let response = await API.response(Contact.update, {
-          jid: data.key.remoteJid,
+          jid: correctJid,
           profile_picture: data.profile_picture
         }, profile_picture);
       }
     }
 
-    let last_message_datetime = document.getElementById(`last-message-datetime-${data.key.remoteJid}`);
+    let last_message_datetime = document.getElementById(`last-message-datetime-${correctJid}`);
     last_message_datetime.innerHTML = "";
     last_message_datetime.innerHTML = lib.splitTextBy(lib.timestampToFulldate(message.datetime), " ")[1];
 
-    let last_message = document.getElementById(`last-message-${data.key.remoteJid}`);
+    let last_message = document.getElementById(`last-message-${correctJid}`);
     last_message.innerHTML = "";
 
     if (message.type == "text") {

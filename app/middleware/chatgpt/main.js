@@ -12,6 +12,15 @@ const ChatGPTAPI = async (message) => {
   return completion.choices[0].message.content;
 };
 
+async function ChatGPTTranscription(filePath) {
+  const transcription = await openai.audio.transcriptions.create({
+    file: fs.createReadStream(filePath),
+    model: "gpt-4o-transcribe",
+  });
+
+  return transcription.text;
+}
+
 const ChatGPTImage = {
   async generate(prompt, size = "1024x1024") {
     const result = await openai.images.generate({
@@ -43,4 +52,4 @@ const ChatGPTImage = {
   }
 };
 
-module.exports = { ChatGPTAPI, ChatGPTImage };
+module.exports = { ChatGPTAPI, ChatGPTTranscription, ChatGPTImage };
