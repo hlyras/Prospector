@@ -11,6 +11,7 @@ router.post('/update', lib.route.toHttps, Contact.update);
 router.post('/filter', lib.route.toHttps, Contact.filter);
 router.delete('/delete/:id', lib.route.toHttps, Contact.delete);
 
+ContactList.queue();
 router.post('/list/create', lib.route.toHttps, ContactList.create);
 router.post('/list/send', lib.route.toHttps, ContactList.send);
 router.post('/list/filter', lib.route.toHttps, ContactList.filter);

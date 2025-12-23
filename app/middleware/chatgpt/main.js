@@ -1,6 +1,6 @@
 const OpenAIApi = require("openai");
 const fs = require("fs");
-const axios = require("axios");
+const path = require("path");
 
 const openai = new OpenAIApi({
   apiKey: process.env.OPENAI_API_KEY,
@@ -21,35 +21,45 @@ async function ChatGPTTranscription(filePath) {
   return transcription.text;
 }
 
-const ChatGPTImage = {
-  async generate(prompt, size = "1024x1024") {
-    const result = await openai.images.generate({
-      model: "gpt-image-1",
-      prompt,
-      size
-    });
-    return result.data[0].url;
-  },
+async function ChatGPTTTS(text, voice = 'aria') {
+  try {
+    // Caminho físico da pasta /public/tts/
+    const ttsDir = path.join(process.cwd(), "public", "tts");
 
-  async edits(imagePath, prompt, size = "1024x1024") {
-    const result = await openai.images.edits({
-      model: "gpt-image-1",
-      image: fs.createReadStream(imagePath),
-      prompt,
-      size,
-    });
-    return result.data[0].url;
-  },
+    // Garante que a pasta exista
+    if (!fs.existsSync(ttsDir)) {
+      fs.mkdirSync(ttsDir, { recursive: true });
+    }
 
-  async variations(imagePath, variation_amount = 1, size = "1024x1024") {
-    const result = await openai.images.variations({
-      model: "gpt-image-1",
-      image: fs.createReadStream(imagePath),
-      variation_amount,
-      size,
+    // Nome do arquivo com timestamp
+    const filename = `tts_${Date.now()}.mp3`;
+
+    // Caminho físico do arquivo a ser salvo
+    const outputPath = path.join(ttsDir, filename);
+
+    // Gera o áudio
+    const response = await openai.audio.speech.create({
+      model: "gpt-4o-mini-tts",
+      voice,
+      input: `${text}`
     });
-    return result.data.map((img) => img.url);
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+    fs.writeFileSync(outputPath, buffer);
+
+    // Caminho público utilizado no browser
+    const publicPath = `/tts/${filename}`;
+
+    return publicPath;
+
+  } catch (err) {
+    console.error("Erro ao gerar TTS:", err);
+    return null;
   }
-};
+}
 
-module.exports = { ChatGPTAPI, ChatGPTTranscription, ChatGPTImage };
+module.exports = {
+  ChatGPTAPI,
+  ChatGPTTranscription,
+  ChatGPTTTS
+};

@@ -1,5 +1,7 @@
-<div id="user-filter-form" class="box">
-
+<div id="user-filter-form" class="box"></div>
+<div class="box b1 container padding-10">
+  <div id="connect_all" class="mobile-box btn-act radius-10 padding-10 pointer">Conectar todos</div>
+  <div id="disconnect_all" class="mobile-box btn-cancel radius-10 padding-10 pointer">Desconectar todos</div>
 </div>
 
 <div id="user_filter_box" class="box b2-3 container">
@@ -9,9 +11,19 @@
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
     userFilter();
+
+    connect_all.addEventListener("click", () => {
+      connectAll();
+    });
+
+    disconnect_all.addEventListener("click", () => {
+      disconnectAll();
+    });
   });
 
   async function userFilter() {
+    user_filter_box.innerHTML = "";
+
     let users = await API.response(User.filter, {});
 
     for (let i in users) {
@@ -23,11 +35,16 @@
       user_filter_box.append(user_div);
 
       let user_name = lib.element.create("div", {
-        class: "mobile-box b5-6 center padding-10"
+        class: "mobile-box b4-9 center padding-10"
       }, user.name);
       user_div.append(user_name);
 
-      let session_btn = lib.element.icon("b6", "20", "images/icon/refresh.png");
+      let user_phone = lib.element.create("div", {
+        class: "mobile-box b4-9 center padding-10"
+      }, user.phone.split("@")[0] || "Sem número");
+      user_div.append(user_phone);
+
+      let session_btn = lib.element.icon("b9", "20", "images/icon/refresh.png");
       user_div.append(session_btn);
 
       let status = lib.element.create("div", {
@@ -49,12 +66,11 @@
       let disconnect_btn = lib.element.create("div", {
         class: "box b1 btn-cancel padding-5 radius-5 center",
         style: "display: none;"
-      }, "Disconectar");
+      }, "Disconnectar");
       user_div.append(disconnect_btn);
 
       session_btn.addEventListener("click", async () => {
         let user_session_response = await API.response(User.session, { user_id: user.id });
-        console.log(user_session_response);
 
         if (user_session_response.connected) {
           status.innerHTML = "Online";
@@ -69,7 +85,6 @@
 
       connect_btn.addEventListener("click", async () => {
         let user_connect_response = await API.response(User.connect, { user_id: user.id });
-        console.log(user_connect_response);
 
         if (user_connect_response.connected) {
           status.innerHTML = "Online";
@@ -89,7 +104,6 @@
 
       disconnect_btn.addEventListener("click", async () => {
         let user_disconnect_response = await API.response(User.disconnect, { user_id: user.id });
-        console.log(user_disconnect_response);
 
         if (!user_disconnect_response.connected) {
           status.innerHTML = "Offline";
@@ -97,6 +111,30 @@
           lib.display(disconnect_btn, "none");
         }
       });
+
+      session_btn.click();
     };
+  };
+
+  async function connectAll() {
+    let users = await API.response(User.filter, {});
+
+    for (let i in users) {
+      let user = users[i];
+      let user_connect_response = await API.response(User.connect, { user_id: user.id });
+    };
+
+    userFilter();
+  };
+
+  async function disconnectAll() {
+    let users = await API.response(User.filter, {});
+
+    for (let i in users) {
+      let user = users[i];
+      let user_disconnect_response = await API.response(User.disconnect, { user_id: user.id });
+    };
+
+    userFilter();
   };
 </script>

@@ -193,6 +193,7 @@ contactController.update = async (req, res) => {
   contact.business = req.body.business;
   contact.name = req.body.name;
   contact.autochat = req.body.autochat;
+  contact.flow_step = req.body.flow_step;
   contact.profile_picture = req.body.profile_picture;
   contact.notify = req.body.notify;
 

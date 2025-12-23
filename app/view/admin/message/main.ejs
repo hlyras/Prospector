@@ -3,11 +3,10 @@
 
 <script>
   async function receivedMessage({ data, message }) {
-    const correctJid =
-      (data.key.remoteJid?.endsWith("s.whatsapp.net") && data.key.remoteJid) ||
-      (data.key.remoteJidAlt?.endsWith("s.whatsapp.net") && data.key.remoteJidAlt) ||
-      null;
+    const correctJid = message.jid || null;
+    console.log('passou', correctJid);
     if (!correctJid) { return; }
+
 
     let contact_box = document.getElementById("contact-box");
     let contact_div = document.getElementById(`contact-${correctJid}`);

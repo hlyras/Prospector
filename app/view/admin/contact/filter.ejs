@@ -1,8 +1,8 @@
 <div id="contact-filter-icon" class="container b1 h-center">
   <select id="contact-filter-period"
     class="box b1 center lucida-grande bold em08 border shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
-    <option value="today" selected>Hoje</option>
-    <option value="">Todos os dias</option>
+    <option value="" selected>Todos os dias</option>
+    <option value="today">Hoje</option>
     <option value="period">Período</option>
   </select>
 
@@ -57,17 +57,17 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
-    contact_period_start.value = lib.convertDate(lib.genDate());
-    contact_period_end.value = lib.convertDate(lib.genDate());
+    // contact_period_start.value = lib.convertDate(lib.genDate());
+    // contact_period_end.value = lib.convertDate(lib.genDate());
 
-    contact_period_end.value
-      ? lib.dateToTimestamp(lib.convertDate(lib.genDate())) + (lib.timestampDay() - 1)
-      : null;
+    // contact_period_end.value
+    //   ? lib.dateToTimestamp(lib.convertDate(lib.genDate())) + (lib.timestampDay() - 1)
+    //   : null;
 
     let contact_options = {
-      period_start: lib.dateToTimestamp(contact_period_start.value),
-      period_end: contact_period_end.value ?
-        lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null
+      // period_start: lib.dateToTimestamp(contact_period_start.value),
+      // period_end: contact_period_end.value ?
+      //   lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null
     };
 
     let contacts = await API.response(Contact.filter, contact_options);

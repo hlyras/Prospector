@@ -30,7 +30,7 @@ const ContactMap = function () {
   };
 };
 
-ContactMap.filter = ({ props, inners, lefts, period, params, strict_params, order_params }) => {
+ContactMap.filter = ({ props, inners, lefts, period, params, strict_params, in_params, order_params }) => {
   let { query, values } = new lib.Query().select()
     .props(props)
     .table("cms_prospector.contact_map")
@@ -39,6 +39,7 @@ ContactMap.filter = ({ props, inners, lefts, period, params, strict_params, orde
     .period(period)
     .params(params)
     .strictParams(strict_params)
+    .inParams(in_params)
     .order(order_params).build();
   return db(query, values);
 };

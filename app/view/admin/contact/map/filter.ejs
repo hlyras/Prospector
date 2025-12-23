@@ -8,6 +8,8 @@
     });
     console.log(contact_maps);
 
+    contact_maps = lib.sort(contact_maps, "datetime", "desc");
+
     contact_maps.forEach(cm => {
       let contact_map_div = lib.element.create("div", {
         class: "box a2-3 container border-lg-st shadow padding-10 margin-top-5"
@@ -27,12 +29,16 @@
       }, cm.cidade));
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box a3-10 center"
+        class: "mobile-box b2-5 center"
       }, cm.bairro));
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box a5 center"
+        class: "mobile-box a2 center wrap"
       }, cm.segment));
+
+      contact_map_div.append(lib.element.create("div", {
+        class: "mobile-box a2 center wrap"
+      }, cm.status));
     });
   };
 </script>

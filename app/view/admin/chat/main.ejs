@@ -64,7 +64,7 @@
     identity_box.innerHTML = "";
 
     let identity_info_box = lib.element.create("div", {
-      class: "mobile-box a2-3 container",
+      class: "mobile-box a2 container",
       style: "align-self: center;"
     });
     identity_box.append(identity_info_box);
@@ -90,7 +90,7 @@
     }, lib.splitTextBy(contact.jid, "@")[0]));
 
     let autochat_status = lib.element.create("select", {
-      class: "mobile-box b3 padding-5 border-st radius-3 shadow-lg-st v-center"
+      class: "mobile-box b4 padding-5 border-st radius-3 shadow-lg-st v-center"
     });
     identity_box.append(autochat_status);
 
@@ -98,6 +98,20 @@
     autochat_status.append(lib.element.create("option", { value: 0 }, "Desligado"));
 
     autochat_status.value = contact.autochat;
+
+    let contact_step = lib.element.create("select", {
+      class: "mobile-box b4 padding-5 border-st radius-3 shadow-lg-st v-center"
+    });
+    identity_box.append(contact_step);
+
+    contact_step.append(lib.element.create("option", { value: 0 }, "0"));
+    contact_step.append(lib.element.create("option", { value: 1 }, "1"));
+    contact_step.append(lib.element.create("option", { value: 2 }, "2"));
+    contact_step.append(lib.element.create("option", { value: 3 }, "3"));
+    contact_step.append(lib.element.create("option", { value: 4 }, "4"));
+    contact_step.append(lib.element.create("option", { value: 5 }, "5"));
+
+    contact_step.value = contact.flow_step;
 
     // Message box
     message_box.innerHTML = "";
@@ -115,6 +129,13 @@
       let response = await API.response(Contact.update, {
         jid: contact.jid,
         autochat: autochat_status.value
+      });
+    });
+
+    contact_step.addEventListener("change", async () => {
+      let response = await API.response(Contact.update, {
+        jid: contact.jid,
+        flow_step: contact_step.value
       });
     });
   };

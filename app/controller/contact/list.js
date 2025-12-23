@@ -12,102 +12,226 @@ const ContactMap = require("../../model/contact/map");
 
 const contactListController = {};
 
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+};
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+// contactListController.create = async (req, res) => {
+//   if (req.user?.id != 1) {
+//     return res.send({ msg: "Você não tem permissão para executar essa ação." });
+//   }
+
+//   let contact_map = new ContactMap();
+//   contact_map.datetime = lib.date.timestamp.generate();
+//   contact_map.cidade = req.body.cidade;
+//   contact_map.bairro = req.body.bairro;
+//   contact_map.uf = req.body.uf;
+//   contact_map.segment = req.body.segment;
+
+//   const session = getSession(req.user.id);
+//   if (!session || !session.sock || !session.connected) {
+//     console.log('create');
+//     return res.send({ msg: "Sessão WhatsApp não conectada!" });
+//   }
+
+//   try {
+//     let contact_map_create = await contact_map.create();
+//     if (contact_map_create.err) {
+//       return res.send({ msg: contact_map_create.err });
+//     }
+
+//     contact_map.id = contact_map_create.insertId;
+
+//     let contacts = await scrapeMapsFromUrl(req.body.url, 200, async (c) => {
+//       c.telefone = c.telefone?.replace(/\D/g, "");
+
+//       let session = getSession(req.user.id);
+
+//       // -------------------------------
+//       // 1. Verificar se a sessão caiu
+//       // -------------------------------
+//       if (!session || !session.sock || !session.connected) {
+//         console.log("Sessão caiu, tentando reconectar...");
+
+//         // Tentar recriar/recuperar sessão
+//         session = await createOrGetSession(req.user.id);
+
+//         // Aguardar reconexão usando a mesma lógica do seu controller
+//         let status = { connected: false };
+
+//         if (typeof waitForSessionState === "function") {
+//           status = await waitForSessionState(session, 15000);
+//         }
+
+//         if (!status.connected) {
+//           console.log("Falha ao reconectar. Ignorando número:", c.telefone);
+//           return;
+//         }
+
+//         console.log("Sessão reconectada com sucesso!");
+//       }
+
+//       const [wa_contact] = await session.sock.onWhatsApp(`55${c.telefone}@s.whatsapp.net`);
+//       if (!wa_contact?.exists) {
+//         return console.log({ msg: `Esse número não existe! ${c.nome}` });
+//       }
+
+//       if ((await Contact.findByJid(wa_contact.jid)).length) {
+//         return console.log({ msg: `Este contato já foi cadastrado! ${c.nome}` });
+//       }
+
+//       if ((await ContactList.findByJid(wa_contact.jid)).length) {
+//         return console.log({ msg: `Esse número já está listado! ${c.nome}` });
+//       }
+
+//       if (!c.nome) {
+//         return console.log({ msg: "Informe o nome da empresa ou do contato" });
+//       }
+
+//       let contact_list = new ContactList();
+//       contact_list.map_id = contact_map.id;
+//       contact_list.business = c.nome;
+//       contact_list.jid = wa_contact.jid;
+//       contact_list.datetime = lib.date.timestamp.generate();
+//       contact_list.status = "Pendente";
+//       contact_list.cidade = req.body.cidade;
+//       contact_list.bairro = req.body.bairro;
+//       contact_list.uf = req.body.uf;
+//       contact_list.segment = req.body.segment;
+//       contact_list.seller_id = req.body.seller_id;
+
+//       let contact_create_response = await contact_list.create();
+//       if (contact_create_response.err) {
+//         return res.status(500).send({
+//           msg: contact_create_response.err
+//         });
+//       }
+//     });
+
+//     res.status(201).send({ done: "Concluído com sucesso!", contacts });
+//   } catch (error) {
+//     console.error("Erro durante a prospecção:", error);
+//     res.status(500).send({ msg: "Erro durante a prospecção.", error });
+//   }
+// };
+
 contactListController.create = async (req, res) => {
   if (req.user?.id != 1) {
     return res.send({ msg: "Você não tem permissão para executar essa ação." });
   }
 
-  let contact_map = new ContactMap();
-  contact_map.datetime = lib.date.timestamp.generate();
-  contact_map.cidade = req.body.cidade;
-  contact_map.bairro = req.body.bairro;
-  contact_map.uf = req.body.uf;
-  contact_map.segment = req.body.segment;
-
-  const session = getSession(req.user.id);
-  if (!session || !session.sock || !session.connected) {
-    console.log('create');
-    return res.send({ msg: "Sessão WhatsApp não conectada!" });
-  }
-
   try {
-    let contact_map_create = await contact_map.create();
-    if (contact_map_create.err) {
-      return res.send({ msg: contact_map_create.err });
+    const contact_map = new ContactMap();
+    contact_map.datetime = lib.date.timestamp.generate();
+    contact_map.cidade = req.body.cidade;
+    contact_map.bairro = req.body.bairro;
+    contact_map.uf = req.body.uf;
+    contact_map.segment = req.body.segment;
+    contact_map.url = req.body.url;
+    contact_map.seller_id = req.body.seller_id;
+    contact_map.status = "Pendente";
+
+    const create = await contact_map.create();
+    if (create.err) {
+      return res.status(500).send({ msg: create.err });
     }
 
-    contact_map.id = contact_map_create.insertId;
-
-    let contacts = await scrapeMapsFromUrl(req.body.url, 200, async (c) => {
-      c.telefone = c.telefone?.replace(/\D/g, "");
-
-      let session = getSession(req.user.id);
-
-      // -------------------------------
-      // 1. Verificar se a sessão caiu
-      // -------------------------------
-      if (!session || !session.sock || !session.connected) {
-        console.log("Sessão caiu, tentando reconectar...");
-
-        // Tentar recriar/recuperar sessão
-        session = await createOrGetSession(req.user.id);
-
-        // Aguardar reconexão usando a mesma lógica do seu controller
-        let status = { connected: false };
-
-        if (typeof waitForSessionState === "function") {
-          status = await waitForSessionState(session, 15000);
-        }
-
-        if (!status.connected) {
-          console.log("Falha ao reconectar. Ignorando número:", c.telefone);
-          return;
-        }
-
-        console.log("Sessão reconectada com sucesso!");
-      }
-
-      const [wa_contact] = await session.sock.onWhatsApp(`55${c.telefone}@s.whatsapp.net`);
-      if (!wa_contact?.exists) {
-        return console.log({ msg: `Esse número não existe! ${c.nome}` });
-      }
-
-      if ((await Contact.findByJid(wa_contact.jid)).length) {
-        return console.log({ msg: `Este contato já foi cadastrado! ${c.nome}` });
-      }
-
-      if ((await ContactList.findByJid(wa_contact.jid)).length) {
-        return console.log({ msg: `Esse número já está listado! ${c.nome}` });
-      }
-
-      if (!c.nome) {
-        return console.log({ msg: "Informe o nome da empresa ou do contato" });
-      }
-
-      let contact_list = new ContactList();
-      contact_list.map_id = contact_map.id;
-      contact_list.business = c.nome;
-      contact_list.jid = wa_contact.jid;
-      contact_list.datetime = lib.date.timestamp.generate();
-      contact_list.status = "Pendente";
-      contact_list.cidade = req.body.cidade;
-      contact_list.bairro = req.body.bairro;
-      contact_list.uf = req.body.uf;
-      contact_list.segment = req.body.segment;
-      contact_list.seller_id = req.body.seller_id;
-
-      let contact_create_response = await contact_list.create();
-      if (contact_create_response.err) {
-        return res.status(500).send({
-          msg: contact_create_response.err
-        });
-      }
+    return res.status(201).send({
+      done: "Mapa cadastrado e aguardando processamento.",
+      map_id: create.insertId
     });
 
-    res.status(201).send({ done: "Concluído com sucesso!", contacts });
-  } catch (error) {
-    console.error("Erro durante a prospecção:", error);
-    res.status(500).send({ msg: "Erro durante a prospecção.", error });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ msg: "Erro ao criar mapa." });
+  }
+};
+
+contactListController.queue = async () => {
+  while (true) {
+    try {
+      const maps = await ContactMap.filter({
+        in_params: {
+          keys: ["status"],
+          values: [[["Pendente", "Processando"]]]
+        },
+        order_params: [["contact_map.datetime", "asc"]],
+        limit: 1
+      });
+
+      console.log(maps);
+
+      const map = maps?.[0];
+      if (!map) {
+        await sleep(randInt(2000, 5000));
+        continue;
+      }
+
+      const session = getSession(map.user_id || map.seller_id);
+      if (!session || !session.sock || !session.connected) {
+        console.log("Sessão não conectada, aguardando...");
+        await sleep(randInt(10000, 20000));
+        continue;
+      }
+
+      // Marca como processando (lock simples)
+      if (map.status != "Processando") {
+        const mapProc = new ContactMap();
+        mapProc.id = map.id;
+        mapProc.status = "Processando";
+        await mapProc.update();
+      }
+
+      console.log(`Processando ContactMap ${map.id}`);
+
+      await scrapeMapsFromUrl(map.url, 200, async (c) => {
+        c.telefone = c.telefone?.replace(/\D/g, "");
+        if (!c.telefone || !c.nome) return;
+
+        const [wa_contact] =
+          await session.sock.onWhatsApp(`55${c.telefone}@s.whatsapp.net`);
+
+        if (!wa_contact?.exists) return;
+
+        if ((await Contact.findByJid(wa_contact.jid)).length) return;
+        if ((await ContactList.findByJid(wa_contact.jid)).length) return;
+
+        const contact_list = new ContactList();
+        contact_list.map_id = map.id;
+        contact_list.business = c.nome;
+        contact_list.jid = wa_contact.jid;
+        contact_list.datetime = lib.date.timestamp.generate();
+        contact_list.status = "Pendente";
+        contact_list.cidade = map.cidade;
+        contact_list.bairro = map.bairro;
+        contact_list.uf = map.uf;
+        contact_list.segment = map.segment;
+        contact_list.seller_id = map.seller_id;
+
+        await contact_list.create();
+
+        // delay humano
+        await sleep(randInt(1200, 4500));
+      });
+
+      // Finaliza o mapa
+      const mapDone = new ContactMap();
+      mapDone.id = map.id;
+      mapDone.status = "Concluído";
+      await mapDone.update();
+
+      console.log(`ContactMap ${map.id} concluído`);
+
+      await sleep(randInt(2000, 6000));
+
+    } catch (err) {
+      console.error("Erro no worker de ContactMap:", err);
+      await sleep(randInt(3000, 8000));
+    }
   }
 };
 

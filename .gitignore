@@ -3,3 +3,4 @@ node_modules
 dump
 app/middleware/baileys/auth
 public/download
+public/tts

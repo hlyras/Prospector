@@ -3,7 +3,7 @@
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
     contact_map_btn.addEventListener("click", async () => {
-      lib.popup(await contactMapInterface(), null, true);
+      lib.popup(await contactMapInterface(), null, false);
 
       let contact_map_options = {}
       contactMapFilter(contact_map_options);
@@ -13,7 +13,7 @@
   async function contactMapInterface() {
     let contact_map_container = lib.element.create("div", {
       id: "contact_map_container",
-      class: "box a1 container h-center"
+      class: "container a1 padding-10 h-center"
     });
 
     return contact_map_container;

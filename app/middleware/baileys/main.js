@@ -55,7 +55,7 @@ async function startSocket(userId, state, saveCreds, version) {
 
     // Modo ghost seguro
     syncFullHistory: false,
-    shouldSyncHistoryMessage: () => false,
+    shouldSyncHistoryMessage: () => true,
     generateHighQualityLinkPreview: false,
     markOnlineOnConnect: false,
 
@@ -94,7 +94,6 @@ async function startSocket(userId, state, saveCreds, version) {
      🔔 EVENTOS DE CONEXÃO
   ----------------------------------------------*/
   sock.ev.process(async (events) => {
-
     if (events['creds.update']) await saveCreds();
 
     if (events['connection.update']) {
@@ -147,23 +146,38 @@ async function startSocket(userId, state, saveCreds, version) {
       }
     }
 
-    if (events['messages.upsert']) {
-      const { messages } = events['messages.upsert'];
+    // if (events['messages.upsert']) {
+    //   const { messages } = events['messages.upsert'];
 
-      for (const msg of messages) {
-        if (!msg.message) continue;
+    //   console.log('messages', messages);
 
-        waEmitter.emit('received-message', {
-          userId,
-          data: proto.WebMessageInfo.toObject(msg)
-        });
-      }
+    //   for (const msg of messages) {
+    //     if (!msg.message) continue;
+
+    //     waEmitter.emit('received-message', {
+    //       userId,
+    //       data: proto.WebMessageInfo.toObject(msg)
+    //     });
+    //   }
+    // }
+  });
+
+  sock.ev.on('messages.upsert', ({ messages, type }) => {
+    if (!['notify', 'append', 'history'].includes(type)) return;
+
+    for (const msg of messages) {
+      if (!msg.message) continue;
+      if (msg.key.remoteJid === 'status@broadcast') continue;
+
+      waEmitter.emit('received-message', {
+        userId,
+        data: proto.WebMessageInfo.create(msg)
+      });
     }
   });
 
   return session;
 }
-
 
 /* -----------------------------------------------------------
    🔄 RECONEXÃO AUTOMÁTICA

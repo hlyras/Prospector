@@ -123,5 +123,6 @@ router.use("/user", require("./user"));
 router.use("/contact", require("./contact"));
 router.use("/message", require("./message"));
 router.use("/customer", require("./customer"));
+router.use("/speech", require("./speech"));
 
 module.exports = router;

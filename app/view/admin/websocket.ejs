@@ -14,6 +14,9 @@
       socket.onmessage = (event) => {
         const { data, message } = JSON.parse(event.data);
 
+        console.log('data', data);
+        console.log('message', message);
+
         if (data.notify_alert) {
           if (document.getElementById(`contact-${data.jid}`)) {
             lib.display(`contact-${data.jid}-notify`, "");
@@ -30,11 +33,11 @@
           return;
         }
 
-        if (!data.key.remoteJid) {
+        if (!message.jid) {
           return;
         }
 
-        if (lib.splitTextBy(data.key.remoteJid)[0] == "status") {
+        if (lib.splitTextBy(message.jid)[0] == "status") {
           return;
         }
 

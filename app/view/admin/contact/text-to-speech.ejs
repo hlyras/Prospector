@@ -1,0 +1,120 @@
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    text_to_speech.addEventListener("click", async () => {
+      lib.popup(await textToSpeechInterface(), null, true);
+    });
+  });
+
+  async function textToSpeechInterface() {
+    let text_to_speech_interface = lib.element.create("div", {
+      class: "box a1 container h-center"
+    });
+
+    let tts_form = lib.element.create("div", {
+      class: "box b1 container h-center"
+    });
+    text_to_speech_interface.append(tts_form);
+
+    let text_textarea = lib.element.create("textarea", {
+      class: "box a2-3 border radius-3 padding-10 margin-top-10"
+    });
+    tts_form.append(text_textarea);
+
+    let voice_select = lib.element.create("select", {
+      class: "box a2-3 border radius-3 padding-10 margin-top-10"
+    });
+    tts_form.append(voice_select);
+
+    const voices = [
+      'alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer',
+      'coral', 'verse', 'ballad', 'ash', 'sage', 'marin', 'cedar'
+    ];
+
+    voices.forEach(voice => {
+      voice_select.append(
+        lib.element.create("option", {
+          value: voice
+        }, voice.charAt(0).toUpperCase() + voice.slice(1))
+      );
+    });
+
+    let text_to_speech_submit = lib.element.create("button", {
+      class: "box a2-3 btn-act lucida-grande bold noborder radius-3 padding-10 margin-top-10"
+    }, "Gerar áudio");
+    tts_form.append(text_to_speech_submit);
+
+    let tts_box = lib.element.create("div", {
+      class: "box b1 container h-center"
+    });
+    text_to_speech_interface.append(tts_box);
+
+    let speechs = await API.response(Speech.filter, {});
+
+    speechs = lib.sort(speechs, "id", "desc");
+
+    speechs.forEach(async s => {
+      let speech_div = await speechDiv(s);
+      tts_box.append(speech_div);
+    });
+
+    text_to_speech_submit.addEventListener("click", () => {
+      if (!text_textarea.value) { return; }
+
+      lib.confirm("Deseja gerar o áudio?", async r => {
+        if (!r) { return; }
+
+        let speech = await API.response(Speech.create, {
+          text: text_textarea.value,
+          voice: voice_select.value
+        });
+        if (!speech) { return; }
+
+        let speech_div = await speechDiv(speech);
+        tts_box.prepend(speech_div);
+      });
+    });
+
+    return text_to_speech_interface;
+  };
+
+  async function speechDiv(speech) {
+    let speech_div = lib.element.create("div", {
+      class: "box b2-3 container border radius-3 padding-10 margin-top-10"
+    });
+
+    speech_div.append(lib.element.create("div", {
+      class: "mobile-box b2-3 center"
+    }, speech.content));
+
+    speech_div.append(lib.element.create("div", {
+      class: "mobile-box b3 center"
+    }, speech.url));
+
+    let audio_element = lib.element.create("audio", {
+      class: "mobile-box b4-9 margin-top-10",
+      controls: true,
+      src: speech.url
+    });
+    speech_div.append(audio_element);
+
+    speech_div.append(lib.element.create("div", {
+      class: "mobile-box b4-9 center margin-top-10"
+    }, speech.voice));
+
+    let delete_icon = lib.element.icon("b9", "20", "/images/icon/trash.png");
+    speech_div.append(delete_icon);
+
+    delete_icon.addEventListener("click", async () => {
+      lib.confirm("Confirmar exclusão?", async r => {
+        if (!r) { return; }
+
+        let response = await API.response(Speech.delete, speech.id);
+        if (!response) { return; }
+
+        speech_div.remove();
+      });
+    });
+
+    return speech_div;
+  };
+</script>
