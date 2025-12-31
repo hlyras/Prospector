@@ -20,105 +20,6 @@ function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-// contactListController.create = async (req, res) => {
-//   if (req.user?.id != 1) {
-//     return res.send({ msg: "Você não tem permissão para executar essa ação." });
-//   }
-
-//   let contact_map = new ContactMap();
-//   contact_map.datetime = lib.date.timestamp.generate();
-//   contact_map.cidade = req.body.cidade;
-//   contact_map.bairro = req.body.bairro;
-//   contact_map.uf = req.body.uf;
-//   contact_map.segment = req.body.segment;
-
-//   const session = getSession(req.user.id);
-//   if (!session || !session.sock || !session.connected) {
-//     console.log('create');
-//     return res.send({ msg: "Sessão WhatsApp não conectada!" });
-//   }
-
-//   try {
-//     let contact_map_create = await contact_map.create();
-//     if (contact_map_create.err) {
-//       return res.send({ msg: contact_map_create.err });
-//     }
-
-//     contact_map.id = contact_map_create.insertId;
-
-//     let contacts = await scrapeMapsFromUrl(req.body.url, 200, async (c) => {
-//       c.telefone = c.telefone?.replace(/\D/g, "");
-
-//       let session = getSession(req.user.id);
-
-//       // -------------------------------
-//       // 1. Verificar se a sessão caiu
-//       // -------------------------------
-//       if (!session || !session.sock || !session.connected) {
-//         console.log("Sessão caiu, tentando reconectar...");
-
-//         // Tentar recriar/recuperar sessão
-//         session = await createOrGetSession(req.user.id);
-
-//         // Aguardar reconexão usando a mesma lógica do seu controller
-//         let status = { connected: false };
-
-//         if (typeof waitForSessionState === "function") {
-//           status = await waitForSessionState(session, 15000);
-//         }
-
-//         if (!status.connected) {
-//           console.log("Falha ao reconectar. Ignorando número:", c.telefone);
-//           return;
-//         }
-
-//         console.log("Sessão reconectada com sucesso!");
-//       }
-
-//       const [wa_contact] = await session.sock.onWhatsApp(`55${c.telefone}@s.whatsapp.net`);
-//       if (!wa_contact?.exists) {
-//         return console.log({ msg: `Esse número não existe! ${c.nome}` });
-//       }
-
-//       if ((await Contact.findByJid(wa_contact.jid)).length) {
-//         return console.log({ msg: `Este contato já foi cadastrado! ${c.nome}` });
-//       }
-
-//       if ((await ContactList.findByJid(wa_contact.jid)).length) {
-//         return console.log({ msg: `Esse número já está listado! ${c.nome}` });
-//       }
-
-//       if (!c.nome) {
-//         return console.log({ msg: "Informe o nome da empresa ou do contato" });
-//       }
-
-//       let contact_list = new ContactList();
-//       contact_list.map_id = contact_map.id;
-//       contact_list.business = c.nome;
-//       contact_list.jid = wa_contact.jid;
-//       contact_list.datetime = lib.date.timestamp.generate();
-//       contact_list.status = "Pendente";
-//       contact_list.cidade = req.body.cidade;
-//       contact_list.bairro = req.body.bairro;
-//       contact_list.uf = req.body.uf;
-//       contact_list.segment = req.body.segment;
-//       contact_list.seller_id = req.body.seller_id;
-
-//       let contact_create_response = await contact_list.create();
-//       if (contact_create_response.err) {
-//         return res.status(500).send({
-//           msg: contact_create_response.err
-//         });
-//       }
-//     });
-
-//     res.status(201).send({ done: "Concluído com sucesso!", contacts });
-//   } catch (error) {
-//     console.error("Erro durante a prospecção:", error);
-//     res.status(500).send({ msg: "Erro durante a prospecção.", error });
-//   }
-// };
-
 contactListController.create = async (req, res) => {
   if (req.user?.id != 1) {
     return res.send({ msg: "Você não tem permissão para executar essa ação." });
@@ -163,8 +64,6 @@ contactListController.queue = async () => {
         limit: 1
       });
 
-      console.log(maps);
-
       const map = maps?.[0];
       if (!map) {
         await sleep(randInt(2000, 5000));
@@ -178,81 +77,118 @@ contactListController.queue = async () => {
         continue;
       }
 
-      // Marca como processando (lock simples)
-      if (map.status != "Processando") {
-        const mapProc = new ContactMap();
-        mapProc.id = map.id;
-        mapProc.status = "Processando";
-        await mapProc.update();
+      // 🔒 lock simples
+      if (map.status !== "Processando") {
+        const lock = new ContactMap();
+        lock.id = map.id;
+        lock.status = "Processando";
+        await lock.update();
       }
 
-      console.log(`Processando ContactMap ${map.id}`);
+      console.log(`🚀 Processando ContactMap ${map.id}`);
 
-      await scrapeMapsFromUrl(map.url, 200, async (c) => {
-        c.telefone = c.telefone?.replace(/\D/g, "");
-        if (!c.telefone || !c.nome) return;
+      const startIndex = map.last_index || 0;
 
-        const [wa_contact] =
-          await session.sock.onWhatsApp(`55${c.telefone}@s.whatsapp.net`);
+      await scrapeMapsFromUrl({
+        url: map.url,
+        limit: 200,
+        startIndex,
 
-        if (!wa_contact?.exists) return;
+        // =========================
+        // PROGRESSO INICIAL
+        // =========================
+        onProgress: async ({ totalEncontrado }) => {
+          const m = new ContactMap();
+          m.id = map.id;
+          m.found = totalEncontrado;
+          await m.update();
 
-        if ((await Contact.findByJid(wa_contact.jid)).length) return;
-        if ((await ContactList.findByJid(wa_contact.jid)).length) return;
+          console.log(`🔎 ${totalEncontrado} resultados encontrados`);
+        },
 
-        const contact_list = new ContactList();
-        contact_list.map_id = map.id;
-        contact_list.business = c.nome;
-        contact_list.jid = wa_contact.jid;
-        contact_list.datetime = lib.date.timestamp.generate();
-        contact_list.status = "Pendente";
-        contact_list.cidade = map.cidade;
-        contact_list.bairro = map.bairro;
-        contact_list.uf = map.uf;
-        contact_list.segment = map.segment;
-        contact_list.seller_id = map.seller_id;
+        // =========================
+        // PROCESSAMENTO STREAM
+        // =========================
+        onFound: async (c, index) => {
+          try {
+            // ✅ checkpoint REAL
+            const checkpoint = new ContactMap();
+            checkpoint.id = map.id;
+            checkpoint.last_index = index + 1;
+            await checkpoint.update();
 
-        await contact_list.create();
+            c.telefone = c.telefone?.replace(/\D/g, "");
+            if (!c.telefone || !c.nome) return;
 
-        // delay humano
-        await sleep(randInt(1200, 4500));
+            const [wa_contact] =
+              await session.sock.onWhatsApp(`55${c.telefone}@s.whatsapp.net`);
+
+            if (!wa_contact?.exists) return;
+
+            if ((await Contact.findByJid(wa_contact.jid)).length) {
+              console.log(`📛 [${index}] já contatado: ${c.nome}`);
+              return;
+            }
+
+            if ((await ContactList.findByJid(wa_contact.jid)).length) {
+              console.log(`📛 [${index}] já contatado: ${c.nome}`);
+              return;
+            }
+
+            const contact_list = new ContactList();
+            contact_list.map_id = map.id;
+            contact_list.business = c.nome;
+            contact_list.jid = wa_contact.jid;
+            contact_list.datetime = lib.date.timestamp.generate();
+            contact_list.status = "Pendente";
+            contact_list.cidade = map.cidade;
+            contact_list.bairro = map.bairro;
+            contact_list.uf = map.uf;
+            contact_list.segment = map.segment;
+            contact_list.seller_id = map.seller_id;
+
+            await contact_list.create();
+
+            console.log(`📥 [${index}] salvo: ${c.nome}`);
+
+            await sleep(randInt(1200, 4500));
+          } catch (err) {
+            console.error(`Erro no índice ${index}:`, err);
+          }
+        }
       });
 
-      // Finaliza o mapa
-      const mapDone = new ContactMap();
-      mapDone.id = map.id;
-      mapDone.status = "Concluído";
-      await mapDone.update();
+      // =========================
+      // FINALIZA MAPA
+      // =========================
+      const done = new ContactMap();
+      done.id = map.id;
+      done.status = "Concluído";
+      await done.update();
 
-      console.log(`ContactMap ${map.id} concluído`);
+      console.log(`✅ ContactMap ${map.id} concluído`);
 
       await sleep(randInt(2000, 6000));
 
     } catch (err) {
-      console.error("Erro no worker de ContactMap:", err);
+      console.error("❌ Erro no worker de ContactMap:", err);
       await sleep(randInt(3000, 8000));
     }
   }
 };
 
 contactListController.send = async (req, res) => {
-  try {
-    const session = getSession(req.user.id);
-    if (!session || !session.sock) {
-      console.log('send');
-      return res.status(400).send({ msg: "Sessão WhatsApp não conectada!" });
-    }
+  if (req.user.id != 1) {
+    return res.send({ msg: "Você não tem autorização para realizar essa ação" });
+  }
 
+  try {
     let contact_list_verify = (await ContactList.filter({
       strict_params: {
         keys: ['id'],
         values: [req.body.id]
       }
     }))[0];
-
-    if (contact_list_verify.seller_id != req.user.id) {
-      return res.send({ msg: "Você não tem autorização para realizar essa ação" });
-    }
 
     let contact_verify = (await Contact.filter({
       strict_params: {
@@ -263,6 +199,12 @@ contactListController.send = async (req, res) => {
 
     if (contact_verify) {
       return res.send({ msg: "Esse contato já foi contatado." });
+    }
+
+    const session = getSession(contact_list_verify.seller_id);
+    if (!session || !session.sock) {
+      console.log('send');
+      return res.status(400).send({ msg: "Sessão WhatsApp não conectada!" });
     }
 
     let contact_list = new ContactList();
@@ -280,7 +222,7 @@ contactListController.send = async (req, res) => {
     contact.created = 1;
     contact.flow_step = 0;
     contact.segment = contact_list_verify.segment;
-    contact.seller_id = req.user.id;
+    contact.seller_id = contact_list_verify.seller_id;
 
     const profilePicPath = await downloadProfilePicture(
       session.sock,
@@ -297,7 +239,7 @@ contactListController.send = async (req, res) => {
     enqueueMessage({
       contact_jid: contact.jid,
       priority: parseInt(contact.flow_step),
-      user_id: req.user.id
+      user_id: contact_list_verify.seller_id
     });
 
     return res.send({ done: "Mensagem incluída na fila" });
@@ -312,7 +254,8 @@ contactListController.filter = async (req, res) => {
     let contact_list_options = {
       props: [
         "contact_list.*",
-        "contact.flow_step"
+        "contact.flow_step",
+        "contact.status contact_status"
       ],
       lefts: [
         ["cms_prospector.contact", "contact_list.jid", "contact.jid"],
@@ -325,7 +268,8 @@ contactListController.filter = async (req, res) => {
     lib.Query.fillParam("contact_list.jid", req.body.jid, contact_list_options.strict_params);
     lib.Query.fillParam("contact_list.map_id", req.body.map_id, contact_list_options.strict_params);
     lib.Query.fillParam("contact_list.status", req.body.status, contact_list_options.strict_params);
-    lib.Query.fillParam("contact_list.seller_id", req.user.id, contact_list_options.strict_params);
+    lib.Query.fillParam("contact_list.contact_status", req.body.contact_status, contact_list_options.strict_params);
+    lib.Query.fillParam("contact_list.seller_id", req.body.seller_id, contact_list_options.strict_params);
     let contact_lists = await ContactList.filter(contact_list_options);
 
     res.send(contact_lists);

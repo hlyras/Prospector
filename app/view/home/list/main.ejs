@@ -1,22 +1,41 @@
 <div id="contact_map_box" class="box b2-3 container" style="display: none;"></div>
 <form id="contact_list_form" class="box b2-3 container">
-  <select name="status" class="mobile-box b4 lucida-grande bold border radius-3 padding-8 margin-top-5">
+  <select name="status" class="mobile-box b5 lucida-grande bold border radius-3 padding-8 margin-top-5">
     <!-- <option value="">Todos os status</option> -->
     <option value="Pendente">Pendente</option>
     <option value="Concluído">Concluído</option>
   </select>
 
+  <select name="user" class="mobile-box b5 lucida-grande bold border radius-3 padding-8 margin-top-5">
+    <% for(let i in users){ %>
+    <option value="<%= users[i].id %>"><%=users[i].name %></option>
+    <% } %>
+  </select>
+
   <input type="date" name="period_start"
-    class="mobile-box b4 lucida-grande bold border radius-3 padding-8 margin-top-5">
-  <input type="date" name="period_end" class="mobile-box b4 lucida-grande bold border radius-3 padding-8 margin-top-5">
+    class="mobile-box b5 lucida-grande bold border radius-3 padding-8 margin-top-5">
+  <input type="date" name="period_end" class="mobile-box b5 lucida-grande bold border radius-3 padding-8 margin-top-5">
 
   <input type="submit" name="submit"
-    class="mobile-box b4 btn-act lucida-grande bold noborder radius-3 padding-10 margin-top-5" value="Buscar">
+    class="mobile-box b5 btn-act lucida-grande bold noborder radius-3 padding-10 margin-top-5" value="Buscar">
 </form>
 
 <div id="contact_list_box" class="box b2-3 container"></div>
 
 <script>
+  let randomizeAndRemove = function (array) {
+    if (!Array.isArray(array)) {
+      throw new Error('O parâmetro deve ser um array');
+    }
+
+    if (array.length === 0) {
+      return null;
+    }
+
+    const index = Math.floor(Math.random() * array.length);
+    return array.splice(index, 1)[0];
+  };
+
   document.addEventListener("DOMContentLoaded", async () => {
     contact_list_form.period_start.value = lib.convertDate(lib.timestampToDate(lib.genTimestamp()));
     contact_list_form.period_end.value = lib.convertDate(lib.timestampToDate(lib.genTimestamp()));
@@ -31,14 +50,82 @@
     contactListFilter();
   });
 
+  async function contactListSender(rounds = 1) {
+    const contact_lists = await API.response(ContactList.filter, {
+      status: "Pendente",
+      order: [["created_at", "asc"]]
+    });
+
+    if (!contact_lists?.length) {
+      console.log('📭 Nenhum contato pendente');
+      return;
+    }
+
+    // apenas os não enviados
+    let pending = contact_lists.filter(cl => !cl.sent_datetime);
+
+    if (!pending.length) {
+      console.log('✅ Nada para enviar');
+      return;
+    }
+
+    // usuários fixos
+    const baseUsers = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+    for (let round = 1; round <= rounds; round++) {
+      console.log(`🔁 Rodada ${round}/${rounds}`);
+
+      // copia os users para essa rodada
+      let users = [...baseUsers];
+
+      while (users.length > 0) {
+        const user = randomizeAndRemove(users);
+
+        const contact_list = pending.find(
+          cl => cl.seller_id === user
+        );
+
+        if (!contact_list) {
+          console.log(`⏭️ User ${user} sem contatos pendentes`);
+          continue;
+        }
+
+        const response = await API.response(ContactList.send, {
+          id: contact_list.id,
+          user_id: user
+        });
+
+        if (!response) {
+          console.log(`❌ Falha ao enviar ${contact_list.id}`);
+          continue;
+        }
+
+        console.log(`📤 Enviado ${contact_list.id} por user ${user}`);
+
+        // remove da lista pendente para não reenviar
+        pending = pending.filter(p => p.id !== contact_list.id);
+      }
+
+      if (!pending.length) {
+        console.log('🏁 Acabaram os contatos pendentes');
+        break;
+      }
+    }
+
+    console.log('✅ Envio finalizado');
+  }
+
   async function contactListFilter() {
     contact_list_box.innerHTML = "";
 
     let contact_lists = await API.response(ContactList.filter, {
       status: contact_list_form.status.value,
       period_start: contact_list_form.status.value == "Concluído" ? lib.dateToTimestamp(contact_list_form.period_start.value) : null,
-      period_end: contact_list_form.status.value == "Concluído" ? lib.dateToTimestamp(contact_list_form.period_end.value) + lib.timestampDay() - 1 : null
+      period_end: contact_list_form.status.value == "Concluído" ? lib.dateToTimestamp(contact_list_form.period_end.value) + lib.timestampDay() - 1 : null,
+      seller_id: contact_list_form.user.value
     });
+
+    let sender_icon = lib.element.icon("b2-3", "50", "images/icon/");
 
     contact_list_box.append(lib.element.create("input", {
       type: "number",
@@ -77,6 +164,7 @@
       contact_list_div.append(contact_business);
 
       let send_icon = lib.element.icon("b6", 30, "/images/icon/send.png")
+      send_icon.id = `send-icon-contact-${contact_list.jid}`;
       if (!contact_list.sent_datetime) {
         contact_list_div.append(send_icon);
       }

@@ -44,6 +44,38 @@
   </div>
 </div>
 
+<div id="follow-icon" style="position: relative;"
+  class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+  <span id="follow-icon-notify" class="badge padding-5 size-5 radius-50"
+    style="display: none;background-color: red;top:2px;right:2px;"></span>
+  <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">Acompanhar</div>
+  <img class='image-prop mobile-box size-25' src='/images/icon/follow.png'>
+</div>
+
+<div id="important-icon" style="position: relative;"
+  class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+  <span id="important-icon-notify" class="badge padding-5 size-5 radius-50"
+    style="display: none;background-color: red;top:2px;right:2px;"></span>
+  <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">Importantes</div>
+  <img class='image-prop mobile-box size-25' src='/images/icon/important.png'>
+</div>
+
+<div id="customer-icon" style="position: relative;"
+  class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+  <span id="customer-icon-notify" class="badge padding-5 size-5 radius-50"
+    style="display: none;background-color: red;top:2px;right:2px;"></span>
+  <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">Clientes</div>
+  <img class='image-prop mobile-box size-25' src='/images/icon/customer.png'>
+</div>
+
+<div id="personal-icon" style="position: relative;"
+  class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+  <span id="personal-icon-notify" class="badge padding-5 size-5 radius-50"
+    style="display: none;background-color: red;top:2px;right:2px;"></span>
+  <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">Pessoal</div>
+  <img class='image-prop mobile-box size-25' src='/images/icon/personal.png'>
+</div>
+
 <form id="contact-filter-form" class="container b1 padding-3 margin-top-3">
   <input type="text" id="contact-filter-input" class="mobile-box b9-10 lucida-grande border-bottom-lg-st padding-3"
     placeholder="Nome ou número do contato">
@@ -77,6 +109,10 @@
     const conected_icon = document.getElementById("conected-icon");
     const interested_icon = document.getElementById("interested-icon");
     const demo_icon = document.getElementById("demo-icon");
+    const follow_icon = document.getElementById("follow-icon");
+    const important_icon = document.getElementById("important-icon");
+    const customer_icon = document.getElementById("customer-icon");
+    const personal_icon = document.getElementById("personal-icon");
 
     function switchStatus(status) {
       let icon = document.getElementById(`${status}-icon`);
@@ -91,7 +127,7 @@
         lib.removeCss(icon, ["shadow-lg-st", "border"]);
       }
 
-      let status_list = ["all-users", "conected", "interested", "demo"];
+      let status_list = ["all-users", "conected", "interested", "demo", "follow", "important", "customer", "personal"];
       status_list = status_list.filter(s => s !== status);
 
       status_list.forEach(s => {
@@ -156,6 +192,62 @@
       });
 
       lib.display("demo-icon-notify", "none");
+      contactFilter(contacts);
+    });
+
+    follow_icon.addEventListener("click", async () => {
+      switchStatus("follow");
+
+      let contacts = await API.response(Contact.filter, {
+        period_start: lib.dateToTimestamp(contact_period_start.value),
+        period_end: contact_period_end.value ?
+          lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null,
+        status: follow_icon.dataset.selected ? "acompanhar" : ""
+      });
+
+      lib.display("follow-icon-notify", "none");
+      contactFilter(contacts);
+    });
+
+    important_icon.addEventListener("click", async () => {
+      switchStatus("important");
+
+      let contacts = await API.response(Contact.filter, {
+        period_start: lib.dateToTimestamp(contact_period_start.value),
+        period_end: contact_period_end.value ?
+          lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null,
+        status: important_icon.dataset.selected ? "importante" : ""
+      });
+
+      lib.display("important-icon-notify", "none");
+      contactFilter(contacts);
+    });
+
+    customer_icon.addEventListener("click", async () => {
+      switchStatus("customer");
+
+      let contacts = await API.response(Contact.filter, {
+        period_start: lib.dateToTimestamp(contact_period_start.value),
+        period_end: contact_period_end.value ?
+          lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null,
+        status: customer_icon.dataset.selected ? "cliente" : ""
+      });
+
+      lib.display("customer-icon-notify", "none");
+      contactFilter(contacts);
+    });
+
+    personal_icon.addEventListener("click", async () => {
+      switchStatus("personal");
+
+      let contacts = await API.response(Contact.filter, {
+        period_start: lib.dateToTimestamp(contact_period_start.value),
+        period_end: contact_period_end.value ?
+          lib.dateToTimestamp(contact_period_end.value) + (lib.timestampDay() - 1) : null,
+        status: personal_icon.dataset.selected ? "pessoal" : ""
+      });
+
+      lib.display("personal-icon-notify", "none");
       contactFilter(contacts);
     });
 

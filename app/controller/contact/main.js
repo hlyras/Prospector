@@ -1,7 +1,7 @@
 const lib = require('jarmlib');
 
-const wa = require('../../middleware/baileys/main');
-const { getProfilePicWithTimeout } = require('../../middleware/baileys/controller');
+const { createOrGetSession, getSession } = require('../../middleware/baileys/main');
+
 const { ChatGPTAPI } = require('../../middleware/chatgpt/main');
 const { scrapeMapsFromUrl } = require("../../middleware/gmaps/main");
 
@@ -13,7 +13,14 @@ const { enqueueMessage } = require("../../middleware/queue/main");
 const contactController = {};
 
 contactController.create = async (req, res) => {
-  const [wa_contact] = await wa.getSocket().onWhatsApp(`${req.body.jid}@s.whatsapp.net`);
+  const session = getSession(1);
+  if (!session || !session.sock) {
+    console.log('send');
+    return res.status(400).send({ msg: "Sessão WhatsApp não conectada!" });
+  }
+
+  const [wa_contact] = await session.sock.onWhatsApp(`${req.body.jid}@s.whatsapp.net`);
+
   if (!wa_contact?.exists) {
     return res.send({ msg: "Esse número não existe!" });
   }
@@ -36,10 +43,7 @@ contactController.create = async (req, res) => {
   contact.created = 1;
   contact.flow_step = 1;
   contact.segment = req.body.segment;
-
-  // let profile_picture = null;
-  // profile_picture = await getProfilePicWithTimeout(wa.getSocket(), contact.jid);
-  // contact.profile_picture = profile_picture;
+  contact.seller_id = 1;
 
   try {
     let contact_create_response = await contact.create();
@@ -49,48 +53,9 @@ contactController.create = async (req, res) => {
       });
     }
 
-    if (contact.autochat) {
-      if (wa.isConnected()) {
-        let response = await ChatGPTAPI({
-          model: "gpt-3.5-turbo",
-          messages: [
-            {
-              role: "system",
-              content: `
-Preciso identificar se o nome da empresa deve ser referido como masculino ou feminino.
-Complete .. com "da" ou "do" levando em consideração o nome da empresa.
+    // if (contact.autochat) {
 
-Exemplo:
-Boa tarde, é da Apple?
-Boa tarde, é do Google?
-
-Frase base da resposta:
-Boa tarde, é .. ${contact.business}?
-
-Atenção o JSON precisa ser formatado corretamente, sem blocos de código, sem texto explicativo, sem comentários.  
-Todas as chaves e strings devem estar entre aspas duplas e as quebras de linha devem ser representadas como \n.
-{
-  "output": "Retorne com a melhor resposta."
-}
-      `
-            }
-          ]
-        });
-
-        // console.log("Resposta do CHATGPT: ", response);
-
-        // await wa.getSocket().sendMessage(contact.jid, {
-        //   text: JSON.parse(response).output
-        // });
-
-        enqueueMessage({
-          contact_jid: contact.jid,
-          message: JSON.parse(response).output
-        });
-      } else {
-        console.warn("WhatsApp não está pronto para enviar mensagens.");
-      }
-    }
+    // }
 
     res.status(201).send({ done: "Contato criado com sucesso!", contact });
   } catch (error) {
@@ -196,6 +161,7 @@ contactController.update = async (req, res) => {
   contact.flow_step = req.body.flow_step;
   contact.profile_picture = req.body.profile_picture;
   contact.notify = req.body.notify;
+  contact.status = req.body.status;
 
   try {
     let contact_update_response = await contact.update();

@@ -129,7 +129,7 @@ messageController.react = async (req, res) => {
 messageController.receipt = async ({ data }) => {
   // REMOVIDO: impedía receber imagem/áudio
   // if (!data.message.extendedTextMessage && !data.message.conversation) { return; }
-  console.log('data', data);
+  // console.log('data', data);
 
   const isGroup =
     data.key.remoteJid?.endsWith("@g.us") ||
@@ -375,11 +375,36 @@ messageController.receipt = async ({ data }) => {
       }
     }
 
-    for (const [sessionID, ws] of activeWebSockets.entries()) {
-      if (ws.readyState === 1) {
-        ws.send(JSON.stringify({ data, message }));
+    let notify_alert = false;
+
+    if (!data.key.fromMe) {
+      let contact_notify = new Contact();
+      contact_notify.jid = contact.jid;
+      contact_notify.notify = 1;
+      contact_notify.status = contact.status;
+
+      contact_notify.update();
+
+      if (["interessado", "demonstração", "acompanhar", "importante", "cliente", "pessoal"]
+        .includes(contact.status)) {
+        notify_alert = {
+          status: contact.status,
+          jid: contact.jid
+        };
       }
     }
+
+    for (const [sessionID, ws] of activeWebSockets.entries()) {
+      if (ws.readyState === 1) {
+
+        ws.send(JSON.stringify({
+          data,
+          contact,
+          message,
+          notify_alert
+        }));
+      }
+    };
 
   } catch (error) {
     console.log(error);

@@ -6,7 +6,6 @@
       bairro: contact_map_options.bairro,
       segment: contact_map_options.segment
     });
-    console.log(contact_maps);
 
     contact_maps = lib.sort(contact_maps, "datetime", "desc");
 
@@ -17,28 +16,111 @@
       contact_map_container.append(contact_map_div);
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box a5 container"
+        class: "mobile-box padding-5 a5 container"
       }, lib.timestampToFulldate(cm.datetime)));
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box a10 center"
+        class: "mobile-box padding-5 a10 center"
       }, cm.uf));
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box a5 center"
+        class: "mobile-box padding-5 a5 center"
       }, cm.cidade));
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box b2-5 center"
+        class: "mobile-box padding-5 b2-5 center"
       }, cm.bairro));
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box a2 center wrap"
+        class: "mobile-box padding-5 b2-5 center wrap"
       }, cm.segment));
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box a2 center wrap"
+        class: "mobile-box padding-5 b2-5 center wrap"
       }, cm.status));
+
+      contact_map_div.append(lib.element.create("div", {
+        class: "mobile-box padding-5 b10 center wrap"
+      }, cm.found));
+
+      contact_map_div.append(lib.element.create("div", {
+        class: "mobile-box padding-5 b10 center wrap"
+      }, cm.last_index));
+
+      contact_map_div.addEventListener("click", async () => {
+        lib.popup(await contactMapDetail(cm.id));
+      });
     });
+  };
+
+  async function contactMapDetail(map_id) {
+    let contact_lists = await API.response(ContactList.filter, {
+      map_id
+    });
+    console.log(contact_lists);
+
+    if (!contact_lists.length) {
+      return lib.element.create("div", {
+        class: "box b1 padding-30"
+      }, "Nenhum contato encontrado");
+    }
+
+    let contact_list_container = lib.element.create("div", {
+      class: "box b1 container padding-10"
+    });
+
+    contact_list_container.append(lib.element.create("div", {
+      class: "box b2 padding-10 center bold"
+    }, `Cidade: ${contact_lists[0].cidade}`));
+
+    contact_list_container.append(lib.element.create("div", {
+      class: "box b4 padding-10 center bold"
+    }, `Bairro: ${contact_lists[0].bairro}`));
+
+    contact_list_container.append(lib.element.create("div", {
+      class: "box b4 padding-10 center bold"
+    }, `UF: ${contact_lists[0].uf}`));
+
+    contact_list_container.append(lib.element.create("div", {
+      class: "box b1 padding-10 center bold"
+    }, `Total de contatos: ${contact_lists.length}`));
+
+    let contact_list_box = lib.element.create("div", {
+      class: "box b1 container"
+    });
+    contact_list_container.append(contact_list_box);
+
+    contact_lists.forEach(cl => {
+      let contact_list_div = lib.element.create("div", {
+        class: "box a2-3 container border-lg-st shadow padding-10 margin-top-5"
+      });
+      contact_list_box.append(contact_list_div);
+
+      contact_list_div.append(lib.element.create("div", {
+        class: "mobile-box a3 padding-5 container"
+      }, lib.timestampToFulldate(cl.datetime)));
+
+      contact_list_div.append(lib.element.create("div", {
+        class: "mobile-box a3 padding-5 center"
+      }, cl.name));
+
+      contact_list_div.append(lib.element.create("div", {
+        class: "mobile-box a3 padding-5 center"
+      }, cl.jid.split("@")[0]));
+
+      contact_list_div.append(lib.element.create("div", {
+        class: "mobile-box a3 padding-5 center"
+      }, cl.business));
+
+      contact_list_div.append(lib.element.create("div", {
+        class: "mobile-box a3 padding-5 center wrap"
+      }, cl.status));
+
+      contact_list_div.append(lib.element.create("div", {
+        class: "mobile-box a3 padding-5 center wrap"
+      }, cl.contact_status));
+    });
+
+    return contact_list_container;
   };
 </script>

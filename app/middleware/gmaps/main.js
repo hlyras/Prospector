@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer-extra");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+const path = require("path");
 
 puppeteer.use(StealthPlugin());
 
@@ -40,10 +41,21 @@ async function scrollToEnd(page, scrollContainer = "div[role='feed']") {
   }
 }
 
-async function scrapeMapsFromUrl(url, limit = 10, onContact = null) {
+async function scrapeMapsFromUrl({
+  url,
+  limit = 10,
+  startIndex = 0,
+  onProgress = null,
+  onFound = null
+}) {
   const browser = await puppeteer.launch({
     headless: false,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    userDataDir: path.resolve(__dirname, "./puppeteer-profile"), // 🔐 SESSÃO LOGADA
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-blink-features=AutomationControlled"
+    ],
   });
 
   const page = await browser.newPage();
@@ -52,17 +64,20 @@ async function scrapeMapsFromUrl(url, limit = 10, onContact = null) {
   await page.goto(url, { waitUntil: "networkidle2" });
   await randomDelay();
 
-  // Scroll até o fim para carregar todos os resultados
   await scrollToEnd(page, "div[role='feed']");
 
-  // Pega links dos cards
-  const links = await page.$$eval("a.hfpxzc", (as) => as.map((a) => a.href));
+  const links = await page.$$eval("a.hfpxzc", as =>
+    as.map(a => a.href)
+  );
 
-  console.log(`🔎 Encontrados ${links.length} resultados.`);
+  onProgress?.({ totalEncontrado: links.length });
 
-  let results = [];
+  const slice = links.slice(startIndex, limit);
 
-  for (let link of links.slice(0, limit)) {
+  for (let i = 0; i < slice.length; i++) {
+    const absoluteIndex = startIndex + i;
+    const link = slice[i];
+
     try {
       await page.goto(link, { waitUntil: "networkidle2" });
       await randomDelay(4000, 7000);
@@ -71,12 +86,10 @@ async function scrapeMapsFromUrl(url, limit = 10, onContact = null) {
         const nome =
           document.querySelector("h1.DUwDvf")?.innerText.trim() || null;
         const endereco =
-          document
-            .querySelector("button[data-item-id='address']")
+          document.querySelector("button[data-item-id='address']")
             ?.innerText.trim() || null;
         const telefone =
-          document
-            .querySelector("button[data-item-id*='phone']")
+          document.querySelector("button[data-item-id*='phone']")
             ?.innerText.trim() || null;
         const site =
           document.querySelector("a[data-item-id='authority']")?.href || null;
@@ -84,20 +97,16 @@ async function scrapeMapsFromUrl(url, limit = 10, onContact = null) {
         return { nome, endereco, telefone, site };
       });
 
-      if (data.nome) results.push(data);
+      if (data?.nome) {
+        await onFound?.(data, absoluteIndex);
+      }
 
-      if (onContact) onContact(data);
-
-      console.log("✅ Coletado:", data.nome);
-
-      await randomDelay(3000, 6000);
     } catch (err) {
-      console.log("⚠️ Erro ao pegar dados:", err);
+      console.log(`⚠️ Erro no índice ${absoluteIndex}:`, err);
     }
   }
 
   await browser.close();
-  return results;
 }
 
 // Exporta a função

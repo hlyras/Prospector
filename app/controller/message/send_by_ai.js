@@ -12,7 +12,7 @@ function randomizeMessage(message) {
       role: "system",
       content: `
 Reescreva a mensagem abaixo de formas diferentes para evitar filtros antispam. 
-ATENÇÃO!!! -> A única regra é que as palavras 'aprimorar', 'apresentação', 'divulgação' e 'atendimento' não podem ser alteradas por sinônimos.
+ATENÇÃO!!! -> A única regra é que as palavras 'proposta', 'aprimorar', 'apresentação', 'divulgação' e 'atendimento' não podem ser alteradas por sinônimos.
 Também não quero que utilize a palavra: 'Missão'
 
 Frase para ser reescrita:

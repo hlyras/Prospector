@@ -19,6 +19,10 @@
       if (contact.status == "conectado") { lib.display("conected-icon-notify", ""); }
       if (contact.status == "interessado") { lib.display("interested-icon-notify", ""); }
       if (contact.status == "demonstração") { lib.display("demo-icon-notify", ""); }
+      if (contact.status == "acompanhar") { lib.display("follow-icon-notify", ""); }
+      if (contact.status == "importante") { lib.display("important-icon-notify", ""); }
+      if (contact.status == "cliente") { lib.display("customer-icon-notify", ""); }
+      if (contact.status == "pessoal") { lib.display("personal-icon-notify", ""); }
     } else {
       lib.display(notify_batch, "none");
     }
@@ -42,7 +46,7 @@
     contact_div.append(info_box);
 
     let name_box = lib.element.create("div", {
-      class: "mobile-box b1 container v-center"
+      class: "mobile-box b2-3 container v-center"
     });
     info_box.append(name_box);
 
@@ -50,6 +54,19 @@
       class: "mobile-box b1 lucida-grande em08 text-shadow"
     }, `${lib.splitTextBy(contact.jid, "@")[0]} - ${contact.seller_id}`);
     name_box.append(name);
+
+    let contact_status = lib.element.create("select", {
+      class: "mobile-box b3 container v-center"
+    });
+    info_box.append(contact_status);
+
+    ["conectado", "interessado", "demonstração", "acompanhar", "importante", "cliente", "pessoal"].forEach(status => {
+      let option = lib.element.create("option", {
+        value: status
+      }, status);
+      if (contact.status == status) { option.selected = true; }
+      contact_status.append(option);
+    });
 
     if (contact.last_message_type == "text") { lib.string.cut(contact.last_message_content, 30); }
     if (contact.last_message_type == "conversation") { lib.string.cut(contact.last_message_content, 30); }
@@ -97,6 +114,17 @@
 
     profile_picture.addEventListener("click", async () => {
       lib.image.zoom(profile_picture.src);
+    });
+
+    contact_status.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+
+    contact_status.addEventListener("change", async () => {
+      let response = await API.response(Contact.update, {
+        jid: contact.jid,
+        status: contact_status.value
+      });
     });
 
     return contact_div;

@@ -79,42 +79,9 @@ router.get('/queue', async (req, res) => {
     }
   }))[0];
 
-  return res.render('home/index', { title: 'WA Messager', user });
+  let users = await User.filter({});
 
-  // let session = getSession(req.user.id);
-
-  // if (!session) {
-  //   session = await createOrGetSession(req.user.id);
-  // }
-
-  // if (session.connected) {
-  //   return res.render('home/index', {
-  //     title: 'WA Messager',
-  //     // isConnected: true,
-  //     // qrCode: null
-  //   });
-  // }
-
-  // Se ainda não conectado, gerar QR
-  // if (session.qr) {
-  //   const qrImage = await qrcode.toDataURL(session.qr);
-
-  //   console.log(qrImage);
-
-  //   return res.render('home/index', {
-  //     title: 'WA Messager',
-  //     isConnected: false,
-  //     qrCode: qrImage
-  //   });
-  // }
-
-  // // Caso o QR ainda não tenha chegado
-  // res.render('home/index', {
-  //   title: 'WA Messager',
-  //   isConnected: false,
-  //   qrCode: null,
-  //   message: 'Aguardando geração do QR Code...'
-  // });
+  return res.render('home/index', { title: 'WA Messager', user, users });
 });
 
 router.ws('/ws', websocketHandler);

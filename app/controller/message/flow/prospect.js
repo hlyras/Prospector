@@ -220,12 +220,13 @@ Valores true|false devem ser booleanos e não strings.
 Atenção ao valor de "output" pois será enviado diretamente para o cliente sem tratamentos, exceto se "reply" for false.
 
 Caso 1 Interessado → 
+Caso o cliente diga que tem interesse para o próximo ano/mês envie mensagem dizendo que irá chamar no ano novo (e pergunte o nome caso ainda não tenha).
   Envie a próxima mensagem do fluxo com a palavra "Legal" no início: "Legal, esse cat...";
   "reply": true
   "flow_step": "next"
 
 Caso 2 Indireto → 
-  Envia a próxima mensagem do fluxo com o parágrafo sobre o preço no topo;
+  Envia a próxima mensagem do fluxo (Caso o cliente tenha perguntado apenas qual preço/custa/valor enviar com o parágrafo sobre o preço no topo);
   "reply": true
   "flow_step": "next"
 
@@ -319,11 +320,13 @@ Caso 2 Perguntou →
   "flow_step": "next"
 
 Caso 3 Indefinido momentâneo →
+  Caso o cliente diga que tem interesse para o próximo ano/mês envie mensagem dizendo que irá chamar no ano novo (e pergunte o nome caso ainda não tenha).
   Responda que tudo bem, quebre duas linhas e envie a próxima mensagem do fluxo;
   "reply": true
   "flow_step": "next"
 
 Caso 4 Desinteresse momentâneo → 
+  Caso o cliente diga que tem interesse para o próximo ano/mês envie mensagem dizendo que irá chamar no ano novo (e pergunte o nome caso ainda não tenha).
   Responda que tudo bem e diga para salvar seu contato que surgindo interesse está a disposição;
   "reply": true
   "flow_step": "exit"
@@ -398,11 +401,13 @@ Caso 1 Interessado →
   "flow_step": "next"
 
 Caso 2 Indefinido →
+  Caso o cliente diga que tem interesse para o próximo ano/mês envie mensagem dizendo que irá chamar no ano novo (e pergunte o nome caso ainda não tenha).
   Se houver pergunta do cliente responda de forma breve e simples e pergunte novamente se gostaria de ver o modelo com as cores da identidade visual.
   "reply": true
   "flow_step": "stay"
 
 Caso 3 Indefinido momentâneo →
+  Caso o cliente diga que tem interesse para o próximo ano/mês envie mensagem dizendo que irá chamar no ano novo (e pergunte o nome caso ainda não tenha).
   Responda que tudo bem, e que querendo ver o esboço você está a disposição.
   "reply": true
   "flow_step": "exit"

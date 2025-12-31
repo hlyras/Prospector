@@ -12,30 +12,43 @@
       };
 
       socket.onmessage = (event) => {
-        const { data, message } = JSON.parse(event.data);
+        const { data, contact, message, notify_alert } = JSON.parse(event.data);
 
+        console.log(notify_alert);
+        console.log('contact', contact);
         console.log('data', data);
         console.log('message', message);
+
+        if (notify_alert) {
+          beep();
+
+          if (document.getElementById(`contact-${notify_alert.jid}`)) {
+            lib.display(`contact-${notify_alert.jid}-notify`, "");
+          }
+
+          lib.display("all-users-icon-notify", "");
+          !notify_alert.status && lib.display("all-users-icon-notify", "");
+          notify_alert.status == "conectado" && lib.display("conected-icon-notify", "");
+          notify_alert.status == "interessado" && lib.display("interested-icon-notify", "");
+          notify_alert.status == "demo" && lib.display("demo-icon-notify", "");
+          notify_alert.status == "acompanhar" && lib.display("follow-icon-notify", "");
+          notify_alert.status == "importante" && lib.display("important-icon-notify", "");
+          notify_alert.status == "cliente" && lib.display("customer-icon-notify", "");
+          notify_alert.status == "pessoal" && lib.display("personal-icon-notify", "");
+        }
 
         if (data.notify_alert) {
           if (document.getElementById(`contact-${data.jid}`)) {
             lib.display(`contact-${data.jid}-notify`, "");
           }
 
-          if (data.interested || data.demo) {
-            beep();
-          }
-
           lib.display("all-users-icon-notify", "");
           data.conected && lib.display("conected-icon-notify", "");
           data.interested && lib.display("interested-icon-notify", "");
           data.demo && lib.display("demo-icon-notify", "");
-          return;
         }
 
-        if (!message.jid) {
-          return;
-        }
+        if (!message.jid) { return; }
 
         if (lib.splitTextBy(message.jid)[0] == "status") {
           return;
@@ -45,7 +58,7 @@
           return messageReaction(message);
         }
 
-        receivedMessage({ data, message });
+        receivedMessage({ data, message, contact });
       };
 
       socket.onerror = function (event) {

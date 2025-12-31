@@ -112,10 +112,10 @@
 
       let react_box = reactBox(event);
 
-      let emotes = ['👍', '❤️', '😂', '😯', '😢', '🙏'];
+      let emotes = ['👍', '❤️', '😂', '😯', '😢', '🙏', '🤝'];
       for (let i in emotes) {
         let react_div = lib.element.create("div", {
-          class: "mobile-box b6 radius-50 box-hover padding-5 center pointer noselect"
+          class: "mobile-box b7 radius-50 box-hover padding-5 center pointer noselect"
         }, emotes[i]);
         react_box.append(react_div);
 
@@ -161,7 +161,7 @@
       class: "react-popup container ground border radius-50 shadow scroll-x-hide scroll-y-hide"
     });
     react_box.style.position = 'absolute';
-    react_box.style.width = '200px';
+    react_box.style.width = '250px';
     react_box.style.height = '35px';
 
     react_box.style.left = isRight ?
