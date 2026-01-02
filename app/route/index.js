@@ -3,6 +3,7 @@ const router = require("express").Router();
 const User = require("./../model/user/main");
 
 const websocketHandler = require('./../middleware/websocket/handler');
+const { setSubscription } = require("./../middleware/webpush/main");
 
 // 🏠 Página inicial
 router.get('/manage', async (req, res) => {
@@ -55,7 +56,8 @@ router.get("/admin", async (req, res) => {
 
   res.render("admin/index", {
     title: "WA Messager",
-    users
+    users,
+    VAPID_PUBLIC: process.env.VAPID_PUBLIC
   });
 });
 
@@ -82,6 +84,15 @@ router.get('/queue', async (req, res) => {
   let users = await User.filter({});
 
   return res.render('home/index', { title: 'WA Messager', user, users });
+});
+
+router.post("/webpush/subscribe", (req, res) => {
+  if (!req.body?.endpoint) {
+    return res.sendStatus(400);
+  }
+
+  setSubscription(req.body);
+  res.sendStatus(200);
 });
 
 router.ws('/ws', websocketHandler);

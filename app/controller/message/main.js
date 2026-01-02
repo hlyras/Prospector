@@ -8,6 +8,7 @@ const { getDownloadPath, getPublicPath } = require("../../middleware/baileys/dow
 const downloadProfilePicture = require("../../middleware/baileys/profile");
 const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 const { ChatGPTTranscription } = require('../../middleware/chatgpt/main');
+const { pushNotification } = require("../../middleware/webpush/main");
 
 const fs = require("fs");
 const path = require("path");
@@ -391,6 +392,11 @@ messageController.receipt = async ({ data }) => {
           status: contact.status,
           jid: contact.jid
         };
+
+        await pushNotification({
+          title: `${contact.status} - ${contact.business || contact.name} - ${contact.jid.split("@")[0]}`,
+          body: `${message.content}`
+        });
       }
     }
 
