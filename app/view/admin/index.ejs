@@ -24,10 +24,12 @@
   <script src="/js/contact/main.js"></script>
   <script src="/js/contact/map.js"></script>
   <script src="/js/contact/list.js"></script>
+  <script src="/js/contact/agenda.js"></script>
   <script src="/js/message/main.js"></script>
   <script src="/js/speech/main.js"></script>
 
   <%- include('./message/main.ejs') %>
+  <%- include('./agenda/main.ejs') %>
   <%- include('./websocket.ejs') %>
 
   <script>
@@ -43,7 +45,6 @@
 
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        alert("Permissão negada");
         return;
       }
 

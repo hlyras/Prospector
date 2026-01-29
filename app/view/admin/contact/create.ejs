@@ -2,32 +2,67 @@
   <div class="mobile-box lucida-grande em09 bold padding-5">Prospector</div>
 
   <div class="mobile-box container right">
-    <div id="text_to_speech" class="mobile-box container ground margin-5">
-      <img class='image-prop size-30 shadow-lg-st radius-5 opacity-out-09 padding-8 pointer' src='/images/icon/tts.png'>
+    <!-- AGENDA -->
+    <div id="agenda_icon"
+      class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+      <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">
+        Agenda
+      </div>
+      <img id="agenda-icon" class="image-prop mobile-box size-25" src="/images/icon/agenda.png">
     </div>
 
-    <div id="contact_map_btn" class="mobile-box container ground margin-5">
-      <img class='image-prop size-30 shadow-lg-st radius-5 opacity-out-09 padding-8 pointer' src='/images/icon/map.png'>
+    <!-- TEXT TO SPEECH -->
+    <div id="text_to_speech"
+      class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+      <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">
+        Novo Áudio
+      </div>
+      <img class="image-prop mobile-box size-25" src="/images/icon/tts.png">
     </div>
 
-    <div class="mobile-box container ground margin-5" onclick="window.location.href='/queue'">
-      <img class='image-prop size-30 shadow-lg-st radius-5 opacity-out-09 padding-8 pointer'
-        src='/images/icon/queue.png'>
+    <!-- MAPA -->
+    <div id="contact_map_btn"
+      class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+      <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">
+        Mapa
+      </div>
+      <img class="image-prop mobile-box size-25" src="/images/icon/map.png">
     </div>
 
-    <div class="mobile-box container ground margin-5" onclick="window.location.href='/manage'">
-      <img class='image-prop size-30 shadow-lg-st radius-5 opacity-out-09 padding-8 pointer'
-        src='/images/icon/manage.png'>
+    <!-- FILA -->
+    <div onclick="window.location.href='/queue'"
+      class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+      <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">
+        Fila
+      </div>
+      <img class="image-prop mobile-box size-25" src="/images/icon/queue.png">
     </div>
 
-    <div id="contact-create-btn" class="mobile-box container ground margin-5">
-      <img id="contact-icon" class='image-prop size-30 shadow-lg-st radius-5 opacity-out-09 padding-8 pointer'
-        src='/images/icon/add-contact.png'>
+    <!-- GERENCIAR -->
+    <div onclick="window.location.href='/manage'"
+      class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+      <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">
+        Gerenciar
+      </div>
+      <img class="image-prop mobile-box size-25" src="/images/icon/manage.png">
     </div>
 
-    <div id="contact-prospect-btn" class="mobile-box container ground margin-5">
-      <img id="prospect-icon" class='image-prop size-30 shadow-lg-st radius-5 opacity-out-09 padding-8 pointer'
-        src='/images/icon/prospect.png'>
+    <!-- ADICIONAR CONTATO -->
+    <div id="contact-create-btn"
+      class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+      <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">
+        Novo Contato
+      </div>
+      <img id="contact-icon" class="image-prop mobile-box size-25" src="/images/icon/add-contact.png">
+    </div>
+
+    <!-- PROSPECT -->
+    <div id="contact-prospect-btn"
+      class="mobile-box b4 container border h-center shadow-lg-st radius-5 opacity-out-08 padding-5 margin-top-5 pointer">
+      <div class="mobile-box b1 lucida-grande em06 center margin-bottom-5 hide-in-mobile">
+        Prospect
+      </div>
+      <img id="prospect-icon" class="image-prop mobile-box size-25" src="/images/icon/prospect.png">
     </div>
   </div>
 
@@ -144,7 +179,6 @@
 
       contact_create_business.value = "";
       contact_create_jid.value = "";
-
     });
 
     return contact_create_form;
@@ -160,32 +194,27 @@
     }, "Prospecção automática");
     prospect_form.append(contact_prospect_title);
 
-    let estados_array = [
-      "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO",
-      "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI",
-      "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
-    ];
+    prospect_form.append(lib.element.create("div", {
+      class: "box b1 lucida-grande bold rem08 margin-top-10"
+    }, "Link da busca"));
+    let prospect_url = lib.element.create("input", {
+      class: "box b1 lucida-grande rem08 border-bottom-lg-st padding-10",
+      placeholder: "URL do Maps",
+      role: "presentation",
+      autocomplete: "off"
+    });
+    prospect_form.append(prospect_url);
 
     prospect_form.append(lib.element.create("div", {
       class: "box b1 lucida-grande bold rem08 margin-top-10"
     }, "Estado / UF"));
-    let uf_select = lib.element.create("select", {
-      class: "box b1 lucida-grande hide-disabled rem08 border-bottom-lg-st padding-10"
+    let uf_input = lib.element.create("input", {
+      class: "box b1 lucida-grande rem08 border-bottom-lg-st padding-10",
+      placeholder: "UF",
+      role: "presentation",
+      autocomplete: "off"
     });
-    prospect_form.append(uf_select);
-
-    uf_select.append(lib.element.create("option", {
-      value: "",
-      disabled: true,
-      selected: true
-    }, "Estado / UF"));
-
-    for (let i in estados_array) {
-      let uf = estados_array[i];
-      uf_select.append(lib.element.create("option", {
-        value: uf,
-      }, uf));
-    };
+    prospect_form.append(uf_input);
 
     prospect_form.append(lib.element.create("div", {
       class: "box b1 lucida-grande bold rem08 margin-top-10"
@@ -208,17 +237,6 @@
       autocomplete: "off"
     });
     prospect_form.append(bairro_input);
-
-    prospect_form.append(lib.element.create("div", {
-      class: "box b1 lucida-grande bold rem08 margin-top-10"
-    }, "Link da busca"));
-    let prospect_url = lib.element.create("input", {
-      class: "box b1 lucida-grande rem08 border-bottom-lg-st padding-10",
-      placeholder: "URL do Maps",
-      role: "presentation",
-      autocomplete: "off"
-    });
-    prospect_form.append(prospect_url);
 
     prospect_form.append(lib.element.create("div", {
       class: "box b1 lucida-grande bold rem08 margin-top-10"
@@ -247,7 +265,6 @@
     }, "Sexshop"));
 
     const users = JSON.parse('<%- JSON.stringify(users) %>');
-    console.log(users);
 
     prospect_form.append(lib.element.create("div", {
       class: "box b1 lucida-grande bold rem08 margin-top-10"
@@ -279,6 +296,15 @@
     });
     prospect_form.append(submit_button);
 
+    //events
+    prospect_url.addEventListener("blur", async e => {
+      let data = await findLocation(prospect_url.value);
+
+      uf_input.value = data.uf;
+      cidade_input.value = data.cidade;
+      bairro_input.value = data.bairro;
+    });
+
     prospect_form.addEventListener("submit", async e => {
       e.preventDefault();
 
@@ -291,7 +317,7 @@
       }
 
       let response = await API.response(ContactList.create, {
-        uf: uf_select.value,
+        uf: uf_input.value,
         cidade: cidade_input.value,
         bairro: bairro_input.value,
         segment: prospect_segment.value,
@@ -299,9 +325,14 @@
         seller_id: seller_select.value,
       }, "none");
 
-      console.log(response);
+      lib.message(response.done);
 
-      new Audio("/audios/tin_tin.mp3").play();
+      prospect_url.value = "";
+      uf_input.value = "";
+      cidade_input.value = "";
+      bairro_input.value = "";
+
+      // new Audio("/audios/tin_tin.mp3").play();
     });
 
     return prospect_form;
@@ -351,4 +382,34 @@
       }
     });
   });
+
+  async function findLocation(url) {
+    const match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (!match) {
+      alert('Link inválido');
+      return;
+    }
+
+    const [, lat, lon] = match;
+
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+    );
+
+    const data = await res.json();
+
+    console.log({
+      pais: data.address.country,
+      estado: data.address.state,
+      cidade: data.address.city || data.address.town,
+      bairro: data.address.suburb || data.address.neighbourhood
+    });
+
+    return {
+      pais: data.address.country,
+      uf: data.address.state,
+      cidade: data.address.city || data.address.town,
+      bairro: data.address.suburb || data.address.neighbourhood
+    };
+  }
 </script>

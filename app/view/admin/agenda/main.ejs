@@ -1,0 +1,15 @@
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    agenda_icon.addEventListener("click", async () => {
+      lib.popup(await agendaInterface(), null, true);
+    });
+  });
+
+  async function agendaInterface() {
+    let agenda_interface = lib.element.create("div", {
+      class: "box b1"
+    }, "OKOK");
+
+    return agenda_interface;
+  };
+</script>

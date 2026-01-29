@@ -6,3 +6,4 @@ app/middleware/gmaps/puppeteer-profile
 app/middleware/puppeteer-profile
 public/download
 public/tts
+public/uploads

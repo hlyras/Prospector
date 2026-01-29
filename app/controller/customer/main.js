@@ -41,6 +41,7 @@ customerController.create = async (req, res) => {
     customer.logo_keycode = imageData.Key;
     customer.seller_id = req.user.id;
     customer.seller_status = "Demonstração";
+    customer.expires_at = Date.now() + 7 * 24 * 60 * 60 * 1000;
 
     let customer_create = await customer.create();
     if (customer_create.err) { return res.send({ msg: customer_create.err }); }
@@ -94,6 +95,7 @@ customerController.update = async (req, res) => {
     customer.id = req.body.id;
     customer.email = req.body.email;
     customer.balance = 0;
+    customer.expires_at = Date.now();
     customer.status = "Inativo";
     customer.seller_status = "Pendente";
 

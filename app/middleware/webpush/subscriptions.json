@@ -1,18 +1,10 @@
 [
   {
-    "endpoint": "https://fcm.googleapis.com/wp/cDThktYID0o:APA91bH_Cqx7cyCbBNdEZLkkNeUqhye3Dq7YSgCp3u59Od41yrCoMGLGmiLjsLgkWv4Co29lBzyyPXqU51FSV4eILmwOqSyO0JAfNOQyyQ8RA8oCFCCIgG33-5SnV3yGIzwiQm68QWtw",
+    "endpoint": "https://fcm.googleapis.com/fcm/send/dyQI2YGyjBw:APA91bGjLpHFKr938CNjs90wiyB5VGILdfrgBGMaHOzj7pOO2ZefM7mwfHW3d81qBPFGZW2BgSqnSlJzIjYxYj7GpW_ptDKe-Xcerwxj25oas86FsrhgrqwUnFiTk01gypZLrb6GJ00M",
     "expirationTime": null,
     "keys": {
-      "p256dh": "BGmP92YMRl8zF1E5mB5-EL3fvoWYzGQvYNQdmtc2EZV-mJt4ipDGT2ov4ZkaWcJGBPa8CF9eGGiJ_H8ASDgZl-k",
-      "auth": "uSQip45X809ViJEcjfcSNw"
-    }
-  },
-  {
-    "endpoint": "https://fcm.googleapis.com/fcm/send/ezQHr5079AI:APA91bFgZ9ggNhaVQI_iJb1MbDD9vEdwpxq8mKXQXJYU5-pUXBJEZ85vvviCnQTNOkOEUvVfG5IjP_drHF7x0eUqSmlGeAc5MGV9hsi24DaPVCL34FqUd2dJTDG4i0-rMb4nFmfhNtRS",
-    "expirationTime": null,
-    "keys": {
-      "p256dh": "BM0M_3BGIp9vti5FacH7BENO7X78ANr3LxFD_7Sr0hwuca3p7mptG0bRryH3FOQQawKCcbpmrXonA2goZ9LKP1w",
-      "auth": "K6TIgNxN1yCCGnk1N-ljQw"
+      "p256dh": "BMWi1ZJmipkc8mZzdLPvDFaRUU0rxAQa0a1yTlmy3NWgf574Aljmq6O3Btqdjescq3pmj-hjhxWp2ZRa-evU44k",
+      "auth": "5TVl_PFZ5kFQsQ__4id-RA"
     }
   }
 ]

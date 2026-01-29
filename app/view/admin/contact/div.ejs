@@ -2,7 +2,7 @@
   function contactDiv(contact) {
     let contact_div = lib.element.create("div", {
       id: `contact-${contact.jid}`,
-      class: "box a1 container box-hover opacity-out-09 ground padding-8 pointer",
+      class: "box a1 container box-hover border-bottom opacity-out-09 ground padding-8 pointer",
       style: "position: relative;"
     });
 
@@ -34,7 +34,7 @@
 
     let profile_picture = lib.element.create("img", {
       id: `profile-picture-${contact.jid}`,
-      class: "image-prop size-50 radius-50",
+      class: "image-prop size-40 radius-50",
       src: contact.profile_picture || "/images/icon/profile.png",
       'data-empty': contact.profile_picture ? false : true
     });
@@ -51,7 +51,7 @@
     info_box.append(name_box);
 
     let name = lib.element.create("div", {
-      class: "mobile-box b1 lucida-grande em08 text-shadow"
+      class: "mobile-box b1 lucida-grande em07 text-shadow"
     }, `${lib.splitTextBy(contact.jid, "@")[0]} - ${contact.seller_id}`);
     name_box.append(name);
 

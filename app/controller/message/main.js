@@ -386,7 +386,7 @@ messageController.receipt = async ({ data }) => {
 
       contact_notify.update();
 
-      if (["interessado", "demonstração", "acompanhar", "importante", "cliente", "pessoal"]
+      if (["interessado", "demonstração", "acompanhar", "importante", "cliente"]
         .includes(contact.status)) {
         notify_alert = {
           status: contact.status,

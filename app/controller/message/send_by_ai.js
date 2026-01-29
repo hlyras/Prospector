@@ -71,6 +71,10 @@ async function sendByAi(contact) {
     history += `[${sender}]: ${content}\n`;
   };
 
+  if (contact.flow_step == 5) {
+    return true;
+  }
+
   let response = await ChatGPTAPI({
     model: "gpt-4o-mini",
     messages: prospect_flow[contact.flow_step](contact, history)
@@ -279,6 +283,8 @@ async function sendByAi(contact) {
     contact.update();
 
     return false;
+  } else {
+    return true;
   }
 };
 

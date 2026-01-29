@@ -70,7 +70,7 @@
     identity_box.append(identity_info_box);
 
     let profile_picture = lib.element.create("img", {
-      class: "image-prop size-35 radius-50 v-center",
+      class: "image-prop size-30 radius-50 margin-left-5 v-center",
       src: contact.profile_picture || "/images/icon/profile.png",
     });
     identity_info_box.append(profile_picture);
@@ -86,11 +86,11 @@
     // }, contact.business || contact.name || ""));
 
     lib.splitTextBy(contact.jid, "@")[1] != "g.us" && identity_contact_box.append(lib.element.create("div", {
-      class: "mobile-box b1 em08 text-shadow v-center"
+      class: "mobile-box b1 em07 text-shadow v-center"
     }, lib.splitTextBy(contact.jid, "@")[0]));
 
     let autochat_status = lib.element.create("select", {
-      class: "mobile-box b4 padding-5 border-st radius-3 shadow-lg-st v-center"
+      class: "mobile-box b5 padding-5 border-st radius-3 shadow-lg-st v-center"
     });
     identity_box.append(autochat_status);
 
@@ -100,9 +100,12 @@
     autochat_status.value = contact.autochat;
 
     let contact_step = lib.element.create("select", {
-      class: "mobile-box b4 padding-5 border-st radius-3 shadow-lg-st v-center"
+      class: "mobile-box b5 padding-5 border-st radius-3 shadow-lg-st v-center"
     });
     identity_box.append(contact_step);
+
+    let agenda_icon = lib.element.icon("b10 icon", "25", "/images/icon/agenda.png");
+    identity_box.append(agenda_icon);
 
     contact_step.append(lib.element.create("option", { value: 0 }, "0"));
     contact_step.append(lib.element.create("option", { value: 1 }, "1"));
@@ -137,6 +140,11 @@
         jid: contact.jid,
         flow_step: contact_step.value
       });
+    });
+
+    agenda_icon.addEventListener("click", async () => {
+      let contact_agenda_interface = await contactAgendaInterface(contact);
+      lib.popup(contact_agenda_interface, null, true);
     });
   };
 
@@ -209,5 +217,164 @@
     });
 
     return message_input_container;
+  };
+
+  async function contactAgendaInterface(contact) {
+    let contact_agenda_interface = lib.element.create("div", {
+      class: "box b1 container"
+    });
+
+    // contact.profile_picture
+    contact_agenda_interface.append(lib.element.icon("b1 padding-5",
+      "100", contact.profile_picture));
+
+    // contact.jid
+    contact_agenda_interface.append(lib.element.create("div", {
+      class: "mobile-box b3 padding-5 center"
+    }, contact.jid.split("@")[0]));
+
+    // contact.business
+    contact_agenda_interface.append(lib.element.create("div", {
+      class: "mobile-box b7-12 padding-5 center"
+    }, contact.business || "Sem nome comercial"));
+
+    // contact.seller_id
+    contact_agenda_interface.append(lib.element.create("div", {
+      class: "mobile-box b12 rem09 lucida-grande bold"
+    }, contact.seller_id));
+
+    // contact.name
+    contact_agenda_interface.append(lib.element.create("div", {
+      class: "mobile-box b3 padding-5 center"
+    }, contact.name || "Sem nome"));
+
+    // contact.status
+    contact_agenda_interface.append(lib.element.create("div", {
+      class: "mobile-box b3 padding-5 center"
+    }, contact.status || "Sem status"));
+
+    // contact.segment
+    contact_agenda_interface.append(lib.element.create("div", {
+      class: "mobile-box b3 padding-5 center"
+    }, contact.segment || "Sem segmento"));
+
+    // contact.last_message_datetime
+    contact_agenda_interface.append(lib.element.create("div", {
+      class: "mobile-box b1 rem07 margin-top-10"
+    }, `Última mensagem - ${lib.timestampToFulldate(contact.last_message_datetime)}`));
+
+    // contact.last_message_content
+    contact_agenda_interface.append(lib.element.create("div", {
+      class: "mobile-box b1 padding-left-5"
+    }, contact.last_message_content || "Sem última mensagem"));
+
+    let contact_agenda_create_form = contactAgendaCreateForm(contact);
+    contact_agenda_interface.append(contact_agenda_create_form);
+
+    let contact_agenda_filter_box = await contactAgendaFilterBox(contact);
+    contact_agenda_interface.append(contact_agenda_filter_box);
+
+    return contact_agenda_interface;
+  };
+
+  function contactAgendaCreateForm(contact) {
+    let contact_agenda_create_form = lib.element.create("form", {
+      class: "box b1 container"
+    });
+
+    let agenda_status_select = lib.element.create("select", {
+      class: "mobile-box b2 padding-10 border-st radius-3 shadow-lg-st v-center margin-top-10"
+    });
+    contact_agenda_create_form.append(agenda_status_select);
+
+    agenda_status_select.append(lib.element.create("option", {
+      value: "Pendente"
+    }, "Pendente"));
+
+    agenda_status_select.append(lib.element.create("option", {
+      value: "Concluído"
+    }, "Concluído"));
+
+    let agenda_datetime_input = lib.element.create("input", {
+      type: "datetime-local",
+      class: "mobile-box b2 padding-9 border-st radius-3 shadow-lg-st v-center margin-top-10"
+    });
+    contact_agenda_create_form.append(agenda_datetime_input);
+
+    let agenda_content_textarea = lib.element.create("textarea", {
+      class: "mobile-box b1 padding-5 height-100 border-st radius-3 shadow-lg-st v-center margin-top-10",
+      placeholder: "Detalhes da agenda"
+    });
+    contact_agenda_create_form.append(agenda_content_textarea);
+
+    contact_agenda_create_form.append(lib.element.create("button", {
+      type: "submit",
+      class: "mobile-box b1 btn-act padding-10 border-st radius-3 shadow-lg-st margin-top-10"
+    }, "Salvar Agenda"));
+
+    contact_agenda_create_form.addEventListener("submit", async e => {
+      e.preventDefault();
+
+      let contact_agenda = {
+        contact_jid: contact.jid,
+        datetime: lib.datetimeToTimestamp(agenda_datetime_input.value),
+        status: agenda_status_select.value,
+        content: agenda_content_textarea.value
+      };
+
+      let response = await API.response(ContactAgenda.create, contact_agenda);
+      if (!response) return;
+
+      lib.message("Cadastrado com sucess!");
+
+      agenda_datetime_input.value = "";
+      agenda_status_select.value = "Pendente";
+      agenda_content_textarea.value = "";
+    });
+
+    return contact_agenda_create_form;
+  };
+
+  async function contactAgendaFilterBox(contact) {
+    let contact_agendas = await API.response(ContactAgenda.filter, {
+      contact_jid: contact.jid
+    });
+
+    console.log(contact_agendas);
+
+    let contact_agenda_filter_box = lib.element.create("div", {
+      class: "box b1 container margin-top-10"
+    });
+
+    contact_agendas.forEach(agenda => {
+      let contact_agenda_div = lib.element.create("div", {
+        class: "mobile-box b1 container padding-10 border-st radius-3 shadow-lg-st margin-top-5"
+      });
+
+      // contact_agenda_div.append(lib.element.create("div", {
+      //   class: "mobile-box b1 bold"
+      // }, `Status: ${agenda.status}`));
+
+      // contact_agenda_div.append(lib.element.create("div", {
+      //   class: "mobile-box b1"
+      // }, `Data/Hora: ${lib.timestampToFulldate(agenda.datetime)}`));
+
+      // contact_agenda_div.append(lib.element.create("div", {
+      //   class: "mobile-box b1"
+      // }, `Detalhes: ${agenda.content}`));
+
+      contact_agenda_div.append(lib.element.info("mobile-box b2",
+        "Status", agenda.status));
+
+      contact_agenda_div.append(lib.element.info("mobile-box b2",
+        "Data/Hora", lib.timestampToFulldate(agenda.datetime)));
+
+      contact_agenda_div.append(lib.element.info("b1 margin-top-5",
+        "Detalhes", agenda.content));
+
+      contact_agenda_filter_box.append(contact_agenda_div);
+    });
+
+    return contact_agenda_filter_box;
   };
 </script>
