@@ -11,6 +11,7 @@ const CustomerPayment = require("../controller/customer/payment");
 router.post('/create', lib.route.toHttps, upload.single('file'), Customer.create);
 router.post('/update', lib.route.toHttps, Customer.update);
 router.post('/filter', lib.route.toHttps, Customer.filter);
+router.post('/logo/edit', lib.route.toHttps, upload.single('file'), Customer.logoEdit);
 
 router.post('/payment/filter', lib.route.toHttps, CustomerPayment.filter);
 

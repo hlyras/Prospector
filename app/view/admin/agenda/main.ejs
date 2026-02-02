@@ -1,14 +1,115 @@
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
     agenda_icon.addEventListener("click", async () => {
-      lib.popup(await agendaInterface(), null, true);
+      let agenda_interface = await agendaInterface();
+
+      lib.popup(agenda_interface, null, true);
     });
   });
 
   async function agendaInterface() {
     let agenda_interface = lib.element.create("div", {
-      class: "box b1"
-    }, "OKOK");
+      class: "box b1 container h-center"
+    });
+
+    agenda_interface.append(lib.element.create("div", {
+      class: "box b1 underline lucida-grande bold margin-top-15 center"
+    }, "Agendamentos"));
+
+    let contact_agendas = await API.response(ContactAgenda.filter, {
+      period_start: lib.genTimestamp() - lib.timestampDay() * 720,
+      period_end: lib.genTimestamp() + lib.timestampDay(),
+      status: 'Pendente'
+    });
+
+    contact_agendas.forEach(agenda => {
+      let contact_agenda_div = lib.element.create("div", {
+        class: "box b2-3 container padding-10 border-st radius-3 shadow-lg-st margin-top-5"
+      });
+      agenda_interface.append(contact_agenda_div);
+
+      let agenda_info = lib.element.create("div", {
+        class: "mobile-box b9-10 container"
+      });
+      contact_agenda_div.append(agenda_info);
+
+      agenda_info.append(lib.element.icon("b8", "40", agenda.profile_picture));
+
+      agenda_info.append(lib.element.info("mobile-box b2",
+        "Empresa", agenda.business));
+
+      agenda_info.append(lib.element.info("mobile-box b3-8",
+        "Telefone", agenda.contact_jid.split("@")[0]));
+
+      agenda_info.append(lib.element.info("mobile-box b3 margin-top-5",
+        "Nome", agenda.name));
+
+      agenda_info.append(lib.element.info("mobile-box b3 margin-top-5",
+        "Status", agenda.status));
+
+      // agenda_info.append(lib.element.info("mobile-box b3 margin-top-5",
+      //   "Data/Hora", lib.timestampToFulldate(agenda.datetime)));
+      let agenda_datetime = lib.element.create("input", {
+        type: "datetime-local",
+        class: "mobile-box b3 margin-top-5",
+        value: lib.timestampToDatetime(agenda.datetime)
+      });
+      agenda_info.append(agenda_datetime);
+
+      agenda_info.append(lib.element.info("b1 margin-top-5",
+        "Detalhes", agenda.content));
+
+      let agenda_menu = lib.element.create("div", {
+        class: "mobile-box b10 container center"
+      });
+      contact_agenda_div.append(agenda_menu);
+
+      let agenda_confirm = lib.element.icon("a1 icon", "25", "/images/icon/done.png");
+      agenda_menu.append(agenda_confirm);
+
+      let agenda_delete = lib.element.icon("a1 icon margin-top-10", "25", "/images/icon/trash.png");
+      agenda_menu.append(agenda_delete);
+
+      agenda_datetime.addEventListener("blur", async () => {
+        if (!agenda_datetime.value) return;
+
+        let response = await API.response(ContactAgenda.update, {
+          id: agenda.id,
+          datetime: lib.datetimeToTimestamp(agenda_datetime.value)
+        });
+        if (!response) return;
+
+        lib.message("Atualizado com sucesso");
+      });
+
+      // Events
+      agenda_confirm.addEventListener("click", e => {
+        lib.confirm("Confirmar conclusão?", async r => {
+          if (!r) return;
+
+          let response = await API.response(ContactAgenda.update, {
+            id: agenda.id,
+            status: "Concluído"
+          });
+          if (!response) return;
+
+          lib.message("Atualizado com sucesso!");
+
+          contact_agenda_div.remove();
+        });
+      });
+
+      // agenda_delete.addEventListener("click", async e => {
+      //   let response = await API.response(ContactAgenda.delete, {
+      //     id: agenda.id,
+      //   });
+      //   if (!response) return;
+
+      //   lib.message("Atualizado com sucesso!");
+
+      //   contact_agenda_div.remove();
+      // });
+    });
 
     return agenda_interface;
   };

@@ -2,6 +2,8 @@ let lib = require("jarmlib");
 const { uploadFileS3, deleteFileS3 } = require("../../middleware/s3/main");
 const path = require("path");
 const fs = require("fs");
+const { ChatGPTImageEdit } = require('../../middleware/chatgpt/main');
+const { GeminiImageEdit } = require('../../middleware/gemini/main');
 
 const Customer = require('../../model/customer/main');
 const Catalog = require('../../model/customer/catalog');
@@ -130,6 +132,32 @@ customerController.filter = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.send({ msg: "Ocorreu um erro ao filtrar os contatos" });
+  }
+};
+
+customerController.logoEdit = async (req, res) => {
+  if (!req.user?.id) {
+    return res.send({ msg: "Você não tem permissão para realizar essa ação." });
+  }
+
+  try {
+    const imagePath = await compressImage(req.file);
+    console.log('imagePath', imagePath);
+
+    // await fs.promises.unlink(imagePath);
+
+    if (!imagePath) {
+      return res.status(500).send({ msg: "Falha ao editar imagem." });
+    }
+
+    // let response = await ChatGPTImageEdit({ imagePath, prompt: req.body.prompt });
+    let response = await ChatGPTImageEdit({ imagePath, prompt: req.body.prompt });
+    console.log(response);
+
+    res.send(response);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ msg: "Ocorreu um erro ao editar a imagem." });
   }
 };
 

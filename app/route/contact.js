@@ -20,7 +20,7 @@ router.post('/list/check', lib.route.toHttps, ContactList.check);
 router.post('/map/filter', lib.route.toHttps, ContactMap.filter);
 
 router.post('/agenda/create', lib.route.toHttps, ContactAgenda.create);
-// router.post('/agenda/update', lib.route.toHttps, ContactList.update);
+router.post('/agenda/update', lib.route.toHttps, ContactAgenda.update);
 router.post('/agenda/filter', lib.route.toHttps, ContactAgenda.filter);
 // router.delete('/agenda/delete/:id', lib.route.toHttps, ContactList.delete);
 

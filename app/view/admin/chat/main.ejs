@@ -255,7 +255,7 @@
 
     // contact.segment
     contact_agenda_interface.append(lib.element.create("div", {
-      class: "mobile-box b3 padding-5 center"
+      class: "mobile-box b3 padding-5 center wrap"
     }, contact.segment || "Sem segmento"));
 
     // contact.last_message_datetime
@@ -350,18 +350,6 @@
       let contact_agenda_div = lib.element.create("div", {
         class: "mobile-box b1 container padding-10 border-st radius-3 shadow-lg-st margin-top-5"
       });
-
-      // contact_agenda_div.append(lib.element.create("div", {
-      //   class: "mobile-box b1 bold"
-      // }, `Status: ${agenda.status}`));
-
-      // contact_agenda_div.append(lib.element.create("div", {
-      //   class: "mobile-box b1"
-      // }, `Data/Hora: ${lib.timestampToFulldate(agenda.datetime)}`));
-
-      // contact_agenda_div.append(lib.element.create("div", {
-      //   class: "mobile-box b1"
-      // }, `Detalhes: ${agenda.content}`));
 
       contact_agenda_div.append(lib.element.info("mobile-box b2",
         "Status", agenda.status));

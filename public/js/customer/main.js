@@ -50,3 +50,15 @@ Customer.update = async (message) => {
 
   return response;
 };
+
+Customer.logoEdit = async (customer) => {
+  let response = await fetch("/customer/logo/edit", {
+    method: "POST",
+    body: customer
+  });
+  response = await response.json();
+
+  if (API.verifyResponse(response)) { return false; };
+
+  return response;
+};

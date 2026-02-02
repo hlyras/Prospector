@@ -58,8 +58,54 @@ async function ChatGPTTTS(text, voice = 'aria') {
   }
 }
 
+async function ChatGPTImageEdit({ imagePath, prompt }) {
+  try {
+    const buffer = fs.readFileSync(imagePath);
+    const ext = path.extname(imagePath).toLowerCase();
+
+    const mimeMap = {
+      ".png": "image/png",
+      ".jpg": "image/jpeg",
+      ".jpeg": "image/jpeg",
+      ".webp": "image/webp",
+    };
+
+    const mimeType = mimeMap[ext];
+    if (!mimeType) {
+      throw new Error(`Formato não suportado: ${ext}`);
+    }
+
+    // 🔥 AQUI está o ponto-chave
+    const file = new File([buffer], path.basename(imagePath), {
+      type: mimeType,
+    });
+
+    const response = await openai.images.edit({
+      model: "gpt-image-1",
+      image: file,
+      prompt,
+      size: "1024x1024",
+      quality: 'medium'
+    });
+    console.log(response);
+
+    const imageBase64 = response.data[0].b64_json;
+    const outputBuffer = Buffer.from(imageBase64, "base64");
+
+    const filePath = path.join(process.cwd(), "public", "images", "ai", `logo-${Date.now()}.png`);
+
+    fs.writeFileSync(filePath, outputBuffer);
+
+    return filePath;
+  } catch (err) {
+    console.error("Erro ao processar imagem:", err);
+    return null;
+  }
+};
+
 module.exports = {
   ChatGPTAPI,
   ChatGPTTranscription,
-  ChatGPTTTS
+  ChatGPTTTS,
+  ChatGPTImageEdit
 };

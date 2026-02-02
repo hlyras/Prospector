@@ -1273,4 +1273,45 @@
     // ====== ADICIONAR AO DOM ======
     return form;
   };
+
+  function logoEditInterface() {
+    let logo_edit_interface = lib.element.create("div", {
+      class: "box a1 container h-center"
+    });
+
+    let logo_edit_form = lib.element.create("form", {
+      class: "box b2-3 container"
+    });
+    logo_edit_interface.append(logo_edit_form);
+
+    let logo_edit_prompt = lib.element.create("textarea", {
+      class: "box b1 lucida-grande rem09 bold margin-top-10"
+    }, "Remova o círculo e deixe a imagem com fundo liso na cor: #f0f0f0. Mantenha a logomarca exatamente como a original.");
+    logo_edit_form.append(logo_edit_prompt);
+
+    let logo_edit_submit = lib.element.create("input", {
+      type: "submit",
+      class: "box b1 btn-act lucida-grande rem10 bold radius-5 noborder shadow-lg-st padding-10 margin-top-10 margin-bottom-5 noselect pointer",
+      value: "Enviar edição"
+    });
+    logo_edit_form.append(logo_edit_submit);
+
+    logo_edit_form.addEventListener("submit", async e => {
+      e.preventDefault();
+
+      let logo_image = lib.base64.toBlob(document.getElementById("logo-img").src);
+
+      let customer = new FormData();
+      customer.append('file', logo_image, "logo.webp");
+      customer.append('prompt', logo_edit_prompt.value);
+
+      let response = await API.response(Customer.logoEdit, customer);
+      if (!response) { return; }
+      console.log(response);
+
+      document.getElementById("logo-img").src = response.image;
+    });
+
+    return logo_edit_interface;
+  };
 </script>

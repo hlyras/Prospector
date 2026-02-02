@@ -2,7 +2,6 @@ const User = require("../../model/user/main");
 const lib = require('jarmlib');
 const fs = require("fs");
 const path = require("path");
-const fetch = require('node-fetch');
 
 const qrcode = require('qrcode');
 const { createOrGetSession, getSession, waitForSessionState, removeSession } = require('../../middleware/baileys/main');
