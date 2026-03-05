@@ -316,4 +316,27 @@ contactListController.check = async (req, res) => {
   }
 };
 
+contactListController.move = async (req, res) => {
+  if (req.user.id != 1) {
+    return res.send({ msg: "Você não tem autorização para realizar essa ação" });
+  }
+
+  try {
+    let from = parseInt(req.body.from);
+    let to = parseInt(req.body.to);
+    let amount = parseInt(req.body.amount);
+
+    if (!from || !to || !amount) {
+      return res.send({ msg: "Informe os usuários" });
+    }
+
+    await ContactList.move({ from, to, amount });
+
+    res.send({ done: "Os leads foram movidos." });
+  } catch (err) {
+    console.error("Erro em check:", err);
+    return res.status(500).send({ msg: err.message });
+  }
+};
+
 module.exports = contactListController;

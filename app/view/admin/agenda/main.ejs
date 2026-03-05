@@ -35,11 +35,26 @@
 
       agenda_info.append(lib.element.icon("b8", "40", agenda.profile_picture));
 
-      agenda_info.append(lib.element.info("mobile-box b2",
+      agenda_info.append(lib.element.info("mobile-box b3-8",
         "Empresa", agenda.business));
 
-      agenda_info.append(lib.element.info("mobile-box b3-8",
+      agenda_info.append(lib.element.info("mobile-box b4",
         "Telefone", agenda.contact_jid.split("@")[0]));
+
+      let agenda_notify_select = lib.element.create("select", {
+        class: "mobile-box b4 padding-10 border-st radius-3 shadow-lg-st v-center"
+      });
+      agenda_info.append(agenda_notify_select);
+
+      agenda_notify_select.append(lib.element.create("option", {
+        value: "Ativo"
+      }, "Ativo"));
+
+      agenda_notify_select.append(lib.element.create("option", {
+        value: "Inativo"
+      }, "Inativo"));
+
+      agenda_notify_select.value = agenda.notify;
 
       agenda_info.append(lib.element.info("mobile-box b3 margin-top-5",
         "Nome", agenda.name));
@@ -47,11 +62,9 @@
       agenda_info.append(lib.element.info("mobile-box b3 margin-top-5",
         "Status", agenda.status));
 
-      // agenda_info.append(lib.element.info("mobile-box b3 margin-top-5",
-      //   "Data/Hora", lib.timestampToFulldate(agenda.datetime)));
       let agenda_datetime = lib.element.create("input", {
         type: "datetime-local",
-        class: "mobile-box b3 margin-top-5",
+        class: "mobile-box b3 padding-10 border margin-top-5",
         value: lib.timestampToDatetime(agenda.datetime)
       });
       agenda_info.append(agenda_datetime);
@@ -70,6 +83,16 @@
       let agenda_delete = lib.element.icon("a1 icon margin-top-10", "25", "/images/icon/trash.png");
       agenda_menu.append(agenda_delete);
 
+      agenda_notify_select.addEventListener("change", async () => {
+        if (!agenda_notify_select.value) return;
+
+        let response = await API.response(ContactAgenda.update, {
+          id: agenda.id,
+          notify: agenda_notify_select.value
+        });
+        if (!response) return;
+      });
+
       agenda_datetime.addEventListener("blur", async () => {
         if (!agenda_datetime.value) return;
 
@@ -78,8 +101,6 @@
           datetime: lib.datetimeToTimestamp(agenda_datetime.value)
         });
         if (!response) return;
-
-        lib.message("Atualizado com sucesso");
       });
 
       // Events

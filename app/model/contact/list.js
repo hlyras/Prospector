@@ -62,4 +62,9 @@ ContactList.delete = ({ inners, params, strict_params }) => {
   return db(query, values);
 }
 
+ContactList.move = ({ from, to, amount }) => {
+  let query = `UPDATE cms_prospector.contact_list SET seller_id = ? WHERE (seller_id = ? AND status = 'Pendente' AND sent_datetime IS NULL) LIMIT ?;`;
+  return db(query, [to, from, amount]);
+};
+
 module.exports = ContactList;

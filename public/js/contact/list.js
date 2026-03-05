@@ -75,3 +75,16 @@ ContactList.delete = async (contact_list_id) => {
 
   return response.done;
 };
+
+ContactList.move = async (options) => {
+  let response = await fetch("/contact/list/move", {
+    method: "POST",
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(options)
+  });
+  response = await response.json();
+
+  if (API.verifyResponse(response)) { return false; };
+
+  return response;
+};

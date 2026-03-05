@@ -40,17 +40,24 @@
       user_div.append(user_name);
 
       let user_phone = lib.element.create("div", {
-        class: "mobile-box b4-9 center padding-10"
+        class: "mobile-box b3 center padding-10"
       }, user.phone.split("@")[0] || "Sem número");
       user_div.append(user_phone);
 
-      let session_btn = lib.element.icon("b9", "20", "images/icon/refresh.png");
-      user_div.append(session_btn);
-
       let status = lib.element.create("div", {
-        class: "box b1 center padding-10"
+        class: "mobile-box b2 center padding-10"
       });
       user_div.append(status);
+
+      let session_btn = lib.element.svg("b4", "25",
+        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-cw-icon lucide-rotate-cw"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>`
+      );
+      user_div.append(session_btn);
+
+      let remove_auth_icon = lib.element.svg("b4", "25",
+        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`
+      );
+      user_div.append(remove_auth_icon);
 
       let qrcode = lib.element.create("img", {
         class: "image-prop b1 center",
@@ -112,6 +119,22 @@
         }
       });
 
+      remove_auth_icon.addEventListener("click", () => {
+        lib.confirm("Deseja confirmar remoção?", async r => {
+          if (!r) return;
+          let user_disconnect_response = await API.response(User.disconnect, {
+            user_id: user.id,
+            permanent: true
+          });
+
+          if (!user_disconnect_response.connected) {
+            status.innerHTML = "Offline";
+            lib.display(connect_btn, "");
+            lib.display(disconnect_btn, "none");
+          }
+        });
+      });
+
       session_btn.click();
     };
   };
@@ -121,7 +144,7 @@
 
     for (let i in users) {
       let user = users[i];
-      let user_connect_response = await API.response(User.connect, { user_id: user.id });
+      await API.response(User.connect, { user_id: user.id });
     };
 
     userFilter();
@@ -132,7 +155,7 @@
 
     for (let i in users) {
       let user = users[i];
-      let user_disconnect_response = await API.response(User.disconnect, { user_id: user.id });
+      await API.response(User.disconnect, { user_id: user.id });
     };
 
     userFilter();

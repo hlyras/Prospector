@@ -1,11 +1,9 @@
-<div id="contact-container" class="mobile-box a2-5 ground border-right scroll-y">
-  <div class="box a1 container">
-    <%- include('./create.ejs') %>
-    <%- include('./div.ejs') %>
-    <%- include('./filter.ejs') %>
-    <%- include('./map/main.ejs') %>
-    <%- include('./text-to-speech.ejs') %>
-  </div>
+<div id="contact-container" class="container mobile-box a2-5 ground border-right">
+  <%- include('./create.ejs') %>
+  <%- include('./filter.ejs') %>
+  <%- include('./div.ejs') %>
+  <%- include('./map/main.ejs') %>
+  <%- include('./text-to-speech.ejs') %>
 </div>
 
 <script>
@@ -18,8 +16,11 @@
   });
 
   function resizeContactContainer() {
-    let contact_container = document.getElementById("contact-container");
-    let header_container = document.getElementById("header-container");
-    contact_container.style.height = (window.innerHeight - header_container.offsetHeight) + "px";
+    let contact_box = document.getElementById("contact-box");
+    let contact_menu = document.getElementById("contact-menu");
+    let contact_filter_icon = document.getElementById("contact-filter-icon");
+    let contact_report = document.getElementById("contact-report");
+
+    contact_box.style.height = (window.innerHeight - contact_menu.offsetHeight - contact_filter_icon.offsetHeight) + "px";
   };
 </script>

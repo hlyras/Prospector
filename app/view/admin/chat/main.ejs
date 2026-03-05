@@ -295,6 +295,19 @@
       value: "Concluído"
     }, "Concluído"));
 
+    let agenda_notify_select = lib.element.create("select", {
+      class: "mobile-box b2 padding-10 border-st radius-3 shadow-lg-st v-center margin-top-10"
+    });
+    contact_agenda_create_form.append(agenda_notify_select);
+
+    agenda_notify_select.append(lib.element.create("option", {
+      value: "Ativo"
+    }, "Ativo"));
+
+    agenda_notify_select.append(lib.element.create("option", {
+      value: "Inativo"
+    }, "Inativo"));
+
     let agenda_datetime_input = lib.element.create("input", {
       type: "datetime-local",
       class: "mobile-box b2 padding-9 border-st radius-3 shadow-lg-st v-center margin-top-10"
@@ -319,7 +332,8 @@
         contact_jid: contact.jid,
         datetime: lib.datetimeToTimestamp(agenda_datetime_input.value),
         status: agenda_status_select.value,
-        content: agenda_content_textarea.value
+        content: agenda_content_textarea.value,
+        notify: agenda_notify_select.value
       };
 
       let response = await API.response(ContactAgenda.create, contact_agenda);
@@ -330,6 +344,7 @@
       agenda_datetime_input.value = "";
       agenda_status_select.value = "Pendente";
       agenda_content_textarea.value = "";
+      agenda_notify_select.value = "Ativo";
     });
 
     return contact_agenda_create_form;
@@ -339,8 +354,6 @@
     let contact_agendas = await API.response(ContactAgenda.filter, {
       contact_jid: contact.jid
     });
-
-    console.log(contact_agendas);
 
     let contact_agenda_filter_box = lib.element.create("div", {
       class: "box b1 container margin-top-10"

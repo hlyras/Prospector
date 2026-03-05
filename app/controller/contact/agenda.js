@@ -16,6 +16,7 @@ contactAgendaController.create = async (req, res) => {
     contact_agenda.status = req.body.status;
     contact_agenda.contact_jid = req.body.contact_jid;
     contact_agenda.content = req.body.content;
+    contact_agenda.notify = req.body.notify;
 
     const create_response = await contact_agenda.create();
     if (create_response.err) {
@@ -30,7 +31,7 @@ contactAgendaController.create = async (req, res) => {
 };
 
 contactAgendaController.update = async (req, res) => {
-  if (req.user.id != 1) {
+  if (req.user?.id != 1) {
     return res.send({ msg: "Você não tem autorização para realizar essa ação" });
   }
 
@@ -39,6 +40,7 @@ contactAgendaController.update = async (req, res) => {
     contact_agenda.id = req.body.id;
     contact_agenda.status = req.body.status;
     contact_agenda.datetime = req.body.datetime;
+    contact_agenda.notify = req.body.notify;
 
     const update_response = await contact_agenda.update();
     if (update_response.err) {
@@ -109,11 +111,8 @@ contactAgendaController.notify = async () => {
         strict_params: { keys: [], values: [] },
       };
 
-      lib.Query.fillParam(
-        "contact_agenda.status",
-        "Pendente",
-        contact_agenda_options.strict_params
-      );
+      lib.Query.fillParam("contact_agenda.status", "Pendente", contact_agenda_options.strict_params);
+      lib.Query.fillParam("contact_agenda.notify", "Ativo", contact_agenda_options.strict_params);
 
       let contact_agendas = await ContactAgenda.filter(contact_agenda_options);
 

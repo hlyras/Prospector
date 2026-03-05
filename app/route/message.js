@@ -12,6 +12,7 @@ router.post('/send', lib.route.toHttps, Message.send);
 router.post('/react', lib.route.toHttps, Message.react);
 router.post('/filter', lib.route.toHttps, Message.filter);
 
-processQueue();
+processQueue(1);
+processQueue(2);
 
 module.exports = router;

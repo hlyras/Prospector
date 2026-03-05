@@ -154,7 +154,7 @@ userController.connect = async (req, res) => {
 /* ========================= DESCONECTAR ========================= */
 
 userController.disconnect = async (req, res) => {
-  const { user_id } = req.body;
+  const { user_id, permanent } = req.body;
 
   if (!user_id) {
     return res.status(400).send({ success: false, msg: "user_id ausente" });
@@ -162,7 +162,7 @@ userController.disconnect = async (req, res) => {
 
   try {
     console.log(`🚪 [${user_id}] Desconectando sessão...`);
-    removeSession(user_id);
+    removeSession(user_id, { permanent });
     return res.send({ success: true });
   } catch (err) {
     console.error("Erro /admin/socket/disconnect:", err);

@@ -35,4 +35,9 @@ Queue.filter = ({ props, inners, lefts, params, strict_params, in_params, order_
   return db(query, values);
 };
 
+Queue.delete = (id) => {
+  let query = `DELETE FROM cms_prospector.queue WHERE id = ?;`
+  return db(query, id);
+};
+
 module.exports = Queue;

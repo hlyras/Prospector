@@ -203,45 +203,58 @@ async function enqueueMessage(item = {}) {
 }
 
 /* --------------------------  PROCESSADOR  ------------------------------- */
-async function processQueue() {
+async function processQueue(worker_id) {
   while (true) {
+    let msg = null;
+
     try {
       const results = await Queue.filter({
         in_params: {
           keys: ["status"],
-          values: [[["Processando", "Pendente"]]]
+          values: [[["Pendente"]]]
         },
         order_params: [["queue.priority", "desc"], ["queue.datetime", "asc"]],
         limit: 1
       });
 
-      const msg = results?.[0];
+      msg = results?.[0];
       if (!msg) {
-        // console.log('!msg', msg);
         await sleep(randInt(800, 3000));
         continue;
       }
 
-      const session = getSession(msg.user_id);
-      if (!session || !session.sock) {
-        console.log({ msg: "Sessão WhatsApp não conectada!" });
-        await sleep(randInt(15000, 30000));
-        continue;
-      }
-
-      let queue_delay = randInt(9000, 47000);
-      console.log(`Próxima mensagem em ${queue_delay}`, msg);
-      await sleep(queue_delay);
-
+      // 🔒 RESERVA IMEDIATA
       const qProc = new Queue();
       qProc.id = msg.id;
       qProc.status = "Processando";
       await qProc.update();
 
+      const session = getSession(msg.user_id);
+      if (!session || !session.sock) {
+        console.log({ msg: `Sessão WhatsApp não conectada! (${worker_id})` });
+
+        // devolve para fila
+        const qBack = new Queue();
+        qBack.id = msg.id;
+        qBack.status = "Pendente";
+        await qBack.update();
+
+        await sleep(randInt(15000, 30000));
+        continue;
+      }
+
+      let queue_delay = randInt(9000, 47000);
+      await sleep(queue_delay);
+
       const profile = pickProfile();
       await sleep(randInt(800, 3000));
 
-      await simulateTypingHuman(session.sock, msg.contact_jid, msg.message, profile);
+      await simulateTypingHuman(
+        session.sock,
+        msg.contact_jid,
+        msg.message,
+        profile
+      );
 
       const updated_contact = (await Contact.findByJid(msg.contact_jid))[0];
 
@@ -253,9 +266,16 @@ async function processQueue() {
       contact_info.segment = updated_contact.segment;
       contact_info.seller_id = msg.user_id;
 
-      // enviar mensagem
       let send_response = await SendByAi(contact_info);
-      if (!send_response) { return }
+
+      if (!send_response) {
+        const qBack = new Queue();
+        qBack.id = msg.id;
+        qBack.status = "Pendente";
+        await qBack.update();
+
+        continue;
+      }
 
       const qSent = new Queue();
       qSent.id = msg.id;
@@ -263,12 +283,21 @@ async function processQueue() {
       await qSent.update();
 
       await sleep(randInt(800, 2500));
+
     } catch (err) {
       console.log(err);
+
+      if (msg?.id) {
+        const qBack = new Queue();
+        qBack.id = msg.id;
+        qBack.status = "Pendente";
+        await qBack.update();
+      }
+
       await sleep(randInt(1000, 5000));
     }
   }
-}
+};
 
 /* ------------------------------  EXPORTS  ------------------------------- */
 
