@@ -70,24 +70,26 @@
     identity_box.append(identity_info_box);
 
     let profile_picture = lib.element.create("img", {
-      class: "image-prop size-30 radius-50 margin-left-5 v-center",
+      class: "mobile-box b9 radius-50 v-center",
       src: contact.profile_picture || "/images/icon/profile.png",
     });
     identity_info_box.append(profile_picture);
 
     let identity_contact_box = lib.element.create("div", {
-      class: "mobile-box container v-center padding-left-10",
-      style: "flex-grow: 1;"
+      class: "mobile-box b8-9 container v-center",
     });
     identity_info_box.append(identity_contact_box);
 
-    // identity_contact_box.append(lib.element.create("div", {
-    //   class: "mobile-box lucida-grande em09 text-shadow",
-    // }, contact.business || contact.name || ""));
-
     lib.splitTextBy(contact.jid, "@")[1] != "g.us" && identity_contact_box.append(lib.element.create("div", {
-      class: "mobile-box b1 em07 text-shadow v-center"
-    }, lib.splitTextBy(contact.jid, "@")[0]));
+      class: "mobile-box b2 em07 text-shadow v-center center"
+    }, `${lib.splitTextBy(contact.jid, "@")[0]} - ${contact.seller_id}`));
+
+    let contact_name = lib.element.create("input", {
+      type: "text",
+      class: "mobile-box b2 em07 border-bottom-lg-st text-shadow-lg-st v-center",
+      value: `${contact.name}`
+    });
+    identity_contact_box.append(contact_name);
 
     let autochat_status = lib.element.create("select", {
       class: "mobile-box b5 padding-5 border-st radius-3 shadow-lg-st v-center"
@@ -132,6 +134,13 @@
       let response = await API.response(Contact.update, {
         jid: contact.jid,
         autochat: autochat_status.value
+      });
+    });
+
+    contact_name.addEventListener("blur", async () => {
+      let response = await API.response(Contact.update, {
+        jid: contact.jid,
+        name: contact_name.value
       });
     });
 

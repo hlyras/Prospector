@@ -88,7 +88,18 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
-    await contactFilter({});
+    document.getElementById("contact-filter-period").value = "period";
+    contact_period_start.value = lib.convertDate(lib.timestampToDate(lib.genTimestamp() - (lib.timestampDay() * 30)));
+    contact_period_end.value = lib.convertDate(lib.timestampToDate(lib.genTimestamp()));
+    lib.display("contact-period-container", "");
+
+    console.log(contact_period_start.value);
+    console.log(lib.dateToTimestamp(contact_period_start.value));
+
+    await contactFilter({
+      period_start: lib.dateToTimestamp(contact_period_start.value),
+      period_end: lib.dateToTimestamp(contact_period_end.value),
+    });
 
     const all_users_icon = document.getElementById("all-users-icon");
     const conected_icon = document.getElementById("conected-icon");
@@ -266,7 +277,7 @@
       });
     });
 
-    contact_period_start.addEventListener("change", async () => {
+    contact_period_start.addEventListener("blur", async () => {
       let contact = {}
 
       contact.period_start = lib.dateToTimestamp(contact_period_start.value);
@@ -284,7 +295,7 @@
       await contactFilter(contact);
     });
 
-    contact_period_end.addEventListener("change", async () => {
+    contact_period_end.addEventListener("blur", async () => {
       let contact = {}
 
       contact.period_start = lib.dateToTimestamp(contact_period_start.value);
@@ -299,8 +310,7 @@
       if (selected_status == "interested") { contact.status = "interessado"; }
       if (selected_status == "demo") { contact.status = "demonstração"; }
 
-      let contacts = await API.response(Contact.filter, contact);
-      contactFilter(contacts);
+      await contactFilter(contact);
     });
   });
 

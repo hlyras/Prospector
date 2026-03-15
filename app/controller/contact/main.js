@@ -199,7 +199,7 @@ contactController.filter = async (req, res) => {
           "last_message.datetime", "msg_max.max_dt"
         ]
       ],
-      period: { key: "contact.datetime", start: req.body.period_start, end: req.body.period_end },
+      period: { key: req.body.period_key || "last_message.datetime", start: req.body.period_start, end: req.body.period_end },
       strict_params: { keys: [], values: [] },
       order_params: [["last_message.datetime", "desc"]],
       // limit: 300

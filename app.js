@@ -20,7 +20,7 @@ const passport = require('./config/passport');
 
 app.use(flash());
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true, parameterLimit: 50000 }));
 
 app.set('views', 'app/view');
 app.set('view engine', 'ejs');

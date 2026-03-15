@@ -33,17 +33,21 @@ customerController.create = async (req, res) => {
     if ((await Customer.findByEmail(customer.email)).length) { return res.send({ msg: 'Este E-mail já está sendo utilizado.' }); }
     if ((await Customer.findByDomain(customer.domain)).length) { return res.send({ msg: 'Este domínio já está sendo utilizado.' }); }
 
+    console.log('Domínio e email ok');
+
     const webpPath = await compressImage(req.file);
     const fileName = path.basename(webpPath);
     let imageData = await uploadFileS3(webpPath, fileName, 'webp');
     fs.promises.unlink(webpPath);
+
+    console.log('Upload ok');
 
     customer.logo_etag = imageData.ETag.replaceAll(`"`, "");
     customer.logo_url = imageData.Location;
     customer.logo_keycode = imageData.Key;
     customer.seller_id = req.user.id;
     customer.seller_status = "Demonstração";
-    customer.expires_at = Date.now() + 7 * 24 * 60 * 60 * 1000;
+    customer.expires_at = Date.now() + 60 * 24 * 60 * 60 * 1000;
 
     let customer_create = await customer.create();
     if (customer_create.err) { return res.send({ msg: customer_create.err }); }
@@ -56,6 +60,7 @@ customerController.create = async (req, res) => {
 
     let catalog_response = await catalog.create();
     if (catalog_response.err) { return res.send({ msg: catalog_response.err }); }
+    console.log('Catalogo ok');
 
     return res.send({ done: "Criado com sucesso" });
   } catch (err) {

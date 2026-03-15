@@ -527,6 +527,9 @@
         cropCanvas.width = Math.round(sw);
         cropCanvas.height = Math.round(sh);
 
+        console.log('w', cropCanvas.width);
+        console.log('h', cropCanvas.height);
+
         const cropCtx = cropCanvas.getContext("2d");
         cropCtx.drawImage(
           image,
