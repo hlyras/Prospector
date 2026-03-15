@@ -201,10 +201,12 @@ contactController.filter = async (req, res) => {
       ],
       period: { key: req.body.period_key || "last_message.datetime", start: req.body.period_start, end: req.body.period_end },
       strict_params: { keys: [], values: [] },
+      params: { keys: [], values: [] },
       order_params: [["last_message.datetime", "desc"]],
       // limit: 300
     };
 
+    lib.Query.fillParam("contact.jid", req.body.like_jid, contact_options.params);
     lib.Query.fillParam("contact.jid", req.body.jid, contact_options.strict_params);
     lib.Query.fillParam("contact.status", req.body.status, contact_options.strict_params);
     let contacts = await Contact.filter(contact_options);

@@ -11,40 +11,40 @@
 
     contact_maps.forEach(cm => {
       let contact_map_div = lib.element.create("div", {
-        class: "box a1 container border-lg-st shadow margin-top-5"
+        class: "box a1 container border-lg-st shadow margin-top-5 padding-10"
       });
       contact_map_container.append(contact_map_div);
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box a5 container"
+        class: "mobile-box a5 padding-10"
       }, lib.timestampToFulldate(cm.datetime)));
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box a10 center"
+        class: "mobile-box a10 center padding-10"
       }, cm.uf));
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box a5 center"
+        class: "mobile-box a5 center padding-10"
       }, cm.cidade));
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box b2-5 center"
+        class: "mobile-box b2-5 center padding-10"
       }, cm.bairro));
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box b2-5 center wrap"
+        class: "mobile-box b2-5 center wrap padding-10"
       }, cm.segment));
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box b2-5 center wrap"
+        class: "mobile-box b2-5 center wrap padding-10"
       }, cm.status));
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box b10 center wrap"
+        class: "mobile-box b10 center"
       }, cm.found));
 
       contact_map_div.append(lib.element.create("div", {
-        class: "mobile-box b10 center wrap"
+        class: "mobile-box b10 center"
       }, cm.last_index));
 
       contact_map_div.addEventListener("click", async () => {
@@ -100,16 +100,16 @@
 
     contact_lists.forEach(cl => {
       let contact_list_div = lib.element.create("div", {
-        class: "box b3 container border-lg-st shadow margin-top-5 padding-10"
+        class: "mobile-box b3 container min-height-125 border-lg-st shadow margin-top-5 padding-10"
       });
       contact_list_box.append(contact_list_div);
 
       contact_list_div.append(lib.element.create("div", {
-        class: "mobile-box b2 rem07 padding-5"
+        class: "mobile-box b2-5 rem07 padding-5"
       }, lib.timestampToFulldate(cl.datetime)));
 
       contact_list_div.append(lib.element.create("div", {
-        class: "mobile-box b2 rem07 padding-5"
+        class: "mobile-box b3-5 rem07 padding-5"
       }, cl.jid.split("@")[0]));
 
       contact_list_div.append(lib.element.create("div", {

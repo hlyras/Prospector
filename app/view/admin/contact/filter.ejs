@@ -75,13 +75,9 @@
     <img class='image-prop mobile-box size-20' src='/images/icon/personal.png'>
   </div>
 
-  <form id="contact-filter-form" class="container b1 padding-3 margin-top-3">
-    <input type="text" id="contact-filter-input" class="mobile-box b9-10 lucida-grande border-bottom-lg-st padding-3"
-      placeholder="Nome ou número do contato">
-    <div class="mobile-box container b10 v-center">
-      <img src="/images/icon/search.png" class="size-20 pointer icon center">
-    </div>
-  </form>
+  <input type="text" id="contact_jid_input"
+    class="mobile-box b1 lucida-grande border-lg-st radius-50 margin-10 padding-8"
+    placeholder="Nome ou número do contato">
 </div>
 
 <div id="contact-box" class="container a1 scroll-y"></div>
@@ -92,9 +88,6 @@
     contact_period_start.value = lib.convertDate(lib.timestampToDate(lib.genTimestamp() - (lib.timestampDay() * 30)));
     contact_period_end.value = lib.convertDate(lib.timestampToDate(lib.genTimestamp()));
     lib.display("contact-period-container", "");
-
-    console.log(contact_period_start.value);
-    console.log(lib.dateToTimestamp(contact_period_start.value));
 
     await contactFilter({
       period_start: lib.dateToTimestamp(contact_period_start.value),
@@ -311,6 +304,14 @@
       if (selected_status == "demo") { contact.status = "demonstração"; }
 
       await contactFilter(contact);
+    });
+
+    contact_jid_input.addEventListener("input", async () => {
+      if (contact_jid_input.value.length > 3) {
+        await contactFilter({
+          like_jid: contact_jid_input.value,
+        });
+      }
     });
   });
 
