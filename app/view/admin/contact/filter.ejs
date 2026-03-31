@@ -86,8 +86,11 @@
   document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("contact-filter-period").value = "period";
     contact_period_start.value = lib.convertDate(lib.timestampToDate(lib.genTimestamp() - (lib.timestampDay() * 30)));
-    contact_period_end.value = lib.convertDate(lib.timestampToDate(lib.genTimestamp()));
+    contact_period_end.value = lib.convertDate(lib.timestampToDate(lib.genTimestamp() + (lib.timestampDay() - 1)));
     lib.display("contact-period-container", "");
+
+    console.log(contact_period_start.value);
+    console.log(contact_period_end.value);
 
     await contactFilter({
       period_start: lib.dateToTimestamp(contact_period_start.value),

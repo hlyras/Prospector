@@ -28,7 +28,7 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
 app.use(session({
-  secret: 'vidyapathaisalwaysrunning',
+  secret: 'prospectorvibes',
   resave: true,
   saveUninitialized: true,
   cookie: { maxAge: 24 * 60 * 60 * 1000 },
@@ -45,14 +45,6 @@ app.use((req, res, next) => {
     next();
   }
 });
-
-app.use(session({
-  secret: 'vidyapathaisalwaysrunning',
-  resave: true,
-  saveUninitialized: true,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 },
-  rolling: true
-}));
 
 app.use('/', require('./app/route/index'));
 
